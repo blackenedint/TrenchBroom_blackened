@@ -50,19 +50,22 @@ VertexTool::VertexTool(mdl::Map& map)
 std::vector<mdl::BrushNode*> VertexTool::findIncidentBrushes(
   const vm::vec3d& handle) const
 {
-  return findIncidentBrushes(m_map.vertexHandles(), handle);
+  //was: return findIncidentBrushes(m_map.vertexHandles(), handle);
+  return this->VertexToolBase<vm::vec3d>::findIncidentBrushes(m_map.vertexHandles(), handle);
 }
 
 std::vector<mdl::BrushNode*> VertexTool::findIncidentBrushes(
   const vm::segment3d& handle) const
 {
-  return findIncidentBrushes(m_map.edgeHandles(), handle);
+//was: return findIncidentBrushes(m_map.edgeHandles(), handle);
+  return this->VertexToolBase<vm::vec3d>::findIncidentBrushes(m_map.edgeHandles(), handle);
 }
 
 std::vector<mdl::BrushNode*> VertexTool::findIncidentBrushes(
   const vm::polygon3d& handle) const
 {
-  return findIncidentBrushes(m_map.faceHandles(), handle);
+// was: return findIncidentBrushes(m_map.faceHandles(), handle);
+  return this->VertexToolBase<vm::vec3d>::findIncidentBrushes(m_map.faceHandles(), handle);
 }
 
 void VertexTool::pick(

@@ -23,6 +23,7 @@
 #include "mdl/Map_Geometry.h"
 
 #include "kdl/string_format.h"
+#include <array>
 
 namespace tb::ui
 {
@@ -35,7 +36,9 @@ FaceTool::FaceTool(mdl::Map& map)
 std::vector<mdl::BrushNode*> FaceTool::findIncidentBrushes(
   const vm::polygon3d& handle) const
 {
-  return findIncidentBrushes(m_map.faceHandles(), handle);
+  //was: return findIncidentBrushes(m_map.faceHandles(), handle);
+  return this->VertexToolBase<vm::polygon3d>::findIncidentBrushes(
+    m_map.faceHandles(), handle);
 }
 
 void FaceTool::pick(
