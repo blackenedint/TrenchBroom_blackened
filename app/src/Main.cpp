@@ -63,11 +63,18 @@ int main(int argc, char* argv[])
   // actually work with TB.)
   qputenv("QT_OPENGL_BUGLIST", ":/opengl_buglist.json");
 
+  //Tony; forced portable.
+#if defined BLACKENED
+	tb::io::SystemPaths::setPortable();
+	QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, QString("./config"));
+#else
+
   // parse portable arg out manually at first to ensure it's set before any settings load
   if (argc > 1)
   {
     for (int i = 1; i < argc; i++)
     {
+
       if (strcmp(argv[i], "--portable") == 0)
       {
         tb::io::SystemPaths::setPortable();
@@ -76,12 +83,15 @@ int main(int argc, char* argv[])
       }
     }
   }
+#endif
 
   // PreferenceManager is destroyed by TrenchBroomApp::~TrenchBroomApp()
   tb::PreferenceManager::createInstance<tb::AppPreferenceManager>();
   tb::ui::TrenchBroomApp app(argc, argv);
 
+#if !defined BLACKENED
   app.askForAutoUpdates();
+#endif
   app.parseCommandLineAndShowFrame();
   return app.exec();
 }

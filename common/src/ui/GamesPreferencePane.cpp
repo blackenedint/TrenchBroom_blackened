@@ -32,6 +32,7 @@
 #include <QWidget>
 
 #include "FileLogger.h"
+#include "PreferenceManager.h"
 #include "io/DiskIO.h"
 #include "io/PathQt.h"
 #include "io/ResourceUtils.h"
@@ -196,6 +197,20 @@ void GamePreferencePane::createGui()
     &QLineEdit::textChanged,
     this,
     [validDirectoryIcon](const QString& text) {
+#if defined BLACKENED
+      if (text.startsWith("$"))
+      {
+        std::string specialToken = text.toUtf8().toStdString();
+        if (auto p = PreferenceManager::resolveSpecialGamePathToken(specialToken))
+        {
+          QString resolvedPath = QString::fromStdString(specialToken);
+          validDirectoryIcon->setToolTip(resolvedPath);
+          validDirectoryIcon->setIcon(QIcon{});
+		  return; // good to go!!
+        }
+      }
+#endif
+
       if (text.isEmpty() || QDir{text}.exists())
       {
         validDirectoryIcon->setToolTip("");

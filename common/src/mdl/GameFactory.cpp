@@ -149,7 +149,15 @@ std::filesystem::path GameFactory::gamePath(const std::string& gameName) const
     throw GameException{"Unknown game: " + gameName};
   }
   auto& pref = it->second;
-  return PreferenceManager::instance().get(pref);
+  auto path = PreferenceManager::instance().get(pref);
+
+#if defined BLACKENED
+  if (auto p = PreferenceManager::resolveSpecialGamePathToken(path.string()))
+  { // special path found; use it instead.
+    return *p;
+  }
+#endif
+  return path;
 }
 
 bool GameFactory::setGamePath(

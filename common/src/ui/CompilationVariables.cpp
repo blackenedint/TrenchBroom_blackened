@@ -72,6 +72,21 @@ CommonVariables::CommonVariables(const mdl::Map& map)
     // qbsp executable
     set(tool.name, el::Value{toolPath.string()});
   }
+
+  // Tony; automatically add some specific environment variables that can be used in configuration files.
+#if defined BLACKENED
+  auto addEnv = [&](const char* envName, const char* varName) {
+    if (const char* v = std::getenv(envName))
+    {
+      set(std::string(varName), el::Value{std::string(v)});
+    }
+  };
+  
+  addEnv("BIBASE", "BIBASE");
+  addEnv("BIGAME", "BIGAME");
+  addEnv("BITOOLS", "BITOOLS");
+  addEnv("BICONTENT", "BICONTENT");
+#endif
 }
 
 CommonCompilationVariables::CommonCompilationVariables(const mdl::Map& map)

@@ -45,10 +45,14 @@
 #include "ui/PreferenceDialog.h"
 #include "ui/QtUtils.h"
 #include "ui/RecentDocuments.h"
+#if !defined BLACKENED
 #include "ui/UpdateConfig.h"
+#endif
 #include "ui/WelcomeWindow.h"
+#if !defined BLACKENED
 #include "upd/QtHttpClient.h"
 #include "upd/Updater.h"
+#endif
 
 #include "kdl/vector_utils.h"
 #ifdef __APPLE__
@@ -155,8 +159,10 @@ LONG WINAPI TrenchBroomUnhandledExceptionFilter(PEXCEPTION_POINTERS pExceptionPt
 TrenchBroomApp::TrenchBroomApp(int& argc, char** argv)
   : QApplication{argc, argv}
   , m_networkManager{new QNetworkAccessManager{this}}
+#if !defined BLACKENED
   , m_httpClient{new upd::QtHttpClient{*m_networkManager}}
   , m_updater{new upd::Updater{*m_httpClient, makeUpdateConfig(), this}}
+#endif
   , m_taskManager{std::thread::hardware_concurrency()}
 {
   using namespace std::chrono_literals;
@@ -240,10 +246,12 @@ TrenchBroomApp::TrenchBroomApp(int& argc, char** argv)
   }
 #endif
 
+#if !defined BLACKENED
   if (pref(Preferences::AutoCheckForUpdates))
   {
     m_updater->checkForUpdates();
   }
+#endif
 }
 
 TrenchBroomApp::~TrenchBroomApp()
@@ -253,6 +261,7 @@ TrenchBroomApp::~TrenchBroomApp()
 
 void TrenchBroomApp::askForAutoUpdates()
 {
+#if !defined BLACKENED
   if (pref(Preferences::AskForAutoUpdates))
   {
     auto& prefs = PreferenceManager::instance();
@@ -275,6 +284,7 @@ void TrenchBroomApp::askForAutoUpdates()
       updater().checkForUpdates();
     }
   }
+#endif
 }
 
 void TrenchBroomApp::parseCommandLineAndShowFrame()

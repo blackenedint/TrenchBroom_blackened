@@ -469,11 +469,12 @@ void MapFrame::updateToolBarWidgets()
 
 void MapFrame::createStatusBar()
 {
-  auto& app = TrenchBroomApp::instance();
-
   m_statusBarLabel = new QLabel{};
   statusBar()->addWidget(m_statusBarLabel, 1);
+#if !defined BLACKENED
+  auto& app = TrenchBroomApp::instance();
   statusBar()->addWidget(app.updater().createUpdateIndicator());
+#endif
 }
 
 namespace

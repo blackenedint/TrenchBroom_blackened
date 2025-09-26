@@ -62,6 +62,10 @@ protected:
 public:
   Notifier<const std::filesystem::path&> preferenceDidChangeNotifier;
 
+#if defined BLACKENED
+  static std::optional<std::filesystem::path> resolveSpecialGamePathToken(std::string_view s);
+ #endif
+
 public:
   static PreferenceManager& instance();
 

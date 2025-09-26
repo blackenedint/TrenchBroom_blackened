@@ -62,6 +62,28 @@ PreferenceManager& PreferenceManager::instance()
   return *m_instance;
 }
 
+#if defined BLACKENED
+std::optional<std::filesystem::path> PreferenceManager::resolveSpecialGamePathToken(
+  std::string_view s)
+{
+  if (s == "$BIGAME")
+  {
+    // Primary env var
+    if (const char* v = std::getenv("BIGAME"); v && *v)
+    {
+      return std::filesystem::path{v};
+    }
+    // fallback.
+    if (const char* v2 = std::getenv("BIBASE"); v2 && *v2)
+    {
+      return std::filesystem::path{v2};
+    }
+    return std::nullopt;
+  }
+  return std::nullopt;
+}
+#endif
+
 namespace
 {
 bool shouldSaveInstantly()

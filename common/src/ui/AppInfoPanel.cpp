@@ -69,15 +69,19 @@ AppInfoPanel::AppInfoPanel(QWidget* parent)
   connect(build, &ClickableLabel::clicked, this, &AppInfoPanel::versionInfoClicked);
   connect(qtVersion, &ClickableLabel::clicked, this, &AppInfoPanel::versionInfoClicked);
 
+#if !defined BLACKENED
   auto& app = TrenchBroomApp::instance();
   auto* updateIndicator = app.updater().createUpdateIndicator();
   makeInfo(updateIndicator);
+#endif
 
   auto* versionLayout = new QHBoxLayout{};
   versionLayout->setContentsMargins(0, 0, 0, 0);
   versionLayout->setSpacing(LayoutConstants::MediumHMargin);
   versionLayout->addWidget(version);
+#if !defined BLACKENED
   versionLayout->addWidget(updateIndicator);
+#endif
 
   auto* versionWidget = new QWidget{};
   versionWidget->setLayout(versionLayout);
