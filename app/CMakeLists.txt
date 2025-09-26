@@ -238,10 +238,18 @@ if(WIN32 OR ${CMAKE_SYSTEM_NAME} MATCHES "Linux|FreeBSD")
             COMMAND ${CMAKE_COMMAND} -E copy_directory "${APP_RESOURCE_DIR}/defaults/" "${APP_RESOURCE_DEST_DIR}/defaults")
 
     # Copy game files to resources directory
-    add_custom_command(TARGET TrenchBroom POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_directory "${APP_RESOURCE_DIR}/games/" "${APP_RESOURCE_DEST_DIR}/games")
+    if (TB_BLACKENED)
+        add_custom_command(TARGET TrenchBroom POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E make_directory "${APP_RESOURCE_DEST_DIR}/games"
+                COMMAND ${CMAKE_COMMAND} -E copy_directory
+                    "${APP_RESOURCE_DIR}/games/Vigil7"
+                    "${APP_RESOURCE_DEST_DIR}/games/Vigil7")
+    else()
+        add_custom_command(TARGET TrenchBroom POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy_directory "${APP_RESOURCE_DIR}/games/" "${APP_RESOURCE_DEST_DIR}/games")
+    endif()
 
-    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    if(CMAKE_BUILD_TYPE STREQUAL "Debug" AND NOT TB_BLACKENED)
         # Copy untested game files to resources directory
         add_custom_command(TARGET TrenchBroom POST_BUILD
                 COMMAND ${CMAKE_COMMAND} -E copy_directory "${APP_RESOURCE_DIR}/games-testing/" "${APP_RESOURCE_DEST_DIR}/games")
@@ -342,11 +350,27 @@ if(WIN32)
     install(DIRECTORY
             "${APP_DIR}/resources/defaults"
             "${APP_DIR}/resources/fonts"
-            "${APP_DIR}/resources/games"
+#            "${APP_DIR}/resources/games"
             "${APP_DIR}/resources/graphics/images"
             "${APP_DIR}/resources/shader"
             "${APP_DIR}/resources/stylesheets"
             DESTINATION . COMPONENT TrenchBroom)
+
+    # games: conditional
+    if (TB_BLACKENED)
+        # install only Vigil7 under .../games/Vigil7
+        install(DIRECTORY
+            "${APP_DIR}/resources/games/Vigil7"
+            DESTINATION games        # -> <prefix>/games/Vigil7
+            COMPONENT TrenchBroom)
+    else()
+        # original behavior: install the entire games tree at the top
+        install(DIRECTORY
+            "${APP_DIR}/resources/games"
+            DESTINATION .            # -> <prefix>/games/...
+            COMPONENT TrenchBroom)
+    endif()
+
     install(FILES
             ${LIB_UPDATE_SCRIPT}
             DESTINATION update COMPONENT TrenchBroom)

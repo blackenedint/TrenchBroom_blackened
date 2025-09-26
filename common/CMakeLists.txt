@@ -74,6 +74,7 @@ set(COMMON_SOURCE
         ${COMMON_SOURCE_DIR}/io/ReadM8Texture.cpp
         ${COMMON_SOURCE_DIR}/io/ReadMipTexture.cpp
         ${COMMON_SOURCE_DIR}/io/ReadWalTexture.cpp
+        ${COMMON_SOURCE_DIR}/io/ReadBtfTexture.cpp
         ${COMMON_SOURCE_DIR}/io/ResourceUtils.cpp
         ${COMMON_SOURCE_DIR}/io/SimpleParserStatus.cpp
         ${COMMON_SOURCE_DIR}/io/SkinLoader.cpp
@@ -587,6 +588,7 @@ set(COMMON_HEADER
         ${COMMON_SOURCE_DIR}/io/ReadM8Texture.h
         ${COMMON_SOURCE_DIR}/io/ReadMipTexture.h
         ${COMMON_SOURCE_DIR}/io/ReadWalTexture.h
+        ${COMMON_SOURCE_DIR}/io/ReadBtfTexture.h
         ${COMMON_SOURCE_DIR}/io/ResourceUtils.h
         ${COMMON_SOURCE_DIR}/io/SimpleParserStatus.h
         ${COMMON_SOURCE_DIR}/io/SkinLoader.h
@@ -1157,6 +1159,7 @@ add_custom_target(generate_version ${CMAKE_COMMAND}
   -D GIT_EXECUTABLE="${GIT_EXECUTABLE}"
   -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/GenerateVersion.cmake")
 add_dependencies(common generate_version)
-
-add_subdirectory(test)
-add_subdirectory(benchmark)
+if(TB_TESTS)
+    add_subdirectory(test)
+    add_subdirectory(benchmark)
+endif()

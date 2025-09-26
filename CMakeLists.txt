@@ -2,6 +2,9 @@
 # 3.14 is required for generator expressions in install(CODE)
 cmake_minimum_required(VERSION 3.25)
 
+option(TB_TESTS "build all tests" ON)
+option(TB_BLACKENED "blackened internal build (excludes certain things)" OFF)
+
 # Fix warning with Ninja and cotire (see https://github.com/sakra/cotire/issues/81)
 if(POLICY CMP0058)
   cmake_policy(SET CMP0058 NEW)
@@ -35,6 +38,11 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Using C and CXX because GLEW is C
 project(TrenchBroom C CXX)
+
+
+if (TB_BLACKENED)
+	add_compile_definitions(BLACKENED)
+endif()
 
 # Configure CCache if available and requested
 if(TB_ENABLE_CCACHE)

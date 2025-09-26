@@ -32,6 +32,8 @@
 #include "io/ReadWalTexture.h"
 #include "io/ResourceUtils.h"
 #include "io/TraversalMode.h"
+//Tony; blackened texture format
+#include "io/ReadBtfTexture.h"
 #include "mdl/GameConfig.h"
 #include "mdl/MaterialCollection.h"
 #include "mdl/Palette.h"
@@ -307,6 +309,14 @@ Result<mdl::Texture> loadTexture(
         return fs.openFile(actualPath) | kdl::and_then([&](auto file) {
                  auto reader = file->reader().buffer();
                  return readDdsTexture(reader);
+               });
+      }
+      //Tony; blackened texture format.
+      else if (extension == ".btf")
+      {
+        return fs.openFile(actualPath) | kdl::and_then([&](auto file) {
+                 auto reader = file->reader().buffer();
+                 return readBtfTexture(reader);
                });
       }
       else if (isSupportedFreeImageExtension(extension))

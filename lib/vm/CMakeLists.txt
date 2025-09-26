@@ -64,4 +64,7 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
 target_link_libraries(vm INTERFACE FastFloat::fast_float)
 endif()
 
-add_subdirectory(test)
+if(TB_TESTS)
+    add_subdirectory(test)
+endif()
+

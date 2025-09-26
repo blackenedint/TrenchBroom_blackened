@@ -52,4 +52,7 @@ target_link_libraries(upd PUBLIC Qt6::Widgets Qt6::Network)
 
 set_compiler_config(upd)
 
-add_subdirectory(test)
+if(TB_TESTS)
+    add_subdirectory(test)
+endif()
+

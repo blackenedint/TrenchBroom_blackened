@@ -107,4 +107,7 @@ else()
     message(FATAL_ERROR "Cannot set compile options for target")
 endif()
 
-add_subdirectory(test)
+if(TB_TESTS)
+    add_subdirectory(test)
+endif()
+
