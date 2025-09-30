@@ -69,30 +69,6 @@
 	sequence(integer) : "Animation Sequence (editor)" : : "Sequence to display in Jackhammer. This does not affect gameplay."
 ]
 
-@BaseClass = ZHLT
-[
-	zhlt_lightflags(choices) : "ZHLT Lightflags" : 0 =
-	[
-		0 : "Default"
-		1 : "Embedded Fix"
-		2 : "Opaque (blocks light)"
-		3 : "Opaque + Embedded fix"
-		6 : "Opaque + Concave Fix"
-	]
-	light_origin(string) : "Light Origin Target"
-]
-
-@BaseClass = ZHLT_point
-[
-	_fade(string) : "ZHLT Fade" : "1.0"
-	_falloff(choices) : "ZHLT Falloff" : 0 =
-	[
-		0 : "Default"
-		1 : "Inverse Linear"
-		2 : "Inverse Square"
-	]
-]
-
 @BaseClass = Global 
 [ 
 	globalname(string) : "Global Entity Name" 
@@ -171,9 +147,9 @@
 
 @BaseClass size(-16 -16 0, 16 16 32) color(0 0 200) base(Targetname, Appearflags, Angles) = Weapon []
 
-@BaseClass base(Appearflags, Angles) flags(Angle) size(-16 -16 -36, 16 16 36) color(0 255 0) offset(0 0 36) = PlayerClass []
+@BaseClass base(Appearflags, Angles) size(-16 -16 -36, 16 16 36) color(0 255 0) offset(0 0 36) = PlayerClass []
 
-@BaseClass base(Target, Targetname, RenderFields, Angles) flags(Angle) color(0 200 200) = Monster 
+@BaseClass base(Target, Targetname, RenderFields, Angles) color(0 200 200) = Monster 
 [
 	TriggerTarget(String) : "TriggerTarget" : : "The event to trigger when the TriggerCondition is met. Used by monsters."
 	TriggerCondition(Choices) : "Trigger Condition" : 0 : "This controls the condition under which a monster will trigger its TriggerTarget. The options are:" =
@@ -522,7 +498,7 @@
 // Entities
 //
 
-@PointClass base(Targetname, Targetx, Angles) flags(Angle) size(-16 -16 0, 16 16 72) color(255 0 255) = aiscripted_sequence : "AI Scripted Sequence"
+@PointClass base(Targetname, Targetx, Angles) size(-16 -16 0, 16 16 72) color(255 0 255) = aiscripted_sequence : "AI Scripted Sequence"
 [
 	m_iszEntity(string) : "Target Monster"
 	m_iszPlay(string) : "Action Animation" : ""
@@ -548,7 +524,7 @@
 	]
 ]
 
-@PointClass iconsprite("sprites/ambient_generic.spr") base(Targetname) = ambient_generic : "Universal Ambient"
+@PointClass iconsprite("textures/sprites/editor/ambient_generic.btf") base(Targetname) = ambient_generic : "Universal Ambient"
 [
 	message(sound) : "WAV Name"
 	health(integer) : "Volume (10 = loudest)" : 10
@@ -606,7 +582,7 @@
 	]
 ]
 
-@SolidClass base(Target, ZHLT, RenderFxChoices, RenderFields) = button_target : "Target Button"
+@SolidClass base(Target, RenderFxChoices, RenderFields) = button_target : "Target Button"
 [
 	spawnflags(flags) =
 	[
@@ -621,7 +597,7 @@
 // cyclers
 //
 
-@PointClass base(Targetname, Angles, Sequence, RenderFxChoices, RenderFields) flags(Angle) size(-16 -16 0, 16 16 72) studio() = cycler : "Monster Cycler" 
+@PointClass base(Targetname, Angles, Sequence, RenderFxChoices, RenderFields) size(-16 -16 0, 16 16 72) studio() = cycler : "Monster Cycler" 
 [
 	model(studio) : "Model"
 	scale(string) : "Scale"
@@ -634,7 +610,7 @@
 	framerate(integer) : "Frames per second" : 10
 ]
 
-@PointClass base(Monster, Sequence) flags(Angle) size(-16 -16 -16, 16 16 16) studio() = cycler_weapon : "Weapon Cycler" 
+@PointClass base(Monster, Sequence) size(-16 -16 -16, 16 16 16) studio() = cycler_weapon : "Weapon Cycler" 
 [
 	model(studio) : "Model"
 	scale(string) : "Scale"
@@ -721,7 +697,7 @@
 	]
 ]
 
-@PointClass base(Targetname) color(255 255 128) iconsprite("sprites/env_global.spr") = env_global : "Global State"
+@PointClass base(Targetname) color(255 255 128) iconsprite("textures/sprites/editor/env_global.btf") = env_global : "Global State"
 [
 	globalstate(string) : "Global State to Set"
 	triggermode(choices) : "Trigger Mode" : 0 =
@@ -843,7 +819,7 @@
 	skin(integer) : "Gib Skin" : 0
 ]
 
-@PointClass iconsprite("sprites/speaker.spr") = env_sound : "DSP Sound" 
+@PointClass iconsprite("textures/sprites/editor/speaker.btf") = env_sound : "DSP Sound" 
 [
 	radius(integer) : "Radius" : 128
 	roomtype(Choices) : "Room Type" : 0 =
@@ -911,7 +887,7 @@
 	]
 ]
 
-@SolidClass base(Breakable, RenderFields, ZHLT) = func_breakable : "Breakable Object" 
+@SolidClass base(Breakable, RenderFields) = func_breakable : "Breakable Object" 
 [
 	spawnflags(flags) =
 	[
@@ -923,7 +899,7 @@
 	_minlight(string) : "Minimum light level"
 ]
 
-@SolidClass base(Global, Targetname, Target, RenderFields, Angles, LockSounds, ZHLT) = func_button : "Button" 
+@SolidClass base(Global, Targetname, Target, RenderFields, Angles, LockSounds) = func_button : "Button" 
 [
 	message(string) : "Activation message"
 	speed(integer) : "Speed" : 5
@@ -958,7 +934,7 @@
 	_minlight(string) : "Minimum light level"
 ]
 
-@SolidClass base(Global,RenderFields, Targetname, Angles, ZHLT) = func_conveyor : "Conveyor Belt" 
+@SolidClass base(Global,RenderFields, Targetname, Angles) = func_conveyor : "Conveyor Belt" 
 [
 	spawnflags(flags) =
 	[
@@ -969,9 +945,9 @@
 	_minlight(string) : "Minimum light level"
 ]
 
-@SolidClass base(Door, ZHLT) = func_door : "Basic door" []
+@SolidClass base(Door) = func_door : "Basic door" []
 
-@SolidClass base(Door, ZHLT) = func_door_rotating : "Rotating door" 
+@SolidClass base(Door) = func_door_rotating : "Rotating door" 
 [
 	spawnflags(flags) =
 	[
@@ -1000,12 +976,12 @@
 	_minlight(integer) : "Minimum light (optional)"
 ]
 
-@SolidClass base(Appearflags, RenderFields, ZHLT) = func_friction : "Surface with a change in friction" 
+@SolidClass base(Appearflags, RenderFields) = func_friction : "Surface with a change in friction" 
 [
 	modifier(integer) : "Percentage of standard (0 - 100)" : 15
 ]
 
-@SolidClass base(Targetname, RenderFields, Global, ZHLT) = func_guntarget : "Moving platform" 
+@SolidClass base(Targetname, RenderFields, Global) = func_guntarget : "Moving platform" 
 [
 	speed(integer) : "Speed (units per second)" : 100
 	target(target_source) : "First stop target"
@@ -1014,18 +990,18 @@
 	_minlight(string) : "Minimum light level"
 ]
 
-@SolidClass base(Global, RenderFields, ZHLT) = func_healthcharger: "Wall health recharger" 
+@SolidClass base(Global, RenderFields) = func_healthcharger: "Wall health recharger" 
 [
 	_minlight(string) : "Minimum light level"
 ]
 
-@SolidClass base(Global,RenderFields, ZHLT) = func_recharge: "Battery recharger" 
+@SolidClass base(Global,RenderFields) = func_recharge: "Battery recharger" 
 [
 	_minlight(string) : "Minimum light level"
 ]
 
 
-@SolidClass base(Targetname, RenderFields, ZHLT) = func_illusionary : "Fake Wall/Light" 
+@SolidClass base(Targetname, RenderFields) = func_illusionary : "Fake Wall/Light" 
 [
 
 	skin(choices) : "Contents" : -1 =
@@ -1052,7 +1028,7 @@
 	m_iszYController(target_destination) : "Y Controller"
 ]
 
-@SolidClass base(Global,Appearflags, Targetname, RenderFields, Angles, ZHLT) = func_pendulum : "Swings back and forth" 
+@SolidClass base(Global,Appearflags, Targetname, RenderFields, Angles) = func_pendulum : "Swings back and forth" 
 [
 	speed(integer) : "Speed" : 100
 	distance(integer) : "Distance (deg)" : 90
@@ -1069,7 +1045,7 @@
 	_minlight(integer) : "_minlight"
 ]
 
-@SolidClass base(Targetname,Global,RenderFields, PlatSounds, ZHLT) = func_plat : "Elevator" 
+@SolidClass base(Targetname,Global,RenderFields, PlatSounds) = func_plat : "Elevator" 
 [
 	spawnflags(Flags) =
 	[
@@ -1080,7 +1056,7 @@
 	_minlight(string) : "Minimum light level"
 ]	
 
-@SolidClass base(Targetname, Global, RenderFields, PlatSounds, Angles, ZHLT) = func_platrot : "Moving Rotating platform" 
+@SolidClass base(Targetname, Global, RenderFields, PlatSounds, Angles) = func_platrot : "Moving Rotating platform" 
 [
 	spawnflags(Flags) =
 	[
@@ -1094,7 +1070,7 @@
 	_minlight(string) : "Minimum light level"
 ]
 
-@SolidClass base(Breakable, RenderFields, ZHLT) = func_pushable : "Pushable object"
+@SolidClass base(Breakable, RenderFields) = func_pushable : "Pushable object"
 [
 	size(choices) : "Hull Size" : 0 =
 	[
@@ -1112,7 +1088,7 @@
 	_minlight(string) : "Minimum light level"
 ]
 
-@SolidClass base(Targetname, Global, RenderFields, Angles, ZHLT) = func_rot_button : "Rotating Button" 
+@SolidClass base(Targetname, Global, RenderFields, Angles) = func_rot_button : "Rotating Button" 
 [
 	target(target_destination) : "Targetted object"
 	// changetarget will change the button's target's TARGET field to the button's changetarget.
@@ -1146,7 +1122,7 @@
 	_minlight(integer) : "_minlight"
 ]
 
-@SolidClass base(Targetname, Global, RenderFields, Angles, ZHLT) = func_rotating : "Rotating Object"
+@SolidClass base(Targetname, Global, RenderFields, Angles) = func_rotating : "Rotating Object"
 [
 	speed(integer)	: "Rotation Speed" : 0
 	volume(integer) : "Volume (10 = loudest)" : 10
@@ -1179,7 +1155,7 @@
 	dmg(integer) : "Damage inflicted when blocked" : 0
 ]
 
-@SolidClass base(BaseTank, ZHLT) = func_tank : "Brush Gun Turret" 
+@SolidClass base(BaseTank) = func_tank : "Brush Gun Turret" 
 [
 	bullet(choices) : "Bullets" : 0 = 
 	[
@@ -1195,30 +1171,30 @@
 	target(target_destination) : "Tank entity name"
 ]
 
-@SolidClass base(BaseTank, ZHLT) = func_tanklaser : "Brush Laser Turret" 
+@SolidClass base(BaseTank) = func_tanklaser : "Brush Laser Turret" 
 [
 	laserentity(target_source) : "env_laser Entity"
 ]
 
-@SolidClass base(BaseTank, ZHLT) = func_tankrocket : "Brush Rocket Turret" []
+@SolidClass base(BaseTank) = func_tankrocket : "Brush Rocket Turret" []
 
 
-@SolidClass base(BaseTank, ZHLT) = func_tankmortar : "Brush Mortar Turret" 
+@SolidClass base(BaseTank) = func_tankmortar : "Brush Mortar Turret" 
 [
 	iMagnitude(Integer) : "Explosion Magnitude" : 100
 ]
 
-@SolidClass base(Trackchange, ZHLT) = func_trackautochange : "Automatic track changing platform"
+@SolidClass base(Trackchange) = func_trackautochange : "Automatic track changing platform"
 [
 	_minlight(string) : "Minimum light level"
 ]
 
-@SolidClass base(Trackchange, ZHLT) = func_trackchange : "Train track changing platform"
+@SolidClass base(Trackchange) = func_trackchange : "Train track changing platform"
 [
 	_minlight(string) : "Minimum light level"
 ]
 
-@SolidClass base(Targetname, Global, RenderFields, ZHLT) = func_tracktrain : "Track Train" 
+@SolidClass base(Targetname, Global, RenderFields) = func_tracktrain : "Track Train" 
 [
 	spawnflags(flags) =
 	[
@@ -1252,7 +1228,7 @@
 	target(target_destination) : "Train Name"
 ]
 
-@SolidClass base(Targetname, Global, RenderFields, ZHLT) = func_train : "Moving platform" 
+@SolidClass base(Targetname, Global, RenderFields) = func_train : "Moving platform" 
 [
 	target(target_source) : "First stop target"
 	movesnd(choices) : "Move Sound" : 0 = 
@@ -1296,7 +1272,7 @@
 	_minlight(string) : "Minimum light level"
 ]
 
-@SolidClass base(Targetname, Appearflags, RenderFields, Global, ZHLT) = func_wall : "Wall" 
+@SolidClass base(Targetname, Appearflags, RenderFields, Global) = func_wall : "Wall" 
 [
 	_minlight(string) : "Minimum light level"
 ]
@@ -1309,7 +1285,7 @@
 	]
 ]
 
-@SolidClass base(Door, ZHLT) = func_water : "Liquid" 
+@SolidClass base(Door) = func_water : "Liquid" 
 [
 	spawnflags(flags) =
 	[
@@ -1492,23 +1468,31 @@
 //
 // items
 //
+@PointClass size(-16 -16 0, 16 16 16) base(Weapon, Targetx) studio("models/editor/ed_health.mdl") = item_health : "Health Kit"
+[
+	spawnflags(flags) = 
+	[
+		1 : "Rotten" : 0
+		2 : "Megahealth" : 0
+	]	
+]
+@PointClass size(-8 -8 0, 8 8 8) base(Weapon, Targetx) studio("models/editor/ed_hstim.mdl") = item_stimpack : "Stim Pack" []
 
-@PointClass size(-16 -16 0, 16 16 36) base(Weapon, Targetx) studio("models/w_oxygen.mdl") = item_airtank : "Oxygen tank" []
-@PointClass size(-16 -16 0, 16 16 36) base(Weapon, Targetx) studio("models/w_antidote.mdl") = item_antidote : "Poison antidote" []
-@PointClass size(-16 -16 0, 16 16 36) base(Weapon, Targetx) studio("models/w_battery.mdl") = item_battery : "HEV battery" []
-@PointClass size(-16 -16 0, 16 16 36) base(Weapon, Targetx) studio("models/w_medkit.mdl") = item_healthkit : "Small Health Kit" []
-@PointClass size(-16 -16 0, 16 16 36) base(Weapon, Targetx) studio("models/w_security.mdl") = item_security : "Security card" []
+//@PointClass size(-16 -16 0, 16 16 36) base(Weapon, Targetx) studio("models/w_oxygen.mdl") = item_airtank : "Oxygen tank" []
+//@PointClass size(-16 -16 0, 16 16 36) base(Weapon, Targetx) studio("models/w_antidote.mdl") = item_antidote : "Poison antidote" []
+//@PointClass size(-16 -16 0, 16 16 36) base(Weapon, Targetx) studio("models/w_battery.mdl") = item_battery : "HEV battery" []
+//@PointClass size(-16 -16 0, 16 16 36) base(Weapon, Targetx) studio("models/w_security.mdl") = item_security : "Security card" []
 
 //
 // lights
 //
 
-@PointClass iconsprite("sprites/light.spr") base(Target, Targetname, Light, ZHLT_point) flags(Light) = light : "Invisible lightsource."
+@PointClass iconsprite("textures/sprites/editor/light.btf") base(Target, Targetname, Light) = light : "Invisible lightsource."
 [
 	spawnflags(Flags) = [ 1 : "Initially dark" : 0 : "If this is enabled, the entity will need to be triggered to work." ]
 ]
 
-@PointClass iconsprite("sprites/light.spr") base(Targetname, Target, Angles, ZHLT_point) flags(Light) = light_spot : "The light_spot entity allows you to create direct beams of light (like from a, err, spotlight)."
+@PointClass iconsprite("textures/sprites/editor/light.btf") base(Targetname, Target, Angles) = light_spot : "The light_spot entity allows you to create direct beams of light (like from a, err, spotlight)."
 [
 	_cone(integer) : "Inner (bright) angle" : 30 : "The angle of the cone formed around the directional axis. The area inside this cone will contain the brightest light."
 	_cone2(integer) : "Outer (fading) angle" : 45 : "As above, although the area inside this cone will fade increasingly towards the outer edges."
@@ -1538,13 +1522,13 @@
 	pattern(string) : "Custom Appearance" : : "Use a string of letters to provide a custom light style. The property allows you to enter a string of letters from a to z, representing brightness. If you entered 'abcdefghihgfedcba' then the light would go from bright to dim and back again and then repeat. Complicating things, to use this feature, you must name the light. However, if you then use a trigger to activate it, then it will behave as a normal light."
 ]
 
-@PointClass base(Targetname, Angles, ZHLT_point) iconsprite("sprites/light_environment.spr") flags(Light) = light_environment : "This entity makes a map's sky emit light. The only practical way of lighting outdoor maps."
+@PointClass base(Targetname, Angles) iconsprite("textures/sprites/editor/light_environment.btf") = light_environment : "This entity makes a map's sky emit light. The only practical way of lighting outdoor maps."
 [
 	pitch(integer) : "Pitch" : 0 : "A negative number will give downward pitch (which is normally what you want)."
 	_light(color255) : "Brightness" : "255 255 128 200" : "First three integer numbers are the color (RGB). The fourth number is the brightness."
 ]
 
-@SolidClass base(Door, ZHLT) = momentary_door : "Momentary/Continuous door" 
+@SolidClass base(Door) = momentary_door : "Momentary/Continuous door" 
 [
 	spawnflags(flags) =
 	[
@@ -1552,7 +1536,7 @@
 	]
 ]
 
-@SolidClass base(Targetname, Target, Angles, RenderFields, ZHLT) = momentary_rot_button : "Direct wheel control" 
+@SolidClass base(Targetname, Target, Angles, RenderFields) = momentary_rot_button : "Direct wheel control" 
 [
 	speed(integer) : "Speed" : 50
 	master(string) : "Master" 
@@ -1700,7 +1684,7 @@
 	m_imaxlivechildren(integer) : "Max live children" : 5
 ]
 
-@PointClass base(Targetname) color(255 128 0) iconsprite("sprites/multi_manager.spr") = multi_manager : "MultiTarget Manager" 
+@PointClass base(Targetname) color(255 128 0) iconsprite("textures/sprites/editor/multi_manager.btf") = multi_manager : "MultiTarget Manager" 
 [
 	spawnflags(Flags) = 
 	[
@@ -1708,7 +1692,7 @@
 	]
 ]
 
-@PointClass base(Targetname, Target) color(128 255 128) iconsprite("sprites/multisource.spr") = multisource : "Multisource"
+@PointClass base(Targetname, Target) color(128 255 128) iconsprite("textures/sprites/editor/multisource.btf") = multisource : "Multisource"
 [
 	globalstate(string) : "Global State Master"
 ]
@@ -1786,7 +1770,7 @@
 	]
 ]
 
-@PointClass base(Targetname, Targetx, Angles) flags(Angle) size(-16 -16 0, 16 16 72) color(255 0 255) = scripted_sequence : "Scripted Sequence"
+@PointClass base(Targetname, Targetx, Angles) size(-16 -16 0, 16 16 72) color(255 0 255) = scripted_sequence : "Scripted Sequence"
 [
 	m_iszEntity(string) : "Target Monster"
 	m_iszPlay(string) : "Action Animation" : ""
@@ -1811,7 +1795,7 @@
 	]
 ]
 
-@PointClass iconsprite("sprites/speaker.spr") base(Targetname) = speaker : "Announcement Speaker"
+@PointClass iconsprite("textures/sprites/editor/speaker.btf") base(Targetname) = speaker : "Announcement Speaker"
 [
 	preset(choices) :"Announcement Presets" : 0 =
 	[
@@ -1884,7 +1868,7 @@
 // Triggers
 //
 
-@PointClass base(Targetx) iconsprite("sprites/trigger_auto.spr") = trigger_auto : "AutoTrigger"
+@PointClass base(Targetx) iconsprite("textures/sprites/editor/trigger_auto.btf") = trigger_auto : "Auto Trigger (at map load)"
 [
 	spawnflags(Flags) =
 	[
@@ -1904,7 +1888,7 @@
 	master(string) : "Master" 
 ]
 
-@PointClass base(Targetx, Targetname) iconsprite("sprites/trigger_camera.spr") = trigger_camera : "Trigger Camera" 
+@PointClass base(Targetx, Targetname) iconsprite("textures/sprites/editor/trigger_camera.btf") = trigger_camera : "Trigger Camera" 
 [
 	wait(integer) : "Hold time" : 10
 	moveto(string) : "Path Corner"
@@ -1937,7 +1921,7 @@
 	]
 ]
 
-@PointClass base(Targetx, Targetname) iconsprite("sprites/trigger_changetarget.spr") = trigger_changetarget : "Trigger Change Target"
+@PointClass base(Targetx, Targetname) iconsprite("textures/sprites/editor/trigger_changetarget.btf") = trigger_changetarget : "Trigger Change Target"
 [
 	m_iszNewTarget(string) : "New Target"
 ]
@@ -1973,8 +1957,9 @@
 		1: "Target Once" : 0 
 		2: "Start Off" : 0
 		8: "No clients" : 0
-		16:"FireClientOnly" : 0
-		32:"TouchClientOnly" : 0
+		16: "FireClientOnly" : 0
+		32: "TouchClientOnly" : 0
+		64: "Always Gib" : 0
 	]
 	master(string) : "Master" 
 	dmg(integer) : "Damage" : 10
@@ -1983,25 +1968,17 @@
 	[
 		0 : "GENERIC"
 		1 : "CRUSH"
-		2 : "BULLET"
-		4 : "SLASH"
-		8 : "BURN"
-		16 : "FREEZE"
-		32 : "FALL"
-		64 : "BLAST"
-		128 : "CLUB"
-		256 : "SHOCK"
-		512 : "SONIC"
-		1024 : "ENERGYBEAM"
-		16384: "DROWN"
-		32768 : "PARALYSE"
-		65536 : "NERVEGAS"
-		131072 : "POISON"
-		262144 : "RADIATION"
-		524288 : "DROWNRECOVER"
-		1048576 : "CHEMICAL"
-		2097152 : "SLOWBURN"
-		4194304 : "SLOWFREEZE"
+		2 : "SLASH"
+		4 : "BULLET"
+		8 : "BUCKSHOT"
+		16 : "EXPLOSIVE"
+		32 : "ENERGY"
+		64 : "FALLIMPACT"
+		128 : "LIQUID"
+		256 : "BURNING"
+		512 : "PLASMA"
+		1024 : "POISON"
+		16384: "RADIATION"
 	]
 ]
 
@@ -2029,7 +2006,7 @@
 	speed(integer) : "Speed of push" : 40
 ]
 
-@PointClass base(Targetname, Targetx) iconsprite("sprites/trigger_relay.spr") = trigger_relay : "Trigger Relay"
+@PointClass base(Targetname, Targetx) iconsprite("textures/sprites/editor/trigger_relay.btf") = trigger_relay : "Trigger Relay"
 [
 	spawnflags(flags) =
 	[

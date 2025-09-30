@@ -22,6 +22,7 @@
 #include "io/File.h"
 #include "io/MaterialUtils.h"
 #include "io/ReadFreeImageTexture.h"
+#include "io/ReadBtfTexture.h"
 #include "io/ReaderException.h"
 #include "mdl/EntityModel.h"
 #include "mdl/Material.h"
@@ -30,6 +31,7 @@
 #include "render/PrimType.h"
 
 #include "kdl/result.h"
+#include "kdl/path_utils.h"
 
 #include "vm/vec.h"
 
@@ -43,6 +45,16 @@ namespace
 auto loadMaterial(const FileSystem& fs, File& file, std::string name, Logger& logger)
 {
   auto reader = file.reader().buffer();
+  if (name.ends_with(".btf"))
+  {
+	return readBtfTexture(reader) | kdl::or_else(makeReadTextureErrorHandler(fs, logger))
+           | kdl::and_then([&](auto texture) {
+               auto textureResource = createTextureResource(std::move(texture));
+               return Result<mdl::Material>{
+                 mdl::Material{std::move(name), std::move(textureResource)}};
+             });
+  }
+
   return readFreeImageTexture(reader)
          | kdl::or_else(makeReadTextureErrorHandler(fs, logger))
          | kdl::and_then([&](auto texture) {
@@ -103,7 +115,7 @@ ImageSpriteLoader::ImageSpriteLoader(
 
 bool ImageSpriteLoader::canParse(const std::filesystem::path& path)
 {
-  return isSupportedFreeImageExtension(path.extension());
+  return isSupportedFreeImageExtension(path.extension()) || path.extension() == ".btf";
 }
 
 Result<mdl::EntityModelData> ImageSpriteLoader::load(Logger& logger)

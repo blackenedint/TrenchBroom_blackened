@@ -307,6 +307,21 @@ vm::vec3d BrushFace::center() const
   return vm::average(
     std::begin(boundary), std::end(boundary), BrushGeometry::GetVertexPosition());
 }
+vm::bbox3d BrushFace::getBounds() const
+{
+  ensure(m_geometry != nullptr, "geometry is null");
+  const auto* first = m_geometry->boundary().front();
+  const auto* current = first;
+  auto bounds = vm::bbox3d{};
+  bounds.min = bounds.max = current->origin()->position();
+  current = current->next();
+  while (current != first)
+  {
+    bounds = merge(bounds, current->origin()->position());
+    current = current->next();
+  }
+  return bounds;
+}
 
 vm::vec3d BrushFace::boundsCenter() const
 {

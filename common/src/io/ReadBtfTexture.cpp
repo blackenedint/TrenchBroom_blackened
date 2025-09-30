@@ -31,12 +31,28 @@
 
 namespace tb::io
 {
+// so I can copy and paste without having to keep altering.
+using uint32 = uint32_t;
+using int32 = int32_t;
+using uint16 = uint16_t;
+using int16 = int16_t;
+using byte = int8_t;
+
 namespace Btf
 {
-constexpr uint32_t BTF_IDENT = (('F' << 24) + ('T' << 16) + ('I' << 8) + 'B');
-constexpr uint32_t BTF_FRAMEID = (('M' << 24) + ('A' << 16) + ('R' << 8) + 'F');
-constexpr int8_t BTF_VER_MAJOR = 1;
-constexpr int8_t BTF_VER_MINOR = 0;
+constexpr uint32 BTF_IDENT = (('F' << 24) + ('T' << 16) + ('I' << 8) + 'B');
+constexpr uint32 BTF_FRAMEID = (('M' << 24) + ('A' << 16) + ('R' << 8) + 'F');
+constexpr int16 BTF_VER_MAJOR = 1;
+constexpr int16 BTF_VER_MINOR = 0;
+
+constexpr uint32 Version(int16 major, int16 minor)
+{
+  return (uint32)(major * 100 + minor * 10);
+}
+constexpr uint32 HighestVersion()
+{
+  return Version(BTF_VER_MAJOR, BTF_VER_MINOR);
+}
 
 // maintaining the same limit of named textures.
 // +0 +1 +2 +3 +4 +5 +6 +7 +8 +9 (sequence)
@@ -49,7 +65,11 @@ constexpr const char* BITEXTURE_EXT = "btf";
 constexpr size_t SHA1_BUFFER_SIZE = 20;
 constexpr size_t MAX_TEXTURE_NAME = 64; // 32 can probably fit, but this is safer.
 
-enum btf_compression
+// Current known metadata types.
+constexpr uint32 BTF_METAQ2 = (('A' << 24) + ('T' << 16) + ('M' << 8) + 'Q');  // QMTA
+constexpr uint32 BTF_METASPR = (('T' << 24) + ('M' << 16) + ('P' << 8) + 'S'); // SPMT
+
+enum ECompression
 {
   None = 0,
 
@@ -59,9 +79,10 @@ enum btf_compression
   BC4,
   BC5
 };
+
 // currently only RGBA is written
 // but will figure this out later.
-enum btf_format
+enum EFormat
 {
   RGBA = 0,
 
@@ -70,58 +91,87 @@ enum btf_format
   ARGB,
 };
 
-enum btf_anim_type
+enum EAnimType
 {
   Anim_None = 0,
   Anim_Sequence,
-  Anim_Random
+  Anim_Random,
+  Anim_Sprite,
 };
 
-
-// bitexture header; only identifier and version info.
+#pragma pack(push, 1)
 struct header_t
 {
-  uint32_t ident;    // 4
-  int16_t ver_major; // 2
-  int16_t ver_minor; // 2
-  //					//8
+  uint32 ident;
+  int16 ver_major;
+  int16 ver_minor;
 };
 
 struct texinfo_t
 {
-  int32_t width;
-  int32_t height;
+  int32 width;
+  int32 height;
 
-  int16_t compressiontype;
-  int16_t format;
+  int16 compressiontype; // ECompression
+  int16 format;          // EFormat
+  int16 animType;        // EAnimType
+  int16 frame_count;     // number of frames in texture
 
-  int16_t animType;
-  int16_t frame_count;
+  int32 framedatasize;
+  int32 framedataoffset;
 
-  int32_t metadatasize;
-  uint32_t metadatatype;
-  //int8_t reserved[44]; // 44 bytes reserved.
+  int32 metadatasize;
+  int32 metadataoffset;
 };
-
 // frames... shouldn't need to change;
 // but there are 36 bytes available to decrement from as necessary.
 struct frame_t
 {
   uint32_t ident;
-  std::string sha1; //SHA1_BUFFER_SIZE;
-  //int8_t reserved[36];	//36 bytes reserved.
+  std::string sha1; // SHA1_BUFFER_SIZE;
+  byte reserved[40];
+};
+
+
+struct metadata_t
+{
+  uint32 ident;
 };
 
 // metadata for quake2/vigil7
-struct metadata_q2_t
+struct metadata_q2_t : public metadata_t
 {
-  int32_t surfaceflags;
-  int32_t contents;
+  // game surface flags;
+  int32 surfaceflags;
+
+  // game content flags
+  int32 contents;
+
+  // SURF_LIGHT value in Q2 (int32) ; changed to a float so I can re-purpose it.
   float value;
-  int16_t emissive;
-  int16_t alternate_count;
+
+  // texture is emissive; alpha is mask
+  int16 emissive;
+
+  // number of alternate texture names
+  int16 alternate_count;
+  // followed by alternate_count * char[btf::MAX_TEXTURE_NAME]
 };
-constexpr uint32_t BTF_METAQ2 = (('A' << 24) + ('T' << 16) + ('M' << 8) + 'Q'); // QMTA
+
+struct metadata_sprite_t : public metadata_t
+{
+  int32 orientation;
+  int32 rendertype;
+  // followed by frame_count * int32 (intervals)
+};
+#pragma pack(pop)
+
+static_assert(sizeof(header_t) == 8, "header_t size");
+static_assert(sizeof(texinfo_t) == 32, "texinfo_t size");
+// static_assert(sizeof(frame_t) == 64, "frame_t should always be 64 bytes.");
+
+static_assert(sizeof(metadata_q2_t) == 20, "metadata_q2_t size");
+static_assert(sizeof(metadata_sprite_t) == 12, "metadata_sprite_t size");
 } // namespace Btf
 
 Result<mdl::Texture> readBtfTexture(Reader& reader)
@@ -129,62 +179,89 @@ Result<mdl::Texture> readBtfTexture(Reader& reader)
   try
   {
     Btf::header_t hdr{};
-    hdr.ident = reader.read<uint32_t, uint32_t>();
+    hdr.ident = reader.read<uint32, uint32>();
     if (hdr.ident != Btf::BTF_IDENT)
       return Error("unknown btf identifier: " + std::to_string(hdr.ident));
 
-    hdr.ver_major = reader.read<int16_t, int16_t>();
-    hdr.ver_minor = reader.read<int16_t, int16_t>();
-    if (hdr.ver_major != Btf::BTF_VER_MAJOR && hdr.ver_minor != Btf::BTF_VER_MINOR)
+    hdr.ver_major = reader.read<int16, int16>();
+    hdr.ver_minor = reader.read<int16, int16>();
+    if (Btf::Version(hdr.ver_major, hdr.ver_minor) > Btf::HighestVersion())
       return Error(
         fmt::format("unsupported btf version: {}.{}", hdr.ver_major, hdr.ver_minor));
 
     Btf::texinfo_t tnfo{};
-    tnfo.width = reader.read<int32_t, int32_t>();
-    tnfo.height = reader.read<int32_t, int32_t>();
-    tnfo.compressiontype = reader.read<int16_t, int16_t>();
-    tnfo.format = reader.read<int16_t, int16_t>();
-    tnfo.animType = reader.read<int16_t, int16_t>(); // 0 = none, 1 = sequence, 2 = random
-    tnfo.frame_count = reader.read<int16_t, int16_t>();
+    tnfo.width = reader.read<int32, int32>();
+    tnfo.height = reader.read<int32, int32>();
+    tnfo.compressiontype = reader.read<int16, int16>();
+    tnfo.format = reader.read<int16, int16>();
+    tnfo.animType = reader.read<int16, int16>(); // 0 = none, 1 = sequence, 2 = random
+    tnfo.frame_count = reader.read<int16, int16>();
     if (tnfo.frame_count <= 0)
       return Error(fmt::format("frames are missing? {}", tnfo.frame_count));
 
-    tnfo.metadatasize = reader.read<int32_t, int32_t>();
-    tnfo.metadatatype = reader.read<uint32_t, uint32_t>();
-    // skip over the 44 reserved bytes.
-    reader.readVec<int8_t, 44>();
 
+    // use these in trenchbroom instead.
+    size_t framedatasize = reader.readSize<int32>();
+    size_t framedataoffset = reader.readSize<int32>();
+
+    size_t metadatasize = reader.readSize<int32>();
+    size_t metadataoffset = reader.readSize<int32>();
+
+	if (framedatasize == 0 )
+      return Error("no framedata");
+
+
+	// meh!
     Btf::metadata_q2_t meta_q2{};
-    if (tnfo.metadatasize > 0 && tnfo.metadatatype == Btf::BTF_METAQ2)
+    Btf::metadata_sprite_t meta_spr{};
+    if (metadatasize > 0)
     {
-      meta_q2.surfaceflags = reader.read<int32_t, int32_t>();
-      meta_q2.contents = reader.read<int32_t, int32_t>();
-      meta_q2.value = reader.readFloat<float>();
-      meta_q2.emissive = reader.read<int16_t, int16_t>();
-      meta_q2.alternate_count = reader.read<int16_t, int16_t>();
+      // read the metadata first; even though it's at the end.
+      reader.seekFromBegin(metadataoffset);
 
-      // skip over the alternates; we don't need that information
-      // future; display it somewhere for the sake of entity configuration?
-      // like adding a "toggleable" display?
-      for (int i = 0; i < meta_q2.alternate_count; i++)
-        reader.readString(Btf::MAX_TEXTURE_NAME);
+      // read metadata type.
+      uint32 metadatatype = reader.read<uint32, uint32>();
+      switch (metadatatype)
+      {
+      case Btf::BTF_METAQ2: {
+        meta_q2.surfaceflags = reader.read<int32_t, int32_t>();
+        meta_q2.contents = reader.read<int32_t, int32_t>();
+        meta_q2.value = reader.readFloat<float>();
+        // do we need any of these in TB? probably not.
+        // meta_q2.emissive = reader.read<int16_t, int16_t>();
+        // meta_q2.alternate_count = reader.read<int16_t, int16_t>();
+        //  ignore the alternates; we don't need that information
+      }
+      break;
+      case Btf::BTF_METASPR: {
+        meta_spr.orientation = reader.read<int32_t, int32_t>();
+        meta_spr.rendertype = reader.read<int32_t, int32_t>();
+        // skip the frame intervals; we won't be animating sprites in TB (for now)
+      }
+      break;
+      }
     }
+
 
     const int32_t flags = meta_q2.surfaceflags;
     const int32_t contents = meta_q2.contents;
     const int32_t lightvalue = static_cast<int32_t>(meta_q2.value);
 
-    // read the first frame; that's all we're populating; don't need animation info at the
+    // read the first frame; that's all we're populating; don't need animation info at
+    // the moment.
+
+    reader.seekFromBegin(framedataoffset);
 
     Btf::frame_t frame{};
-    frame.ident = reader.read<uint32_t, uint32_t>();
+    frame.ident = reader.read<uint32, uint32>();
     if (frame.ident != Btf::BTF_FRAMEID)
       return Error("invalid frame data: " + std::to_string(frame.ident));
 
     // skip sha1 for now.
     frame.sha1 = reader.readString(Btf::SHA1_BUFFER_SIZE);
-    // skip over the 36 reserved bytes.
-    reader.readVec<int8_t, 36>();
+
+    // skip over the 40 reserved bytes.
+    reader.readVec<byte, 40>();
 
     const size_t width = static_cast<size_t>(tnfo.width);
     const size_t height = static_cast<size_t>(tnfo.height);
