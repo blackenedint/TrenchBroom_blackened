@@ -153,6 +153,9 @@ struct metadata_q2_t : public metadata_t
   // texture is emissive; alpha is mask
   int16 emissive;
 
+  //surface type out of surfaces.txt
+  char surfacetype[MAX_TEXTURE_NAME];
+
   // number of alternate texture names
   int16 alternate_count;
   // followed by alternate_count * char[btf::MAX_TEXTURE_NAME]
@@ -170,7 +173,7 @@ static_assert(sizeof(header_t) == 8, "header_t size");
 static_assert(sizeof(texinfo_t) == 32, "texinfo_t size");
 // static_assert(sizeof(frame_t) == 64, "frame_t should always be 64 bytes.");
 
-static_assert(sizeof(metadata_q2_t) == 20, "metadata_q2_t size");
+static_assert(sizeof(metadata_q2_t) == 84, "metadata_q2_t size");
 static_assert(sizeof(metadata_sprite_t) == 12, "metadata_sprite_t size");
 } // namespace Btf
 
@@ -227,7 +230,7 @@ Result<mdl::Texture> readBtfTexture(Reader& reader)
         meta_q2.surfaceflags = reader.read<int32_t, int32_t>();
         meta_q2.contents = reader.read<int32_t, int32_t>();
         meta_q2.value = reader.readFloat<float>();
-        // do we need any of these in TB? probably not.
+        // we don't need anything other than those 3 in trenchbroom; so just stop here.
         // meta_q2.emissive = reader.read<int16_t, int16_t>();
         // meta_q2.alternate_count = reader.read<int16_t, int16_t>();
         //  ignore the alternates; we don't need that information
