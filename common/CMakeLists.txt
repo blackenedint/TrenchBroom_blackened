@@ -57,6 +57,7 @@ set(COMMON_SOURCE
         ${COMMON_SOURCE_DIR}/io/Md3Loader.cpp
         ${COMMON_SOURCE_DIR}/io/MdlLoader.cpp
         ${COMMON_SOURCE_DIR}/io/MdxLoader.cpp
+		${COMMON_SOURCE_DIR}/io/BvmLoader.cpp
         ${COMMON_SOURCE_DIR}/io/NodeReader.cpp
         ${COMMON_SOURCE_DIR}/io/NodeSerializer.cpp
         ${COMMON_SOURCE_DIR}/io/NodeWriter.cpp
@@ -569,6 +570,7 @@ set(COMMON_HEADER
         ${COMMON_SOURCE_DIR}/io/Md3Loader.h
         ${COMMON_SOURCE_DIR}/io/MdlLoader.h
         ${COMMON_SOURCE_DIR}/io/MdxLoader.h
+        ${COMMON_SOURCE_DIR}/io/BvmLoader.h
         ${COMMON_SOURCE_DIR}/io/NodeReader.h
         ${COMMON_SOURCE_DIR}/io/NodeSerializer.h
         ${COMMON_SOURCE_DIR}/io/NodeWriter.h

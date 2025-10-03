@@ -31,6 +31,7 @@
 #include "io/MdlLoader.h"
 #include "io/MdxLoader.h"
 #include "io/SprLoader.h"
+#include "io/BvmLoader.h"
 #include "mdl/EntityModel.h"
 #include "mdl/GameConfig.h"
 #include "mdl/Palette.h"
@@ -65,6 +66,11 @@ Result<mdl::EntityModelData> loadEntityModelData(
          | kdl::and_then([&](auto file) -> Result<mdl::EntityModelData> {
              auto reader = file->reader().buffer();
 
+             if (io::BvmLoader::canParse(path, reader))
+             {
+               auto loader = io::BvmLoader{modelName, reader, fs};
+               return loader.load(logger);
+             }
              if (io::MdlLoader::canParse(path, reader))
              {
                return loadPalette(fs, materialConfig) | kdl::and_then([&](auto palette) {

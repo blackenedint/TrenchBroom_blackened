@@ -1468,15 +1468,18 @@
 //
 // items
 //
-@PointClass size(-16 -16 0, 16 16 16) base(Weapon, Targetx) studio("models/editor/ed_health.mdl") = item_health : "Health Kit"
-[
-	spawnflags(flags) = 
-	[
-		1 : "Rotten" : 0
-		2 : "Megahealth" : 0
-	]	
-]
-@PointClass size(-8 -8 0, 8 8 8) base(Weapon, Targetx) studio("models/editor/ed_hstim.mdl") = item_stimpack : "Stim Pack" []
+//@PointClass size(-16 -16 0, 16 16 16) base(Weapon, Targetx) studio("models/items/health_25.bvm") = item_health : "Health Kit"
+//[
+//	spawnflags(flags) = 
+//	[
+//		1 : "Rotten" : 0
+//		2 : "Megahealth" : 0
+//	]	
+//]
+@PointClass size(-8 -8 0, 8 8 8) base(Weapon, Targetx) studio("models/items/health_stim.bvm") = item_stimpack : "Stim Pack" []
+@PointClass size(-16 -16 0, 16 16 16) base(Weapon, Targetx) studio("models/items/health_15.bvm") = item_health_sm : "Health Kit (15)" []
+@PointClass size(-16 -16 0, 16 16 16) base(Weapon, Targetx) studio("models/items/health_25.bvm") = item_health_md : "Health Kit (25)" []
+@PointClass size(-16 -16 0, 16 16 16) base(Weapon, Targetx) studio("models/items/health_mega.bvm") = item_health_mega : "Mega Health" []
 
 //@PointClass size(-16 -16 0, 16 16 36) base(Weapon, Targetx) studio("models/w_oxygen.mdl") = item_airtank : "Oxygen tank" []
 //@PointClass size(-16 -16 0, 16 16 36) base(Weapon, Targetx) studio("models/w_antidote.mdl") = item_antidote : "Poison antidote" []

@@ -25,6 +25,7 @@
 #include "io/MaterialUtils.h"
 #include "io/ReadFreeImageTexture.h"
 #include "io/ReadWalTexture.h"
+#include "io/ReadBtfTexture.h"
 #include "io/ResourceUtils.h"
 #include "mdl/Material.h"
 #include "mdl/Palette.h"
@@ -51,7 +52,7 @@ mdl::Material loadSkin(
          | kdl::and_then([&](auto file) -> Result<mdl::Material, ReadMaterialError> {
              const auto extension = kdl::path_to_lower(path.extension());
              auto reader = file->reader().buffer();
-             return (extension == ".wal" ? readWalTexture(reader, palette)
+             return (extension == ".btf" ? readBtfTexture(reader) : extension == ".wal" ? readWalTexture(reader, palette)
                                          : readFreeImageTexture(reader))
                     | kdl::transform([&](auto texture) {
                         auto textureResource = createTextureResource(std::move(texture));
