@@ -31,8 +31,5 @@ class Texture;
 namespace tb::io
 {
 class Reader;
-
-Result<mdl::Texture> readBtfTexture(
-  Reader& reader);
-
+Result<mdl::Texture> readBtfTexture(Reader& reader, bool bVerticalFlip = false);
 } // namespace tb::io

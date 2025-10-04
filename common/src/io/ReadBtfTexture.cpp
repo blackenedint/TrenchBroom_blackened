@@ -153,7 +153,7 @@ struct metadata_q2_t : public metadata_t
   // texture is emissive; alpha is mask
   int16 emissive;
 
-  //surface type out of surfaces.txt
+  // surface type out of surfaces.txt
   char surfacetype[MAX_TEXTURE_NAME];
 
   // number of alternate texture names
@@ -177,7 +177,8 @@ static_assert(sizeof(metadata_q2_t) == 84, "metadata_q2_t size");
 static_assert(sizeof(metadata_sprite_t) == 12, "metadata_sprite_t size");
 } // namespace Btf
 
-Result<mdl::Texture> readBtfTexture(Reader& reader)
+tb::Result<tb::mdl::Texture> readBtfTexture(
+  Reader& reader, bool bVerticalFlip /*= false*/)
 {
   try
   {
@@ -210,11 +211,11 @@ Result<mdl::Texture> readBtfTexture(Reader& reader)
     size_t metadatasize = reader.readSize<int32>();
     size_t metadataoffset = reader.readSize<int32>();
 
-	if (framedatasize == 0 )
+    if (framedatasize == 0)
       return Error("no framedata");
 
 
-	// meh!
+    // meh!
     Btf::metadata_q2_t meta_q2{};
     Btf::metadata_sprite_t meta_spr{};
     if (metadatasize > 0)
@@ -273,6 +274,35 @@ Result<mdl::Texture> readBtfTexture(Reader& reader)
     auto buffers = mdl::TextureBufferList{numMips};
     mdl::setMipBufferSize(buffers, numMips, width, height, GL_RGBA);
     reader.read(buffers[0].data(), buffers[0].size());
+
+	// flip vertically if required (usually only models)
+    if (bVerticalFlip)
+    {
+      const size_t rowBytes = static_cast<size_t>(width) * 4; // RGBA
+      const size_t h = static_cast<size_t>(height);
+      auto* data = static_cast<std::uint8_t*>(buffers[0].data());
+
+      //std::vector<std::uint8_t> tmp(rowBytes);
+      //for (size_t y = 0; y < h / 2; ++y)
+      //{
+      //  auto* rowTop = data + y * rowBytes;
+      //  auto* rowBot = data + (h - 1 - y) * rowBytes;
+	  //
+      //  // swap rows
+      //  std::memcpy(tmp.data(), rowTop, rowBytes);
+      //  std::memcpy(rowTop, rowBot, rowBytes);
+      //  std::memcpy(rowBot, tmp.data(), rowBytes);
+      //}
+
+	  // non-alloc --slightly-- slower version.
+      for (size_t y = 0; y < h / 2; ++y)
+      {
+        auto* rowTop = data + y * rowBytes;
+        auto* rowBot = data + (h - 1 - y) * rowBytes;
+        for (size_t i = 0; i < rowBytes; ++i)
+          std::swap(rowTop[i], rowBot[i]);
+      }
+    }
 
     static auto averageColor = Color{};
     auto embeddedDefaults = mdl::Q2EmbeddedDefaults{flags, contents, lightvalue};
