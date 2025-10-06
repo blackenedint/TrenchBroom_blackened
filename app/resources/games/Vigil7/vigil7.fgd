@@ -2038,6 +2038,16 @@
 	]
 ]
 
+@PointClass base(Targetx) studio() = prop_dynamic : "dynamic prop" 
+[
+	model(studio) : "model"
+	sequence(integer) : "sequence index" : 0
+	playlooped(choices) : "Play Looped" : 0 = 
+	[
+		0: "Yes"
+		1: "No"
+	]	
+]
 
 //
 // ammo

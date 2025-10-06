@@ -70,6 +70,15 @@ enum class MapFormat
    * Quake 3 with brush primitives, also allows Quake 2 brushes
    */
   Quake3,
+
+  /**
+   * Quake 2 with Valve 220 format texturing, supported by
+   * https://github.com/blackenedint/q2tools-220_blackened
+   * Additional features include:
+   * qbsp (large size)
+   * (TBD) lightmap scale being separated from texture resolution
+   */
+  Blackened,
 };
 
 std::ostream& operator<<(std::ostream& lhs, MapFormat rhs);
