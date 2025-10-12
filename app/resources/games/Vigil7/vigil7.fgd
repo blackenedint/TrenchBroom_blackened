@@ -371,7 +371,6 @@
 	spawnflags(flags) =
 	[
 		1: "Starts Open" : 0
-		4: "Don't link" : 0
 		8: "Passable" : 0
 		32: "Toggle" : 0
 		256: "Use Only" : 0
@@ -1499,7 +1498,7 @@
 [
 	_cone(integer) : "Inner (bright) angle" : 30 : "The angle of the cone formed around the directional axis. The area inside this cone will contain the brightest light."
 	_cone2(integer) : "Outer (fading) angle" : 45 : "As above, although the area inside this cone will fade increasingly towards the outer edges."
-	pitch(integer) : "Pitch" : -90 : "The pitch of the light (-90 is straight down, 90 is straight up)."
+	pitch(integer) : "Pitch" : 90 : "The pitch of the light (90 is straight down, -90 is straight up)."
 	_light(color255) : "Brightness" : "255 255 128 200" : "First three integer numbers are the color (RGB). The fourth number is the brightness."
 	_sky(Choices) : "Is Sky" : 0 : "If Yes, the spot_light will affect the sky brushes, rather than project any light itself." = 
 	[ 

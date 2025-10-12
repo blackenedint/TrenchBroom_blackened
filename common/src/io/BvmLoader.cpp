@@ -1,5 +1,6 @@
 /*
  Copyright (C) 2010 Kristian Duske
+ Bvm Copyright (C) 2025 Blackened Interactive, Inc
 
  This file is part of TrenchBroom.
 
@@ -45,16 +46,16 @@ namespace tb::io
 
 namespace BvmLayout
 {
-constexpr uint32_t VTXMDL_IDENT = (('M' << 24) + ('V' << 16) + ('I' << 8) + 'B'); // BIVM
-constexpr uint32_t VTXMDL_SKIN_IDENT =
+constexpr uint32_t BVM_IDENT = (('M' << 24) + ('V' << 16) + ('I' << 8) + 'B'); // BIVM
+constexpr uint32_t BVM_SKIN_IDENT =
   (('K' << 24) + ('S' << 16) + ('M' << 8) + 'S'); // SMSK
-constexpr uint32_t VTXMDL_SUBMESH_IDENT =
+constexpr uint32_t BVM_SUBMESH_IDENT =
   (('H' << 24) + ('S' << 16) + ('M' << 8) + 'S'); // SMSH
 
-constexpr size_t MAX_VTXMDL_NAME = 64;
+constexpr size_t MAX_BVM_NAME = 64;
 
 // the most recent version.
-constexpr int32_t VTXMDL_CURRENTVERSION = 3;
+constexpr int32_t BVM_CURRENTVERSION = 3;
 
 } // namespace BvmLayout
 
@@ -150,7 +151,7 @@ bool BvmLoader::canParse(const std::filesystem::path& path, Reader reader)
   const auto ident = reader.readInt<int32_t>();
   const auto version = reader.readInt<int32_t>();
 
-  return ident == BvmLayout::VTXMDL_IDENT && version <= BvmLayout::VTXMDL_CURRENTVERSION;
+  return ident == BvmLayout::BVM_IDENT && version <= BvmLayout::BVM_CURRENTVERSION;
 }
 
 Result<mdl::EntityModelData> BvmLoader::load(Logger& logger)
@@ -161,11 +162,11 @@ Result<mdl::EntityModelData> BvmLoader::load(Logger& logger)
     const auto ident = reader.readInt<uint32_t>();
     const auto version = reader.readInt<int32_t>();
 
-    if (ident != BvmLayout::VTXMDL_IDENT)
+    if (ident != BvmLayout::BVM_IDENT)
     {
       return Error{fmt::format("Unknown BVM model ident: {}", ident)};
     }
-    if (version > BvmLayout::VTXMDL_CURRENTVERSION)
+    if (version > BvmLayout::BVM_CURRENTVERSION)
     {
       return Error{fmt::format("Unknown BVM model version: {}", version)};
     }
@@ -192,9 +193,9 @@ tb::Result<tb::mdl::EntityModelData> BvmLoader::loadV1(Reader& reader, Logger& l
   // v1 is the most simple;
   // it's almost the same as q1 mdl; except normals are included
   // and no single frames, only sequences (frame groups).
-  const auto base_texture = reader.readString(BvmLayout::MAX_VTXMDL_NAME);
-  /*const auto emission_texture = */ reader.readString(BvmLayout::MAX_VTXMDL_NAME);
-  /*const auto interior_texture = */ reader.readString(BvmLayout::MAX_VTXMDL_NAME);
+  const auto base_texture = reader.readString(BvmLayout::MAX_BVM_NAME);
+  /*const auto emission_texture = */ reader.readString(BvmLayout::MAX_BVM_NAME);
+  /*const auto interior_texture = */ reader.readString(BvmLayout::MAX_BVM_NAME);
   /*const auto emission_scale = */ reader.readFloat<float>();
   const auto origin = reader.readVec<float, 3>();
   const auto scale = reader.readFloat<float>();
@@ -292,7 +293,7 @@ tb::Result<tb::mdl::EntityModelData> BvmLoader::loadV2(Reader& reader, Logger& l
     {
 
       auto seq = BvmSeq{};
-      seq.name = reader.readString(BvmLayout::MAX_VTXMDL_NAME);
+      seq.name = reader.readString(BvmLayout::MAX_BVM_NAME);
       seq.frames = reader.readSize<int32_t>();
       seq.framerate = reader.readInt<int32_t>();
       seq.scale = reader.readFloat<float>();
@@ -344,13 +345,13 @@ tb::Result<tb::mdl::EntityModelData> BvmLoader::loadV2(Reader& reader, Logger& l
   {
     const auto sm_name = fmt::format("submesh_{}", smi);
     const auto ident = reader.readInt<uint32_t>();
-    if (ident != BvmLayout::VTXMDL_SUBMESH_IDENT)
+    if (ident != BvmLayout::BVM_SUBMESH_IDENT)
     {
       return Error{fmt::format("Unknown BVM submesh ident: {}", ident)};
     }
-    const auto tex_diffuse = reader.readString(BvmLayout::MAX_VTXMDL_NAME);
-    /*mesh.tex_interior = */ reader.readString(BvmLayout::MAX_VTXMDL_NAME);
-    /*mesh.tex_emission = */ reader.readString(BvmLayout::MAX_VTXMDL_NAME);
+    const auto tex_diffuse = reader.readString(BvmLayout::MAX_BVM_NAME);
+    /*mesh.tex_interior = */ reader.readString(BvmLayout::MAX_BVM_NAME);
+    /*mesh.tex_emission = */ reader.readString(BvmLayout::MAX_BVM_NAME);
     /*mesh.emission_scale =*/reader.readFloat<float>();
     const auto num_indices = reader.readSize<int32_t>();
     const auto num_verts = reader.readSize<int32_t>();
@@ -361,13 +362,13 @@ tb::Result<tb::mdl::EntityModelData> BvmLoader::loadV2(Reader& reader, Logger& l
     for (int sk = 0; sk < num_skins; sk++)
     {
       const auto sk_ident = reader.readInt<uint32_t>();
-      if (sk_ident != BvmLayout::VTXMDL_SKIN_IDENT)
+      if (sk_ident != BvmLayout::BVM_SKIN_IDENT)
       {
         return Error{fmt::format("Unknown BVM skin ident: {}", sk_ident)};
       }
-      const auto sk_diffuse = reader.readString(BvmLayout::MAX_VTXMDL_NAME);
-      /*const auto sk_interior = */ reader.readString(BvmLayout::MAX_VTXMDL_NAME);
-      /*const auto sk_emission = */ reader.readString(BvmLayout::MAX_VTXMDL_NAME);
+      const auto sk_diffuse = reader.readString(BvmLayout::MAX_BVM_NAME);
+      /*const auto sk_interior = */ reader.readString(BvmLayout::MAX_BVM_NAME);
+      /*const auto sk_emission = */ reader.readString(BvmLayout::MAX_BVM_NAME);
       /*const auto sk_emscale = */ reader.readFloat<float>();
       sm_skins.push_back(fmt::format("textures/models/{}.btf", sk_diffuse));
     }
@@ -512,7 +513,7 @@ tb::Result<tb::mdl::EntityModelData> BvmLoader::loadCurrent(
   for (size_t si = 0; si < sequence_count; si++)
   {
     auto seq = BvmSeq{};
-    seq.name = reader.readString(BvmLayout::MAX_VTXMDL_NAME);
+    seq.name = reader.readString(BvmLayout::MAX_BVM_NAME);
     seq.frames = reader.readSize<int32_t>();
     seq.framerate = reader.readInt<int32_t>();
     seq.scale = reader.readFloat<float>();
@@ -555,7 +556,7 @@ tb::Result<tb::mdl::EntityModelData> BvmLoader::loadCurrent(
   for (int smi = 0; smi < submesh_count; smi++)
   {
     const auto ident = reader.readInt<uint32_t>();
-    if (ident != BvmLayout::VTXMDL_SUBMESH_IDENT)
+    if (ident != BvmLayout::BVM_SUBMESH_IDENT)
     {
       return Error{fmt::format("Unknown BVM submesh ident: {}", ident)};
     }
@@ -603,13 +604,13 @@ tb::Result<tb::mdl::EntityModelData> BvmLoader::loadCurrent(
       for (int sk = 0; sk < smesh.num_skins; sk++)
       {
         const auto sk_ident = reader.readInt<uint32_t>();
-        if (sk_ident != BvmLayout::VTXMDL_SKIN_IDENT)
+        if (sk_ident != BvmLayout::BVM_SKIN_IDENT)
         {
           return Error{fmt::format("Unknown BVM skin ident: {}", sk_ident)};
         }
-        const auto sk_diffuse = reader.readString(BvmLayout::MAX_VTXMDL_NAME);
-        /*const auto sk_interior = */ reader.readString(BvmLayout::MAX_VTXMDL_NAME);
-        /*const auto sk_emission = */ reader.readString(BvmLayout::MAX_VTXMDL_NAME);
+        const auto sk_diffuse = reader.readString(BvmLayout::MAX_BVM_NAME);
+        /*const auto sk_interior = */ reader.readString(BvmLayout::MAX_BVM_NAME);
+        /*const auto sk_emission = */ reader.readString(BvmLayout::MAX_BVM_NAME);
         /*const auto sk_emscale = */ reader.readFloat<float>();
         sm_skins.push_back(fmt::format("textures/models/{}.btf", sk_diffuse));
       }
