@@ -563,13 +563,13 @@ mdl::PropertyDefinition FgdParser::parsePropertyDefinition(
   const std::string& typeName,
   const FileLocation& location)
 {
-  if (kdl::ci::str_is_equal(typeName, "target_source"))
-  {
-    return parseTargetSourcePropertyDefinition(status, std::move(propertyKey));
-  }
   if (kdl::ci::str_is_equal(typeName, "target_destination"))
   {
     return parseTargetDestinationPropertyDefinition(status, std::move(propertyKey));
+  }
+  if (kdl::ci::str_is_equal(typeName, "target_source"))
+  {
+    return parseTargetSourcePropertyDefinition(status, std::move(propertyKey));
   }
   if (kdl::ci::str_is_equal(typeName, "string"))
   {
@@ -608,7 +608,7 @@ mdl::PropertyDefinition FgdParser::parseTargetSourcePropertyDefinition(
   auto longDescription = parsePropertyDescription();
   return {
     std::move(propertyKey),
-    TargetSource{},
+    LinkTarget{},
     std::move(shortDescription),
     std::move(longDescription),
     readOnly};
@@ -623,7 +623,7 @@ mdl::PropertyDefinition FgdParser::parseTargetDestinationPropertyDefinition(
   auto longDescription = parsePropertyDescription();
   return {
     std::move(propertyKey),
-    TargetDestination{},
+    LinkSource{},
     std::move(shortDescription),
     std::move(longDescription),
     readOnly};
