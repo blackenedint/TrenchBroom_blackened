@@ -19,7 +19,6 @@
 
 #include "GameImpl.h"
 
-#include "Exceptions.h"
 #include "Logger.h"
 #include "io/BrushFaceReader.h"
 #include "io/DefParser.h"
@@ -43,14 +42,15 @@
 #include "mdl/MaterialManager.h"
 
 #include "kdl/path_utils.h"
+#include "kdl/ranges/as_rvalue_view.h"
+#include "kdl/ranges/to.h"
 #include "kdl/result.h"
 #include "kdl/string_compare.h"
-#include "kdl/string_utils.h"
-#include "kdl/vector_utils.h"
 
 #include <fmt/format.h>
 #include <fmt/std.h>
 
+#include <ranges>
 #include <string>
 #include <vector>
 
@@ -184,53 +184,27 @@ bool GameImpl::isEntityDefinitionFile(const std::filesystem::path& path) const
 
 std::vector<EntityDefinitionFileSpec> GameImpl::allEntityDefinitionFiles() const
 {
-  return kdl::vec_transform(m_config.entityConfig.defFilePaths, [](const auto& path) {
-    return EntityDefinitionFileSpec::builtin(path);
-  });
-}
-
-EntityDefinitionFileSpec GameImpl::extractEntityDefinitionFile(const Entity& entity) const
-{
-  if (const auto* defValue = entity.property(EntityPropertyKeys::EntityDefinitions))
-  {
-    return EntityDefinitionFileSpec::parse(*defValue);
-  }
-
-  return defaultEntityDefinitionFile();
-}
-
-EntityDefinitionFileSpec GameImpl::defaultEntityDefinitionFile() const
-{
-  if (const auto paths = m_config.entityConfig.defFilePaths; !paths.empty())
-  {
-    return EntityDefinitionFileSpec::builtin(paths.front());
-  }
-
-  throw GameException{
-    "No entity definition files found for game '" + config().name + "'"};
+  return m_config.entityConfig.defFilePaths | std::views::transform([](const auto& path) {
+           return EntityDefinitionFileSpec::makeBuiltin(path);
+         })
+         | kdl::ranges::to<std::vector>();
 }
 
 std::filesystem::path GameImpl::findEntityDefinitionFile(
   const EntityDefinitionFileSpec& spec,
   const std::vector<std::filesystem::path>& searchPaths) const
 {
-  if (!spec.valid())
+  if (spec.type == EntityDefinitionFileSpec::Type::Builtin)
   {
-    throw GameException{"Invalid entity definition file spec"};
+    return m_config.findConfigFile(spec.path);
   }
 
-  const auto& path = spec.path();
-  if (spec.builtin())
+  if (spec.path.is_absolute())
   {
-    return m_config.findConfigFile(path);
+    return spec.path;
   }
 
-  if (path.is_absolute())
-  {
-    return path;
-  }
-
-  return io::Disk::resolvePath(searchPaths, path);
+  return io::Disk::resolvePath(searchPaths, spec.path);
 }
 
 Result<std::vector<std::string>> GameImpl::availableMods() const
@@ -246,25 +220,17 @@ Result<std::vector<std::string>> GameImpl::availableMods() const
            "",
            io::TraversalMode::Flat,
            io::makePathInfoPathMatcher({io::PathInfo::Directory}))
-         | kdl::transform([](auto subDirs) {
-             return kdl::vec_transform(std::move(subDirs), [](auto subDir) {
-               return subDir.filename().string();
-             });
+         | kdl::transform([](const auto& subDirs) {
+             return subDirs | std::views::transform([](const auto& subDir) {
+                      return subDir.filename().string();
+                    });
            })
          | kdl::transform([&](auto mods) {
-             return kdl::vec_filter(std::move(mods), [&](const auto& mod) {
-               return !kdl::ci::str_is_equal(mod, defaultMod);
-             });
+             return mods | std::views::filter([&](const auto& mod) {
+                      return !kdl::ci::str_is_equal(mod, defaultMod);
+                    })
+                    | kdl::views::as_rvalue | kdl::ranges::to<std::vector>();
            });
-}
-
-std::vector<std::string> GameImpl::extractEnabledMods(const Entity& entity) const
-{
-  if (const auto* modStr = entity.property(EntityPropertyKeys::Mods))
-  {
-    return kdl::str_split(*modStr, ";");
-  }
-  return {};
 }
 
 std::string GameImpl::defaultMod() const

@@ -40,11 +40,13 @@
 #include "mdl/PasteType.h"
 #include "mdl/PatchNode.h"
 #include "mdl/Transaction.h"
+#include "mdl/UpdateBrushFaceAttributes.h"
 #include "mdl/WorldNode.h"
 
 #include "kdl/ranges/to.h"
 #include "kdl/vector_utils.h"
 
+#include <algorithm>
 #include <ranges>
 
 namespace tb::mdl
@@ -183,7 +185,7 @@ void fixRecursiveLinkedGroups(
         },
         [&](auto&& thisLambda, GroupNode* groupNode) {
           const auto& linkId = groupNode->linkId();
-          if (std::binary_search(linkedGroupIds.begin(), linkedGroupIds.end(), linkId))
+          if (std::ranges::binary_search(linkedGroupIds, linkId))
           {
             logger.warn() << "Unlinking recursive linked group with ID '" << linkId
                           << "'";
@@ -240,7 +242,9 @@ bool pasteNodes(Map& map, const std::vector<Node*>& nodes)
 bool pasteBrushFaces(Map& map, const std::vector<BrushFace>& faces)
 {
   assert(!faces.empty());
-  return setBrushFaceAttributesExceptContentFlags(map, faces.back().attributes());
+
+  const auto update = copyAllExceptContentFlags(faces.back().attributes());
+  return setBrushFaceAttributes(map, update);
 }
 
 } // namespace

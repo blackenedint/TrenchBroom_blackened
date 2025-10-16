@@ -101,7 +101,6 @@ set(COMMON_SOURCE
         ${COMMON_SOURCE_DIR}/mdl/BrushFaceReference.cpp
         ${COMMON_SOURCE_DIR}/mdl/BrushNode.cpp
         ${COMMON_SOURCE_DIR}/mdl/BrushVertexCommands.cpp
-        ${COMMON_SOURCE_DIR}/mdl/ChangeBrushFaceAttributesRequest.cpp
         ${COMMON_SOURCE_DIR}/mdl/CircleShape.cpp
         ${COMMON_SOURCE_DIR}/mdl/ColorRange.cpp
         ${COMMON_SOURCE_DIR}/mdl/Command.cpp
@@ -123,12 +122,12 @@ set(COMMON_SOURCE
         ${COMMON_SOURCE_DIR}/mdl/EntityDefinitionFileSpec.cpp
         ${COMMON_SOURCE_DIR}/mdl/EntityDefinitionGroup.cpp
         ${COMMON_SOURCE_DIR}/mdl/EntityDefinitionManager.cpp
+        ${COMMON_SOURCE_DIR}/mdl/EntityLinkManager.cpp
         ${COMMON_SOURCE_DIR}/mdl/EntityModel.cpp
         ${COMMON_SOURCE_DIR}/mdl/EntityModelDataResource.cpp
         ${COMMON_SOURCE_DIR}/mdl/EntityModelManager.cpp
         ${COMMON_SOURCE_DIR}/mdl/EntityNode.cpp
         ${COMMON_SOURCE_DIR}/mdl/EntityNodeBase.cpp
-        ${COMMON_SOURCE_DIR}/mdl/EntityNodeIndex.cpp
         ${COMMON_SOURCE_DIR}/mdl/EntityProperties.cpp
         ${COMMON_SOURCE_DIR}/mdl/EntityPropertiesVariableStore.cpp
         ${COMMON_SOURCE_DIR}/mdl/EntityRotation.cpp
@@ -185,6 +184,7 @@ set(COMMON_SOURCE
         ${COMMON_SOURCE_DIR}/mdl/ModelUtils.cpp
         ${COMMON_SOURCE_DIR}/mdl/Node.cpp
         ${COMMON_SOURCE_DIR}/mdl/NodeContents.cpp
+        ${COMMON_SOURCE_DIR}/mdl/NodeIndex.cpp
         ${COMMON_SOURCE_DIR}/mdl/NodeVisitor.cpp
         ${COMMON_SOURCE_DIR}/mdl/NonIntegerVerticesValidator.cpp
         ${COMMON_SOURCE_DIR}/mdl/Object.cpp
@@ -212,6 +212,7 @@ set(COMMON_SOURCE
         ${COMMON_SOURCE_DIR}/mdl/SetLinkIdsCommand.cpp
         ${COMMON_SOURCE_DIR}/mdl/SetLockStateCommand.cpp
         ${COMMON_SOURCE_DIR}/mdl/SetVisibilityCommand.cpp
+        ${COMMON_SOURCE_DIR}/mdl/SoftMapBounds.cpp
         ${COMMON_SOURCE_DIR}/mdl/SoftMapBoundsValidator.cpp
         ${COMMON_SOURCE_DIR}/mdl/SwapNodeContentsCommand.cpp
         ${COMMON_SOURCE_DIR}/mdl/Tag.cpp
@@ -224,6 +225,7 @@ set(COMMON_SOURCE
         ${COMMON_SOURCE_DIR}/mdl/TextureResource.cpp
         ${COMMON_SOURCE_DIR}/mdl/Transaction.cpp
         ${COMMON_SOURCE_DIR}/mdl/UndoableCommand.cpp
+        ${COMMON_SOURCE_DIR}/mdl/UpdateBrushFaceAttributes.cpp
         ${COMMON_SOURCE_DIR}/mdl/UpdateLinkedGroupsCommand.cpp
         ${COMMON_SOURCE_DIR}/mdl/UpdateLinkedGroupsCommandBase.cpp
         ${COMMON_SOURCE_DIR}/mdl/UpdateLinkedGroupsHelper.cpp
@@ -623,7 +625,6 @@ set(COMMON_HEADER
         ${COMMON_SOURCE_DIR}/mdl/BrushGeometry.h
         ${COMMON_SOURCE_DIR}/mdl/BrushNode.h
         ${COMMON_SOURCE_DIR}/mdl/BrushVertexCommands.h
-        ${COMMON_SOURCE_DIR}/mdl/ChangeBrushFaceAttributesRequest.h
         ${COMMON_SOURCE_DIR}/mdl/CircleShape.h
         ${COMMON_SOURCE_DIR}/mdl/ColorRange.h
         ${COMMON_SOURCE_DIR}/mdl/Command.h
@@ -647,13 +648,13 @@ set(COMMON_HEADER
         ${COMMON_SOURCE_DIR}/mdl/EntityDefinitionGroup.h
         ${COMMON_SOURCE_DIR}/mdl/EntityDefinitionManager.h
         ${COMMON_SOURCE_DIR}/mdl/EntityDefinitionUtils.h
+        ${COMMON_SOURCE_DIR}/mdl/EntityLinkManager.h
         ${COMMON_SOURCE_DIR}/mdl/EntityModel_Forward.h
         ${COMMON_SOURCE_DIR}/mdl/EntityModel.h
         ${COMMON_SOURCE_DIR}/mdl/EntityModelDataResource.h
         ${COMMON_SOURCE_DIR}/mdl/EntityModelManager.h
         ${COMMON_SOURCE_DIR}/mdl/EntityNode.h
         ${COMMON_SOURCE_DIR}/mdl/EntityNodeBase.h
-        ${COMMON_SOURCE_DIR}/mdl/EntityNodeIndex.h
         ${COMMON_SOURCE_DIR}/mdl/EntityProperties.h
         ${COMMON_SOURCE_DIR}/mdl/EntityPropertiesVariableStore.h
         ${COMMON_SOURCE_DIR}/mdl/EntityRotation.h
@@ -711,6 +712,7 @@ set(COMMON_HEADER
         ${COMMON_SOURCE_DIR}/mdl/ModelUtils.h
         ${COMMON_SOURCE_DIR}/mdl/Node.h
         ${COMMON_SOURCE_DIR}/mdl/NodeContents.h
+        ${COMMON_SOURCE_DIR}/mdl/NodeIndex.h
         ${COMMON_SOURCE_DIR}/mdl/NodeQueries.h
         ${COMMON_SOURCE_DIR}/mdl/NodeVisitor.h
         ${COMMON_SOURCE_DIR}/mdl/NonIntegerVerticesValidator.h
@@ -772,6 +774,7 @@ set(COMMON_HEADER
         ${COMMON_SOURCE_DIR}/mdl/Transaction.h
         ${COMMON_SOURCE_DIR}/mdl/TransactionScope.h
         ${COMMON_SOURCE_DIR}/mdl/UndoableCommand.h
+        ${COMMON_SOURCE_DIR}/mdl/UpdateBrushFaceAttributes.h
         ${COMMON_SOURCE_DIR}/mdl/UpdateLinkedGroupsCommand.h
         ${COMMON_SOURCE_DIR}/mdl/UpdateLinkedGroupsCommandBase.h
         ${COMMON_SOURCE_DIR}/mdl/UpdateLinkedGroupsHelper.h

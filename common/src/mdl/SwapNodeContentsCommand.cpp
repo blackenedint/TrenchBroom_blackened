@@ -22,11 +22,12 @@
 #include "Notifier.h"
 #include "mdl/Game.h"
 #include "mdl/Map.h"
+#include "mdl/Map_Assets.h"
+#include "mdl/Map_World.h"
 #include "mdl/Node.h"
 #include "mdl/NodeQueries.h"
 
 #include "kdl/ranges/to.h"
-#include "kdl/vector_utils.h"
 
 #include <ranges>
 
@@ -36,7 +37,7 @@ namespace
 {
 
 auto notifySpecialWorldProperties(
-  const Game& game, const std::vector<std::pair<Node*, NodeContents>>& nodesToSwap)
+  const std::vector<std::pair<Node*, NodeContents>>& nodesToSwap)
 {
   for (const auto& [node, contents] : nodesToSwap)
   {
@@ -52,13 +53,13 @@ auto notifySpecialWorldProperties(
         (oldWads == nullptr) != (newWads == nullptr)
         || (oldWads != nullptr && newWads != nullptr && *oldWads != *newWads);
 
-      const auto oldEntityDefinitionSpec = game.extractEntityDefinitionFile(oldEntity);
-      const auto newEntityDefinitionSpec = game.extractEntityDefinitionFile(newEntity);
+      const auto oldEntityDefinitionSpec = entityDefinitionFile(oldEntity);
+      const auto newEntityDefinitionSpec = entityDefinitionFile(newEntity);
       const bool notifyEntityDefinitionsChange =
         oldEntityDefinitionSpec != newEntityDefinitionSpec;
 
-      const auto oldMods = game.extractEnabledMods(oldEntity);
-      const auto newMods = game.extractEnabledMods(newEntity);
+      const auto oldMods = enabledMods(oldEntity);
+      const auto newMods = enabledMods(newEntity);
       const bool notifyModsChange = oldMods != newMods;
 
       return std::tuple{
@@ -75,18 +76,12 @@ void doSwapNodeContents(
   const auto nodes = nodesToSwap
                      | std::views::transform([](const auto& pair) { return pair.first; })
                      | kdl::ranges::to<std::vector>();
-  const auto parents = collectAncestors(nodes);
-  const auto descendants = collectDescendants(nodes);
 
   auto notifyNodes =
     NotifyBeforeAndAfter{map.nodesWillChangeNotifier, map.nodesDidChangeNotifier, nodes};
-  auto notifyParents = NotifyBeforeAndAfter{
-    map.nodesWillChangeNotifier, map.nodesDidChangeNotifier, parents};
-  auto notifyDescendants = NotifyBeforeAndAfter{
-    map.nodesWillChangeNotifier, map.nodesDidChangeNotifier, descendants};
 
   const auto [notifyWadsChange, notifyEntityDefinitionsChange, notifyModsChange] =
-    notifySpecialWorldProperties(*map.game(), nodesToSwap);
+    notifySpecialWorldProperties(nodesToSwap);
   auto notifyWads = NotifyBeforeAndAfter{
     notifyWadsChange,
     map.materialCollectionsWillChangeNotifier,
@@ -153,13 +148,15 @@ bool SwapNodeContentsCommand::doCollateWith(UndoableCommand& command)
 {
   if (auto* other = dynamic_cast<SwapNodeContentsCommand*>(&command))
   {
-    auto myNodes =
-      kdl::vec_transform(m_nodes, [](const auto& pair) { return pair.first; });
-    auto theirNodes =
-      kdl::vec_transform(other->m_nodes, [](const auto& pair) { return pair.first; });
+    auto myNodes = m_nodes
+                   | std::views::transform([](const auto& pair) { return pair.first; })
+                   | kdl::ranges::to<std::vector>();
+    auto theirNodes = other->m_nodes
+                      | std::views::transform([](const auto& pair) { return pair.first; })
+                      | kdl::ranges::to<std::vector>();
 
-    kdl::vec_sort(myNodes);
-    kdl::vec_sort(theirNodes);
+    std::ranges::sort(myNodes);
+    std::ranges::sort(theirNodes);
 
     return myNodes == theirNodes;
   }

@@ -31,7 +31,6 @@
 #include "Preferences.h"
 #include "mdl/BrushFace.h"
 #include "mdl/BrushNode.h"
-#include "mdl/ChangeBrushFaceAttributesRequest.h"
 #include "mdl/EditorContext.h"
 #include "mdl/EntityDefinition.h"
 #include "mdl/EntityDefinitionGroup.h"
@@ -58,6 +57,7 @@
 #include "mdl/PatchNode.h"
 #include "mdl/PointTrace.h"
 #include "mdl/Transaction.h"
+#include "mdl/UpdateBrushFaceAttributes.h"
 #include "mdl/WorldNode.h"
 #include "render/Camera.h"
 #include "render/Compass.h"
@@ -81,6 +81,7 @@
 #include "ui/SelectionTool.h"
 #include "ui/SignalDelayer.h"
 
+#include "kdl/ranges/to.h"
 #include "kdl/string_compare.h"
 #include "kdl/string_format.h"
 #include "kdl/vector_utils.h"
@@ -591,20 +592,16 @@ void MapViewBase::flipUV(const vm::direction direction)
 
 void MapViewBase::resetUV()
 {
-  auto request = mdl::ChangeBrushFaceAttributesRequest{};
-
   auto& map = m_document.map();
-  request.resetAll(map.game()->config().faceAttribsConfig.defaults);
-  setBrushFaceAttributes(map, request);
+  setBrushFaceAttributes(
+    map, mdl::resetAll(map.game()->config().faceAttribsConfig.defaults));
 }
 
 void MapViewBase::resetUVToWorld()
 {
-  auto request = mdl::ChangeBrushFaceAttributesRequest{};
-
   auto& map = m_document.map();
-  request.resetAllToParaxial(map.game()->config().faceAttribsConfig.defaults);
-  setBrushFaceAttributes(map, request);
+  setBrushFaceAttributes(
+    map, mdl::resetAllToParaxial(map.game()->config().faceAttribsConfig.defaults));
 }
 
 void MapViewBase::assembleBrush()
@@ -747,11 +744,10 @@ void MapViewBase::makeStructural()
 
   auto toReparent = std::vector<mdl::Node*>{};
   const auto& selectedBrushes = map.selection().brushes;
-  std::copy_if(
-    selectedBrushes.begin(),
-    selectedBrushes.end(),
-    std::back_inserter(toReparent),
-    [&](const auto* brushNode) { return brushNode->entity() != map.world(); });
+  std::ranges::copy_if(
+    selectedBrushes, std::back_inserter(toReparent), [&](const auto* brushNode) {
+      return brushNode->entity() != map.world();
+    });
 
   auto transaction = mdl::Transaction{map, "Make Structural"};
 
@@ -1557,7 +1553,7 @@ mdl::GroupNode* MapViewBase::findGroupToMergeGroupsInto(
   {
     if (auto* mergeTarget = findOutermostClosedGroup(mdl::hitToNode(hits.front())))
     {
-      if (kdl::all_of(selection.nodes, [&](const auto* node) {
+      if (std::ranges::all_of(selection.nodes, [&](const auto* node) {
             return node == mergeTarget || canReparentNode(node, mergeTarget);
           }))
       {
@@ -1695,10 +1691,11 @@ void MapViewBase::reparentNodes(
 std::vector<mdl::Node*> MapViewBase::collectReparentableNodes(
   const std::vector<mdl::Node*>& nodes, const mdl::Node* newParent) const
 {
-  return kdl::vec_filter(nodes, [&](const auto* node) {
-    return newParent != node && newParent != node->parent()
-           && !newParent->isDescendantOf(node);
-  });
+  return nodes | std::views::filter([&](const auto* node) {
+           return newParent != node && newParent != node->parent()
+                  && !newParent->isDescendantOf(node);
+         })
+         | kdl::ranges::to<std::vector>();
 }
 
 bool MapViewBase::canMergeGroups() const

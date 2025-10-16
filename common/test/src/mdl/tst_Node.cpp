@@ -39,14 +39,18 @@
 #include "kdl/result.h"
 #include "kdl/vector_utils.h"
 
+#include <ranges>
 #include <variant>
 #include <vector>
 
 #include <catch2/catch_test_macros.hpp>
+#include <catch2/matchers/catch_matchers_range_equals.hpp>
 #include <catch2/matchers/catch_matchers_vector.hpp>
 
 namespace tb::mdl
 {
+using namespace Catch::Matchers;
+
 namespace
 {
 
@@ -388,14 +392,12 @@ TEST_CASE("NodeTest.replaceChildren")
 
   CHECK(oldChildren.size() == 2u);
   CHECK_THAT(
-    kdl::vec_transform(oldChildren, [](const auto& c) { return c.get(); }),
-    Catch::Matchers::UnorderedEquals(std::vector<Node*>{childNode1, childNode2}));
+    oldChildren | std::views::transform([](const auto& c) { return c.get(); }),
+    UnorderedRangeEquals(std::vector{childNode1, childNode2}));
   CHECK(childNode1->parent() == nullptr);
   CHECK(childNode2->parent() == nullptr);
 
-  CHECK_THAT(
-    rootNode.children(),
-    Catch::Matchers::UnorderedEquals(std::vector<Node*>{childNode3}));
+  CHECK_THAT(rootNode.children(), UnorderedEquals(std::vector<Node*>{childNode3}));
   CHECK(childNode3->parent() == &rootNode);
 }
 
@@ -705,14 +707,12 @@ TEST_CASE("NodeTest.acceptAndVisitChildren")
 
   CHECK_THAT(
     collectRecursively(worldNode),
-    Catch::Matchers::Equals(std::vector<Node*>{
+    Equals(std::vector<Node*>{
       &worldNode, layerNode, entityNode1, entityNode2, groupNode, groupEntityNode}));
   CHECK_THAT(
     collectRecursively(*groupNode),
-    Catch::Matchers::Equals(std::vector<Node*>{groupNode, groupEntityNode}));
-  CHECK_THAT(
-    collectRecursively(*entityNode1),
-    Catch::Matchers::Equals(std::vector<Node*>{entityNode1}));
+    Equals(std::vector<Node*>{groupNode, groupEntityNode}));
+  CHECK_THAT(collectRecursively(*entityNode1), Equals(std::vector<Node*>{entityNode1}));
 }
 
 TEST_CASE("NodeTest.visitParent")
@@ -758,7 +758,7 @@ TEST_CASE("NodeTest.visitAll")
   auto visited = std::vector<Node*>{};
   Node::visitAll(toVisit, makeCollectVisitedNodesVisitor(visited));
 
-  CHECK_THAT(visited, Catch::Matchers::Equals(toVisit));
+  CHECK_THAT(visited, Equals(toVisit));
 }
 
 TEST_CASE("NodeTest.visitChildren")
@@ -775,22 +775,21 @@ TEST_CASE("NodeTest.visitChildren")
   {
     auto visited = std::vector<Node*>{};
     worldNode.visitChildren(makeCollectVisitedNodesVisitor(visited));
-    CHECK_THAT(visited, Catch::Matchers::Equals(std::vector<Node*>{layerNode}));
+    CHECK_THAT(visited, Equals(std::vector<Node*>{layerNode}));
   }
 
   SECTION("Visit children of layer node")
   {
     auto visited = std::vector<Node*>{};
     layerNode->visitChildren(makeCollectVisitedNodesVisitor(visited));
-    CHECK_THAT(
-      visited, Catch::Matchers::Equals(std::vector<Node*>{entityNode1, entityNode2}));
+    CHECK_THAT(visited, Equals(std::vector<Node*>{entityNode1, entityNode2}));
   }
 
   SECTION("Visit children of entity node")
   {
     auto visited = std::vector<Node*>{};
     entityNode1->visitChildren(makeCollectVisitedNodesVisitor(visited));
-    CHECK_THAT(visited, Catch::Matchers::Equals(std::vector<Node*>{}));
+    CHECK_THAT(visited, Equals(std::vector<Node*>{}));
   }
 }
 

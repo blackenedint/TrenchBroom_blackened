@@ -32,12 +32,14 @@
 #include "Preference.h"
 #include "Result.h"
 
+#include "kdl/reflection_decl.h"
 #include "kdl/vector_set.h"
 
 #include <fmt/format.h>
 #include <fmt/std.h>
 
 #include <filesystem>
+#include <iosfwd>
 #include <map>
 #include <memory>
 #include <vector>
@@ -274,19 +276,29 @@ void resetPref(Preference<T>& preference)
 
 namespace PreferenceErrors
 {
+
 struct NoFilePresent
 {
+  kdl_reflect_decl_empty(NoFilePresent);
 };
+
 struct JsonParseError
 {
   QJsonParseError jsonError;
+
+  kdl_reflect_decl(JsonParseError, jsonError);
 };
+
 struct FileAccessError
 {
+  kdl_reflect_decl_empty(FileAccessError);
 };
+
 struct LockFileError
 {
+  kdl_reflect_decl_empty(LockFileError);
 };
+
 } // namespace PreferenceErrors
 
 using ReadPreferencesResult = Result<
@@ -311,3 +323,5 @@ QByteArray writePreferencesToJson(
   const std::map<std::filesystem::path, QJsonValue>& prefs);
 
 } // namespace tb
+
+std::ostream& operator<<(std::ostream& lhs, const QJsonParseError& rhs);
