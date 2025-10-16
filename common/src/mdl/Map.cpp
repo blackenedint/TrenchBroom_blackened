@@ -36,7 +36,6 @@
 #include "mdl/BrushBuilder.h"
 #include "mdl/BrushFace.h"
 #include "mdl/BrushNode.h"
-#include "mdl/ChangeBrushFaceAttributesRequest.h"
 #include "mdl/Command.h"
 #include "mdl/CommandProcessor.h"
 #include "mdl/EditorContext.h"
@@ -45,6 +44,7 @@
 #include "mdl/EmptyPropertyKeyValidator.h"
 #include "mdl/EmptyPropertyValueValidator.h"
 #include "mdl/EntityDefinitionManager.h"
+#include "mdl/EntityLinkManager.h"
 #include "mdl/EntityModelManager.h"
 #include "mdl/EntityNode.h"
 #include "mdl/Game.h"
@@ -55,12 +55,14 @@
 #include "mdl/Issue.h"
 #include "mdl/LayerNode.h"
 #include "mdl/LinkSourceValidator.h"
+#include "mdl/LinkTargetValidator.h"
 #include "mdl/LinkedGroupUtils.h"
 #include "mdl/LongPropertyKeyValidator.h"
 #include "mdl/LongPropertyValueValidator.h"
 #include "mdl/Map.h"
 #include "mdl/MapFormat.h"
 #include "mdl/MapTextEncoding.h"
+#include "mdl/Map_Assets.h"
 #include "mdl/Map_Entities.h"
 #include "mdl/Map_Groups.h"
 #include "mdl/Map_Nodes.h"
@@ -73,6 +75,8 @@
 #include "mdl/MixedBrushContentsValidator.h"
 #include "mdl/ModelUtils.h"
 #include "mdl/Node.h"
+#include "mdl/NodeIndex.h"
+#include "mdl/NodeQueries.h"
 #include "mdl/NonIntegerVerticesValidator.h"
 #include "mdl/PatchNode.h"
 #include "mdl/PointEntityWithBrushesValidator.h"
@@ -458,6 +462,8 @@ Map::Map(kdl::task_manager& taskManager, Logger& logger)
   , m_editorContext{std::make_unique<EditorContext>()}
   , m_grid{std::make_unique<Grid>(4)}
   , m_worldBounds{DefaultWorldBounds}
+  , m_nodeIndex{std::make_unique<NodeIndex>()}
+  , m_entityLinkManager{std::make_unique<EntityLinkManager>(*m_nodeIndex)}
   , m_vertexHandles{std::make_unique<VertexHandleManager>()}
   , m_edgeHandles{std::make_unique<EdgeHandleManager>()}
   , m_faceHandles{std::make_unique<FaceHandleManager>()}
@@ -607,6 +613,11 @@ void Map::setCurrentMaterialName(const std::string& currentMaterialName)
   }
 }
 
+const EntityLinkManager& Map::entityLinkManager() const
+{
+  return *m_entityLinkManager;
+}
+
 Result<void> Map::create(
   const MapFormat mapFormat, const vm::bbox3d& worldBounds, std::unique_ptr<Game> game)
 {
@@ -630,6 +641,11 @@ Result<void> Map::load(
   std::unique_ptr<Game> game,
   const std::filesystem::path& path)
 {
+  if (!path.is_absolute())
+  {
+    return Error{"Path must be absolute"};
+  }
+
   m_logger.info() << fmt::format("Loading document from {}", path);
 
   clear();
@@ -657,21 +673,27 @@ Result<void> Map::reload()
   return load(mapFormat, worldBounds, std::move(game), path);
 }
 
-void Map::save()
+Result<void> Map::save()
 {
-  saveAs(m_path);
+  return saveAs(m_path);
 }
 
-void Map::saveAs(const std::filesystem::path& path)
+Result<void> Map::saveAs(const std::filesystem::path& path)
 {
-  saveTo(path);
-  setLastSaveModificationCount();
-  setPath(path);
-  mapWasSavedNotifier(*this);
+  return saveTo(path).transform([&]() {
+    setLastSaveModificationCount();
+    setPath(path);
+    mapWasSavedNotifier(*this);
+  });
 }
 
-void Map::saveTo(const std::filesystem::path& path)
+Result<void> Map::saveTo(const std::filesystem::path& path)
 {
+  if (!path.is_absolute())
+  {
+    return Error{"Path must be absolute"};
+  }
+
   ensure(m_game.get() != nullptr, "game is null");
   ensure(m_world, "world is null");
 
@@ -684,6 +706,8 @@ void Map::saveTo(const std::filesystem::path& path)
   }) | kdl::transform_error([&](const auto& e) {
     m_logger.error() << "Could not save document: " << e.msg;
   });
+
+  return Result<void>{};
 }
 
 Result<void> Map::exportAs(const io::ExportOptions& options) const
@@ -722,6 +746,8 @@ void Map::clear()
   {
     mapWillBeClearedNotifier(*this);
 
+    m_nodeIndex->clear();
+    m_entityLinkManager->clear();
     m_editorContext->reset();
     m_cachedSelection = std::nullopt;
     clearAssets();
@@ -969,8 +995,8 @@ void Map::registerValidators()
   m_world->registerValidator(std::make_unique<EmptyGroupValidator>());
   m_world->registerValidator(std::make_unique<EmptyBrushEntityValidator>());
   m_world->registerValidator(std::make_unique<PointEntityWithBrushesValidator>());
-  m_world->registerValidator(std::make_unique<LinkSourceValidator>());
-  m_world->registerValidator(std::make_unique<LinkSourceValidator>());
+  m_world->registerValidator(std::make_unique<LinkSourceValidator>(*m_entityLinkManager));
+  m_world->registerValidator(std::make_unique<LinkTargetValidator>(*m_entityLinkManager));
   m_world->registerValidator(std::make_unique<NonIntegerVerticesValidator>());
   m_world->registerValidator(std::make_unique<MixedBrushContentsValidator>());
   m_world->registerValidator(std::make_unique<WorldBoundsValidator>(worldBounds()));
@@ -1015,28 +1041,34 @@ void Map::clearAssets()
 
 void Map::loadEntityDefinitions()
 {
-  const auto spec = m_world ? game()->extractEntityDefinitionFile(m_world->entity())
-                            : EntityDefinitionFileSpec{};
-  const auto path = game()->findEntityDefinitionFile(spec, externalSearchPaths(*this));
-  auto status = io::SimpleParserStatus{m_logger};
+  if (const auto spec = entityDefinitionFile(*this))
+  {
+    const auto path = game()->findEntityDefinitionFile(*spec, externalSearchPaths(*this));
+    auto status = io::SimpleParserStatus{m_logger};
 
-  entityDefinitionManager().loadDefinitions(path, *game(), status)
-    | kdl::transform([&]() {
-        m_logger.info() << fmt::format(
-          "Loaded entity definition file {}", path.filename());
-      })
-    | kdl::transform_error([&](auto e) {
-        if (spec.builtin())
-        {
-          m_logger.error() << "Could not load builtin entity definition file '"
-                           << spec.path() << "': " << e.msg;
-        }
-        else
-        {
-          m_logger.error() << "Could not load external entity definition file '"
-                           << spec.path() << "': " << e.msg;
-        }
-      });
+    entityDefinitionManager().loadDefinitions(path, *game(), status)
+      | kdl::transform([&]() {
+          m_logger.info() << fmt::format(
+            "Loaded entity definition file {}", path.filename());
+        })
+      | kdl::transform_error([&](auto e) {
+          switch (spec->type)
+          {
+          case EntityDefinitionFileSpec::Type::Builtin:
+            m_logger.error() << "Could not load builtin entity definition file '"
+                             << spec->path << "': " << e.msg;
+            break;
+          case EntityDefinitionFileSpec::Type::External:
+            m_logger.error() << "Could not load external entity definition file '"
+                             << spec->path << "': " << e.msg;
+            break;
+          }
+        });
+  }
+  else
+  {
+    entityDefinitionManager().clear();
+  }
 }
 
 void Map::clearEntityDefinitions()
@@ -1055,9 +1087,8 @@ void Map::loadMaterials()
 {
   if (const auto* wadStr = m_world->entity().property(EntityPropertyKeys::Wad))
   {
-    const auto wadPaths = kdl::vec_transform(
-      kdl::str_split(*wadStr, ";"),
-      [](const auto& str) { return std::filesystem::path{str}; });
+    const auto wadPaths = kdl::str_split(*wadStr, ";")
+                          | kdl::ranges::to<std::vector<std::filesystem::path>>();
     m_game->reloadWads(path(), wadPaths, m_logger);
   }
   m_materialManager->reload(
@@ -1162,12 +1193,88 @@ void Map::unsetEntityModels(const std::vector<Node*>& nodes)
 void Map::updateGameSearchPaths()
 {
   m_game->setAdditionalSearchPaths(
-    mods(*this) | std::views::transform([](const auto& mod) {
+    enabledMods(*this) | std::views::transform([](const auto& mod) {
       return std::filesystem::path{mod};
     }) | kdl::ranges::to<std::vector>(),
     m_logger);
 }
 
+void Map::initializeNodeIndex()
+{
+  ensure(m_world, "world node is set");
+  addToNodeIndex({world()}, true);
+}
+
+void Map::addToNodeIndex(const std::vector<Node*>& nodes, const bool recurse)
+{
+  for (auto* node : nodes)
+  {
+    m_nodeIndex->addNode(*node);
+
+    if (recurse)
+    {
+      addToNodeIndex(node->children(), true);
+    }
+  }
+}
+
+void Map::removeFromNodeIndex(const std::vector<Node*>& nodes, const bool recurse)
+{
+  for (auto* node : nodes)
+  {
+    m_nodeIndex->removeNode(*node);
+
+    if (recurse)
+    {
+      removeFromNodeIndex(node->children(), true);
+    }
+  }
+}
+
+void Map::initializeEntityLinks()
+{
+  ensure(m_world, "world node is set");
+  addEntityLinks({world()}, true);
+}
+
+void Map::addEntityLinks(const std::vector<Node*>& nodes, const bool recurse)
+{
+  for (auto* node : nodes)
+  {
+    node->accept(kdl::overload(
+      [&](WorldNode* worldNode) { m_entityLinkManager->addEntityNode(*worldNode); },
+      [](LayerNode*) {},
+      [](GroupNode*) {},
+      [&](EntityNode* entityNode) { m_entityLinkManager->addEntityNode(*entityNode); },
+      [](BrushNode*) {},
+      [](PatchNode*) {}));
+
+    if (recurse)
+    {
+      addEntityLinks(node->children(), true);
+    }
+  }
+}
+
+void Map::removeEntityLinks(const std::vector<Node*>& nodes, const bool recurse)
+{
+  for (auto* node : nodes)
+  {
+    node->accept(kdl::overload(
+      [&](WorldNode* worldNode) { m_entityLinkManager->removeEntityNode(*worldNode); },
+      [](LayerNode*) {},
+      [](GroupNode*) {},
+      [&](EntityNode* entityNode) { m_entityLinkManager->removeEntityNode(*entityNode); },
+      [](BrushNode*) {},
+      [](PatchNode*) {}));
+
+
+    if (recurse)
+    {
+      removeEntityLinks(node->children(), true);
+    }
+  }
+}
 
 void Map::processResourcesSync(const ProcessContext& processContext)
 {
@@ -1345,9 +1452,17 @@ std::unique_ptr<CommandResult> Map::executeAndStore(
 
 void Map::connectObservers()
 {
+  m_notifierConnection += mapWasCreatedNotifier.connect(this, &Map::mapWasCreated);
+  m_notifierConnection += mapWasLoadedNotifier.connect(this, &Map::mapWasLoaded);
+
   m_notifierConnection += nodesWereAddedNotifier.connect(this, &Map::nodesWereAdded);
+  m_notifierConnection +=
+    nodesWillBeRemovedNotifier.connect(this, &Map::nodesWillBeRemoved);
   m_notifierConnection += nodesWereRemovedNotifier.connect(this, &Map::nodesWereRemoved);
+  m_notifierConnection += nodesWillChangeNotifier.connect(this, &Map::nodesWillChange);
   m_notifierConnection += nodesDidChangeNotifier.connect(this, &Map::nodesDidChange);
+  m_notifierConnection +=
+    brushFacesDidChangeNotifier.connect(this, &Map::brushFacesDidChange);
 
   m_notifierConnection +=
     selectionDidChangeNotifier.connect(this, &Map::selectionDidChange);
@@ -1378,16 +1493,8 @@ void Map::connectObservers()
   m_notifierConnection +=
     transactionUndoneNotifier.connect(this, &Map::transactionUndone);
 
-  // tag management
-  m_notifierConnection += mapWasCreatedNotifier.connect(this, &Map::mapWasCreated);
-  m_notifierConnection += mapWasLoadedNotifier.connect(this, &Map::mapWasLoaded);
-  m_notifierConnection += nodesWereAddedNotifier.connect(this, &Map::initializeNodeTags);
-  m_notifierConnection += nodesWillBeRemovedNotifier.connect(this, &Map::clearNodeTags);
-  m_notifierConnection += nodesDidChangeNotifier.connect(this, &Map::updateNodeTags);
-  m_notifierConnection += brushFacesDidChangeNotifier.connect(this, &Map::updateFaceTags);
-  m_notifierConnection += modsDidChangeNotifier.connect(this, &Map::updateAllFaceTags);
-  m_notifierConnection += resourcesWereProcessedNotifier.connect(
-    this, &Map::updateFaceTagsAfterResourcesWhereProcessed);
+  m_notifierConnection +=
+    resourcesWereProcessedNotifier.connect(this, &Map::resourcesWereProcessed);
 
   // command processing
   m_notifierConnection +=
@@ -1411,11 +1518,15 @@ void Map::connectObservers()
 void Map::mapWasCreated(Map&)
 {
   initializeAllNodeTags();
+  initializeNodeIndex();
+  initializeEntityLinks();
 }
 
 void Map::mapWasLoaded(Map&)
 {
   initializeAllNodeTags();
+  initializeNodeIndex();
+  initializeEntityLinks();
 }
 
 void Map::nodesWereAdded(const std::vector<Node*>& nodes)
@@ -1424,9 +1535,19 @@ void Map::nodesWereAdded(const std::vector<Node*>& nodes)
   setEntityDefinitions(nodes);
   setEntityModels(nodes);
   setMaterials(nodes);
+  initializeNodeTags(nodes);
+  addToNodeIndex(nodes, true);
+  addEntityLinks(nodes, true);
 
   m_cachedSelection = std::nullopt;
   m_cachedSelectionBounds = std::nullopt;
+}
+
+void Map::nodesWillBeRemoved(const std::vector<Node*>& nodes)
+{
+  removeEntityLinks(nodes, true);
+  removeFromNodeIndex(nodes, true);
+  clearNodeTags(nodes);
 }
 
 void Map::nodesWereRemoved(const std::vector<Node*>& nodes)
@@ -1439,13 +1560,32 @@ void Map::nodesWereRemoved(const std::vector<Node*>& nodes)
   m_cachedSelectionBounds = std::nullopt;
 }
 
+void Map::nodesWillChange(const std::vector<Node*>& nodes)
+{
+  removeEntityLinks(nodes, false);
+  removeFromNodeIndex(nodes, false);
+}
+
 void Map::nodesDidChange(const std::vector<Node*>& nodes)
 {
   setEntityDefinitions(nodes);
   setEntityModels(nodes);
   setMaterials(nodes);
+  updateNodeTags(collectNodesAndDescendants(nodes));
+  addToNodeIndex(nodes, false);
+  addEntityLinks(nodes, false);
 
   m_cachedSelectionBounds = std::nullopt;
+}
+
+void Map::brushFacesDidChange(const std::vector<BrushFaceHandle>& brushFaces)
+{
+  updateFaceTags(brushFaces);
+}
+
+void Map::resourcesWereProcessed(const std::vector<ResourceId>& resourceIds)
+{
+  updateFaceTagsAfterResourcesWhereProcessed(resourceIds);
 }
 
 void Map::selectionWillChange()
@@ -1500,6 +1640,7 @@ void Map::modsDidChange()
   updateGameSearchPaths();
   setEntityDefinitions();
   setEntityModels();
+  updateAllFaceTags();
 }
 
 void Map::preferenceDidChange(const std::filesystem::path& path)

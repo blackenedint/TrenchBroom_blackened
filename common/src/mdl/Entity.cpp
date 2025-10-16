@@ -27,6 +27,7 @@
 #include "mdl/ModelDefinition.h"
 #include "mdl/PropertyDefinition.h"
 
+#include "kdl/ranges/to.h"
 #include "kdl/reflection_impl.h"
 #include "kdl/string_utils.h"
 #include "kdl/vector_utils.h"
@@ -37,6 +38,7 @@
 #include "vm/vec_io.h"
 
 #include <algorithm>
+#include <ranges>
 
 namespace tb::mdl
 {
@@ -268,8 +270,7 @@ void Entity::renameProperty(const std::string& oldKey, std::string newKey)
   const auto oldIt = findEntityProperty(m_properties, oldKey);
   if (oldIt != std::end(m_properties))
   {
-    if (const auto protIt = std::find(
-          std::begin(m_protectedProperties), std::end(m_protectedProperties), oldKey);
+    if (const auto protIt = std::ranges::find(m_protectedProperties, oldKey);
         protIt != std::end(m_protectedProperties))
     {
       m_protectedProperties.erase(protIt);
@@ -357,8 +358,9 @@ const std::string* Entity::property(const std::string& key) const
 
 std::vector<std::string> Entity::propertyKeys() const
 {
-  return kdl::vec_transform(
-    m_properties, [](const auto& property) { return property.key(); });
+  return m_properties
+         | std::views::transform([](const auto& property) { return property.key(); })
+         | kdl::ranges::to<std::vector>();
 }
 
 const std::string& Entity::classname() const
@@ -424,21 +426,25 @@ const vm::mat4x4d& Entity::rotation() const
 
 std::vector<EntityProperty> Entity::propertiesWithKey(const std::string& key) const
 {
-  return kdl::vec_filter(
-    m_properties, [&](const auto& property) { return property.hasKey(key); });
+  return m_properties
+         | std::views::filter([&](const auto& property) { return property.hasKey(key); })
+         | kdl::ranges::to<std::vector>();
 }
 
 std::vector<EntityProperty> Entity::propertiesWithPrefix(const std::string& prefix) const
 {
-  return kdl::vec_filter(
-    m_properties, [&](const auto& property) { return property.hasPrefix(prefix); });
+  return m_properties | std::views::filter([&](const auto& property) {
+           return property.hasPrefix(prefix);
+         })
+         | kdl::ranges::to<std::vector>();
 }
 
 std::vector<EntityProperty> Entity::numberedProperties(const std::string& prefix) const
 {
-  return kdl::vec_filter(m_properties, [&](const auto& property) {
-    return property.hasNumberedPrefix(prefix);
-  });
+  return m_properties | std::views::filter([&](const auto& property) {
+           return property.hasNumberedPrefix(prefix);
+         })
+         | kdl::ranges::to<std::vector>();
 }
 
 void Entity::transform(const vm::mat4x4d& transformation, const bool updateAngleProperty)

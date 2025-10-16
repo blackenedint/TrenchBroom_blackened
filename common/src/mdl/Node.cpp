@@ -27,11 +27,14 @@
 
 #include "kdl/const_overload.h"
 #include "kdl/range_utils.h"
+#include "kdl/ranges/as_rvalue_view.h"
+#include "kdl/ranges/to.h"
 #include "kdl/reflection_impl.h"
 #include "kdl/vector_utils.h"
 
 #include <cassert>
 #include <iterator>
+#include <ranges>
 #include <string>
 #include <vector>
 
@@ -263,8 +266,10 @@ std::vector<std::unique_ptr<Node>> Node::replaceChildren(
     child->setParent(nullptr);
   }
 
-  auto oldChildren = kdl::vec_transform(
-    m_children, [](Node* child) { return std::unique_ptr<Node>(child); });
+  auto oldChildren =
+    m_children
+    | std::views::transform([](auto* child) { return std::unique_ptr<Node>(child); })
+    | kdl::ranges::to<std::vector>();
   m_children.clear();
 
   for (auto& child : oldChildren)
@@ -273,9 +278,10 @@ std::vector<std::unique_ptr<Node>> Node::replaceChildren(
   }
 
   decDescendantCount(descendantCount());
-  addChildren(kdl::vec_transform(
-    std::move(newChildren),
-    [](std::unique_ptr<Node>&& child) { return child.release(); }));
+  addChildren(
+    newChildren | kdl::views::as_rvalue
+    | std::views::transform([](auto&& child) { return child.release(); })
+    | kdl::ranges::to<std::vector>());
 
   // nodeDidChange();
 
@@ -808,8 +814,10 @@ bool Node::containsLine(const size_t lineNumber) const
 std::vector<const Issue*> Node::issues(const std::vector<const Validator*>& validators)
 {
   validateIssues(validators);
-  return kdl::vec_transform(
-    m_issues, [](const auto& issue) { return const_cast<const Issue*>(issue.get()); });
+  return m_issues | std::views::transform([](const auto& issue) {
+           return const_cast<const Issue*>(issue.get());
+         })
+         | kdl::ranges::to<std::vector>();
 }
 
 bool Node::issueHidden(const IssueType type) const
@@ -850,34 +858,6 @@ void Node::invalidateIssues() const
 const EntityPropertyConfig& Node::entityPropertyConfig() const
 {
   return doGetEntityPropertyConfig();
-}
-
-void Node::findEntityNodesWithProperty(
-  const std::string& key,
-  const std::string& value,
-  std::vector<EntityNodeBase*>& result) const
-{
-  return doFindEntityNodesWithProperty(key, value, result);
-}
-
-void Node::findEntityNodesWithNumberedProperty(
-  const std::string& prefix,
-  const std::string& value,
-  std::vector<EntityNodeBase*>& result) const
-{
-  return doFindEntityNodesWithNumberedProperty(prefix, value, result);
-}
-
-void Node::addToIndex(
-  EntityNodeBase* node, const std::string& key, const std::string& value)
-{
-  doAddToIndex(node, key, value);
-}
-
-void Node::removeFromIndex(
-  EntityNodeBase* node, const std::string& key, const std::string& value)
-{
-  doRemoveFromIndex(node, key, value);
 }
 
 Node* Node::doCloneRecursively(const vm::bbox3d& worldBounds) const
@@ -926,46 +906,6 @@ const EntityPropertyConfig& Node::doGetEntityPropertyConfig() const
 
   static const auto defaultConfig = EntityPropertyConfig{};
   return defaultConfig;
-}
-
-void Node::doFindEntityNodesWithProperty(
-  const std::string& key,
-  const std::string& value,
-  std::vector<EntityNodeBase*>& result) const
-{
-  if (m_parent)
-  {
-    m_parent->findEntityNodesWithProperty(key, value, result);
-  }
-}
-
-void Node::doFindEntityNodesWithNumberedProperty(
-  const std::string& prefix,
-  const std::string& value,
-  std::vector<EntityNodeBase*>& result) const
-{
-  if (m_parent)
-  {
-    m_parent->findEntityNodesWithNumberedProperty(prefix, value, result);
-  }
-}
-
-void Node::doAddToIndex(
-  EntityNodeBase* node, const std::string& key, const std::string& value)
-{
-  if (m_parent)
-  {
-    m_parent->addToIndex(node, key, value);
-  }
-}
-
-void Node::doRemoveFromIndex(
-  EntityNodeBase* node, const std::string& key, const std::string& value)
-{
-  if (m_parent)
-  {
-    m_parent->removeFromIndex(node, key, value);
-  }
 }
 
 } // namespace tb::mdl

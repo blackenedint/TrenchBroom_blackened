@@ -115,6 +115,7 @@
 #include <fmt/format.h>
 #include <fmt/std.h>
 
+#include <algorithm>
 #include <cassert>
 #include <chrono>
 #include <iterator>
@@ -483,7 +484,7 @@ template <typename T>
 const mdl::EntityNodeBase* commonEntityForNodeList(const std::vector<T*>& nodes)
 {
   return !nodes.empty()
-             && kdl::all_of(
+             && std::ranges::all_of(
                nodes,
                [&](const auto* node) {
                  return node->entity() == nodes.front()->entity();
@@ -496,7 +497,7 @@ std::optional<std::string> commonClassnameForEntityList(
   const std::vector<mdl::EntityNode*>& nodes)
 {
   return !nodes.empty()
-             && kdl::all_of(
+             && std::ranges::all_of(
                nodes,
                [&](const auto* entityNode) {
                  return entityNode->entity().classname()
@@ -975,73 +976,66 @@ bool MapFrame::saveDocument()
 {
   auto& map = m_document->map();
 
-  try
+  if (map.persistent())
   {
-    if (map.persistent())
-    {
-      const auto startTime = std::chrono::high_resolution_clock::now();
-      map.save();
-      const auto endTime = std::chrono::high_resolution_clock::now();
+    const auto startTime = std::chrono::high_resolution_clock::now();
+    return map.save() | kdl::transform([&]() {
+             const auto endTime = std::chrono::high_resolution_clock::now();
 
-      logger().info() << "Saved " << map.path() << " in "
-                      << std::chrono::duration_cast<std::chrono::milliseconds>(
-                           endTime - startTime)
-                           .count()
-                      << "ms";
-      return true;
-    }
-    return saveDocumentAs();
+             logger().info() << "Saved " << map.path() << " in "
+                             << std::chrono::duration_cast<std::chrono::milliseconds>(
+                                  endTime - startTime)
+                                  .count()
+                             << "ms";
+           })
+           | kdl::transform_error([&](const auto& e) {
+               QMessageBox::critical(
+                 this,
+                 "",
+                 QString::fromStdString(
+                   fmt::format("Error while saving {}: ", map.path(), e.msg)),
+                 QMessageBox::Ok);
+             })
+           | kdl::is_success();
   }
-  catch (...)
-  {
-    QMessageBox::critical(
-      this,
-      "",
-      QString::fromStdString(fmt::format("Unknown error while saving {}", map.path())),
-      QMessageBox::Ok);
-    return false;
-  }
+  return saveDocumentAs();
 }
 
 bool MapFrame::saveDocumentAs()
 {
   auto& map = m_document->map();
+  const auto& originalPath = map.path();
+  const auto directory = originalPath.parent_path();
+  const auto fileName = originalPath.filename();
 
-  try
+  const auto newFileName = QFileDialog::getSaveFileName(
+    this, tr("Save map file"), io::pathAsQPath(originalPath), "Map files (*.map)");
+  if (newFileName.isEmpty())
   {
-    const auto& originalPath = map.path();
-    const auto directory = originalPath.parent_path();
-    const auto fileName = originalPath.filename();
-
-    const auto newFileName = QFileDialog::getSaveFileName(
-      this, tr("Save map file"), io::pathAsQPath(originalPath), "Map files (*.map)");
-    if (newFileName.isEmpty())
-    {
-      return false;
-    }
-
-    const auto path = io::pathFromQString(newFileName);
-
-    const auto startTime = std::chrono::high_resolution_clock::now();
-    map.saveAs(path);
-    const auto endTime = std::chrono::high_resolution_clock::now();
-
-    logger().info() << "Saved " << map.path() << " in "
-                    << std::chrono::duration_cast<std::chrono::milliseconds>(
-                         endTime - startTime)
-                         .count()
-                    << "ms";
-    return true;
-  }
-  catch (...)
-  {
-    QMessageBox::critical(
-      this,
-      "",
-      QString::fromStdString("Unknown error while saving " + map.filename()),
-      QMessageBox::Ok);
     return false;
   }
+
+  const auto path = io::pathFromQString(newFileName);
+
+  const auto startTime = std::chrono::high_resolution_clock::now();
+  return map.saveAs(path) | kdl::transform([&]() {
+           const auto endTime = std::chrono::high_resolution_clock::now();
+
+           logger().info() << "Saved " << map.path() << " in "
+                           << std::chrono::duration_cast<std::chrono::milliseconds>(
+                                endTime - startTime)
+                                .count()
+                           << "ms";
+         })
+         | kdl::transform_error([&](const auto& e) {
+             QMessageBox::critical(
+               this,
+               "",
+               QString::fromStdString(
+                 fmt::format("Error while saving {}: ", path, e.msg)),
+               QMessageBox::Ok);
+           })
+         | kdl::is_success();
 }
 
 void MapFrame::revertDocument()
@@ -2216,7 +2210,7 @@ const mdl::Material* materialToReveal(const mdl::Map& map)
   const auto& selection = map.selection();
 
   const auto* firstMaterial = selection.allBrushFaces().front().face().material();
-  const auto allFacesHaveIdenticalMaterial = kdl::all_of(
+  const auto allFacesHaveIdenticalMaterial = std::ranges::all_of(
     selection.allBrushFaces(),
     [&](const auto& face) { return face.face().material() == firstMaterial; });
 
@@ -2308,27 +2302,6 @@ void MapFrame::debugCreateCube()
     const auto positions = bounds.vertices() | kdl::ranges::to<std::vector>();
 
     createBrush(m_document->map(), positions);
-  }
-}
-
-void MapFrame::debugClipBrush()
-{
-  auto ok = false;
-  const auto str = QInputDialog::getText(
-    this,
-    "Clip Brush",
-    "Enter face points ( x y z ) ( x y z ) ( x y z )",
-    QLineEdit::Normal,
-    "",
-    &ok);
-  if (ok)
-  {
-    auto points = std::vector<vm::vec3d>{};
-    vm::parse_all<double, 3>(str.toStdString(), std::back_inserter(points));
-    if (points.size() == 3)
-    {
-      clipBrushes(m_document->map(), points[0], points[1], points[2]);
-    }
   }
 }
 
@@ -2443,7 +2416,7 @@ void MapFrame::dragEnterEvent(QDragEnterEvent* event)
   const auto game = map.game();
   if (
     game->config().materialConfig.property && event->mimeData()->hasUrls()
-    && kdl::all_of(event->mimeData()->urls(), [](const auto& url) {
+    && std::ranges::all_of(event->mimeData()->urls(), [](const auto& url) {
          if (!url.isLocalFile())
          {
            return false;
@@ -2474,9 +2447,8 @@ void MapFrame::dropEvent(QDropEvent* event)
   }
 
   const auto* wadPathsStr = map.world()->entity().property(*wadPropertyKey);
-  auto wadPaths = wadPathsStr ? kdl::vec_transform(
-                                  kdl::str_split(*wadPathsStr, ";"),
-                                  [](const auto& s) { return std::filesystem::path{s}; })
+  auto wadPaths = wadPathsStr ? kdl::str_split(*wadPathsStr, ";")
+                                  | kdl::ranges::to<std::vector<std::filesystem::path>>()
                               : std::vector<std::filesystem::path>{};
 
   auto pathDialog = ChoosePathTypeDialog{
@@ -2491,7 +2463,8 @@ void MapFrame::dropEvent(QDropEvent* event)
     return;
   }
 
-  auto wadPathsToAdd = kdl::vec_transform(urls, [&](const auto& url) {
+  auto wadPathsToAdd = std::vector<std::filesystem::path>{};
+  std::ranges::transform(urls, std::back_inserter(wadPathsToAdd), [&](const auto& url) {
     return convertToPathType(
       pathDialog.pathType(),
       io::pathFromQString(url.toLocalFile()),
@@ -2500,9 +2473,8 @@ void MapFrame::dropEvent(QDropEvent* event)
   });
 
   const auto newWadPathsStr = kdl::str_join(
-    kdl::vec_transform(
-      kdl::vec_concat(std::move(wadPaths), std::move(wadPathsToAdd)),
-      [](const auto& path) { return path.string(); }),
+    kdl::vec_concat(std::move(wadPaths), std::move(wadPathsToAdd))
+      | std::views::transform([](const auto& path) { return path.string(); }),
     ";");
   setEntityProperty(map, *wadPropertyKey, newWadPathsStr);
 

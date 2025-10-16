@@ -32,6 +32,7 @@
 #include "mdl/Transaction.h"
 #include "mdl/WorldNode.h" // IWYU pragma: keep
 
+#include "kdl/optional_utils.h"
 #include "kdl/ranges/to.h"
 #include "kdl/string_utils.h"
 
@@ -43,12 +44,43 @@
 
 namespace tb::mdl
 {
-
-EntityDefinitionFileSpec entityDefinitionFile(const Map& map)
+namespace
 {
-  const auto* worldNode = map.world();
-  return worldNode ? map.game()->extractEntityDefinitionFile(worldNode->entity())
-                   : EntityDefinitionFileSpec{};
+
+std::optional<EntityDefinitionFileSpec> defaultEntityDefinitionFile(const Map& map)
+{
+  if (const auto* game = map.game())
+  {
+    if (const auto paths = game->config().entityConfig.defFilePaths; !paths.empty())
+    {
+      return mdl::EntityDefinitionFileSpec::makeBuiltin(paths.front());
+    }
+  }
+
+  return std::nullopt;
+}
+
+} // namespace
+
+std::optional<EntityDefinitionFileSpec> entityDefinitionFile(const Entity& entity)
+{
+  if (const auto* defValue = entity.property(EntityPropertyKeys::EntityDefinitions))
+  {
+    return EntityDefinitionFileSpec::parse(*defValue);
+  }
+
+  return std::nullopt;
+}
+
+std::optional<EntityDefinitionFileSpec> entityDefinitionFile(const Map& map)
+{
+  if (const auto* worldNode = map.world())
+  {
+    return entityDefinitionFile(worldNode->entity())
+           | kdl::optional_or_else([&]() { return defaultEntityDefinitionFile(map); });
+  }
+
+  return std::nullopt;
 }
 
 void setEntityDefinitionFile(Map& map, const EntityDefinitionFileSpec& spec)
@@ -91,9 +123,10 @@ std::vector<std::filesystem::path> disabledMaterialCollections(const Map& map)
 {
   if (map.world())
   {
-    auto materialCollections = kdl::vec_sort_and_remove_duplicates(kdl::vec_transform(
-      map.materialManager().collections(),
-      [](const auto& collection) { return collection.path(); }));
+    auto materialCollections = kdl::vec_sort_and_remove_duplicates(
+      map.materialManager().collections()
+      | std::views::transform([](const auto& collection) { return collection.path(); })
+      | kdl::ranges::to<std::vector>());
 
     return kdl::set_difference(materialCollections, enabledMaterialCollections(map));
   }
@@ -103,20 +136,29 @@ std::vector<std::filesystem::path> disabledMaterialCollections(const Map& map)
 void setEnabledMaterialCollections(
   Map& map, const std::vector<std::filesystem::path>& enabledMaterialCollections)
 {
-  const auto enabledMaterialCollectionStr = kdl::str_join(
-    kdl::vec_transform(
-      kdl::vec_sort_and_remove_duplicates(enabledMaterialCollections),
-      [](const auto& path) { return path.string(); }),
-    ";");
-
   auto transaction = Transaction{map, "Set enabled material collections"};
 
   const auto pushSelection = PushSelection{map};
   deselectAll(map);
 
-  const auto success = setEntityProperty(
-    map, EntityPropertyKeys::EnabledMaterialCollections, enabledMaterialCollectionStr);
-  transaction.finish(success);
+  if (!enabledMaterialCollections.empty())
+  {
+    const auto enabledMaterialCollectionStr = kdl::str_join(
+      kdl::vec_sort_and_remove_duplicates(enabledMaterialCollections)
+        | std::views::transform([](const auto& path) { return path.string(); })
+        | kdl::ranges::to<std::vector>(),
+      ";");
+
+    const auto success = setEntityProperty(
+      map, EntityPropertyKeys::EnabledMaterialCollections, enabledMaterialCollectionStr);
+    transaction.finish(success);
+  }
+  else
+  {
+    const auto success =
+      removeEntityProperty(map, EntityPropertyKeys::EnabledMaterialCollections);
+    transaction.finish(success);
+  }
 }
 
 void reloadMaterialCollections(Map& map)

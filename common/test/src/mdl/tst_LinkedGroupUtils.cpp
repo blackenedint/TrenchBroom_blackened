@@ -31,15 +31,16 @@
 #include "mdl/PatchNode.h"
 #include "mdl/WorldNode.h"
 
-#include "kdl/pair_iterator.h"
+#include "kdl/ranges/adjacent_view.h"
 #include "kdl/task_manager.h"
-#include "kdl/vector_utils.h"
 
 #include "vm/bbox.h"
 #include "vm/mat.h"
 #include "vm/mat_ext.h"
 
+#include <algorithm>
 #include <numeric>
+#include <ranges>
 #include <vector>
 
 #include "catch/Matchers.h"
@@ -49,6 +50,8 @@
 
 namespace tb::mdl
 {
+using namespace Catch::Matchers;
+
 namespace
 {
 
@@ -99,7 +102,7 @@ std::unordered_map<const Node*, std::string> getLinkIds(const Node& node)
   return result;
 }
 
-class LinkIdMatcher : public Catch::Matchers::MatcherBase<const WorldNode&>
+class LinkIdMatcher : public MatcherBase<const WorldNode&>
 {
   std::vector<std::vector<const Node*>> m_expected;
 
@@ -121,12 +124,12 @@ public:
       });
 
     const auto expectedLinkIds =
-      kdl::vec_transform(m_expected, [&](const auto& nodesWithSameLinkId) {
+      m_expected | std::views::transform([&](const auto& nodesWithSameLinkId) {
         return getValue(linkIds, nodesWithSameLinkId.front());
       });
 
     return linkIds.size() == count
-           && kdl::all_of(
+           && std::ranges::all_of(
              m_expected,
              [&](const auto& nodesWithSameLinkId) {
                if (nodesWithSameLinkId.empty())
@@ -135,14 +138,15 @@ public:
                }
 
                const auto linkId = getValue(linkIds, nodesWithSameLinkId.front());
-               return linkId && kdl::all_of(nodesWithSameLinkId, [&](auto* entity) {
-                        return getValue(linkIds, entity) == linkId;
-                      });
+               return linkId
+                      && std::ranges::all_of(nodesWithSameLinkId, [&](auto* entity) {
+                           return getValue(linkIds, entity) == linkId;
+                         });
              })
-           && kdl::none_of(
-             kdl::make_pair_range(expectedLinkIds), [](const auto& linkIdPair) {
-               const auto& [linkId1, linkId2] = linkIdPair;
-               return linkId1 == linkId2;
+           && std::ranges::none_of(
+             expectedLinkIds | kdl::views::adjacent<2>, [](const auto& pair) {
+               const auto& [linkId1, linkId2] = pair;
+               return linkId1 && linkId2 && *linkId1 == *linkId2;
              });
   }
 
@@ -193,14 +197,13 @@ TEST_CASE("collectLinkedGroups")
 
   CHECK_THAT(
     collectGroupsWithLinkId({&worldNode}, "asdf"),
-    Catch::Matchers::UnorderedEquals(std::vector<GroupNode*>{}));
+    UnorderedEquals(std::vector<GroupNode*>{}));
   CHECK_THAT(
     collectGroupsWithLinkId({&worldNode}, "group1"),
-    Catch::Matchers::UnorderedEquals(
-      std::vector<GroupNode*>{groupNode1, linkedGroupNode1_1}));
+    UnorderedEquals(std::vector<GroupNode*>{groupNode1, linkedGroupNode1_1}));
   CHECK_THAT(
     collectGroupsWithLinkId({&worldNode}, "group2"),
-    Catch::Matchers::UnorderedEquals(
+    UnorderedEquals(
       std::vector<GroupNode*>{groupNode2, linkedGroupNode2_1, linkedGroupNode2_2}));
 }
 
@@ -524,7 +527,7 @@ TEST_CASE("updateLinkedGroups")
       static_cast<EntityNode*>(targetGroupNode->children().front());
     REQUIRE_THAT(
       targetEntityNode->entity().properties(),
-      Catch::Matchers::Equals(sourceEntityNode->entity().properties()));
+      Equals(sourceEntityNode->entity().properties()));
 
     using T = std::tuple<
       std::vector<std::string>,
@@ -646,11 +649,10 @@ TEST_CASE("updateLinkedGroups")
 
           CHECK_THAT(
             newEntityNode->entity().properties(),
-            Catch::Matchers::UnorderedEquals(expectedTargetProperties));
+            UnorderedEquals(expectedTargetProperties));
           CHECK_THAT(
             newEntityNode->entity().protectedProperties(),
-            Catch::Matchers::UnorderedEquals(
-              targetEntityNode->entity().protectedProperties()));
+            UnorderedEquals(targetEntityNode->entity().protectedProperties()));
         })
       | kdl::transform_error([](const auto&) { FAIL(); });
   }
@@ -705,12 +707,12 @@ TEST_CASE("updateLinkedGroups")
 
           CHECK_THAT(
             newEntityNode->entity().properties(),
-            Catch::Matchers::UnorderedEquals(std::vector<EntityProperty>{
+            UnorderedEquals(std::vector<EntityProperty>{
               {"light", "500"},
             }));
           CHECK_THAT(
             newEntityNode->entity().protectedProperties(),
-            Catch::Matchers::UnorderedEquals(std::vector<std::string>{"light"}));
+            UnorderedEquals(std::vector<std::string>{"light"}));
         })
       | kdl::transform_error([](const auto&) { FAIL(); });
   }
@@ -957,7 +959,7 @@ TEST_CASE("initializeLinkIds")
 
       CHECK_THAT(
         initializeLinkIds({&worldNode}),
-        Catch::Matchers::UnorderedEquals(std::vector{
+        UnorderedEquals(std::vector{
           Error{"Inconsistent linked group structure"},
           Error{"Inconsistent linked group structure"}}));
 
@@ -1015,7 +1017,7 @@ TEST_CASE("initializeLinkIds")
 
       CHECK_THAT(
         initializeLinkIds({&worldNode}),
-        Catch::Matchers::UnorderedEquals(std::vector{
+        UnorderedEquals(std::vector{
           Error{"Inconsistent linked group structure"},
           Error{"Inconsistent linked group structure"}}));
 

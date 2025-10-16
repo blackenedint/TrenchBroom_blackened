@@ -34,12 +34,16 @@
 
 #include "kdl/overload.h"
 
+#include <algorithm>
+
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/generators/catch_generators.hpp>
 #include <catch2/matchers/catch_matchers_vector.hpp>
 
 namespace tb::mdl
 {
+using namespace Catch::Matchers;
+
 namespace
 {
 class TestNode : public EntityNode
@@ -140,7 +144,7 @@ TEST_CASE("UpdateLinkedGroupsHelper")
     {
       {
         auto helper = UpdateLinkedGroupsHelper{{linkedNode}};
-        REQUIRE(helper.applyLinkedGroupUpdates(map).is_success());
+        REQUIRE(helper.applyLinkedGroupUpdates(map));
       }
       CHECK(deleted);
     }
@@ -149,7 +153,7 @@ TEST_CASE("UpdateLinkedGroupsHelper")
     {
       {
         auto helper = UpdateLinkedGroupsHelper{{linkedNode}};
-        REQUIRE(helper.applyLinkedGroupUpdates(map).is_success());
+        REQUIRE(helper.applyLinkedGroupUpdates(map));
         helper.undoLinkedGroupUpdates(map);
       }
       CHECK_FALSE(deleted);
@@ -217,7 +221,7 @@ TEST_CASE("UpdateLinkedGroupsHelper")
 
       // propagate changes
       auto helper = UpdateLinkedGroupsHelper{{groupNode}};
-      REQUIRE(helper.applyLinkedGroupUpdates(map).is_success());
+      REQUIRE(helper.applyLinkedGroupUpdates(map));
 
       /*
       world
@@ -250,8 +254,7 @@ TEST_CASE("UpdateLinkedGroupsHelper")
 
       REQUIRE(linkedGroupNode->childCount() == 1u);
       CHECK_THAT(
-        linkedGroupNode->children(),
-        Catch::Matchers::Equals(std::vector<Node*>{linkedBrushNode}));
+        linkedGroupNode->children(), Equals(std::vector<Node*>{linkedBrushNode}));
       CHECK(linkedBrushNode->parent() == linkedGroupNode);
       CHECK(
         linkedBrushNode->physicalBounds()
@@ -279,19 +282,18 @@ TEST_CASE("UpdateLinkedGroupsHelper")
       setGroupName(*linkedInnerGroupNode, "linkedInnerGroupNode");
       REQUIRE(linkedInnerGroupNode->linkId() == innerGroupNode->linkId());
 
-      addNodes(map, {{parentForNodes(map), {linkedInnerGroupNode}}});
-
       auto* linkedOuterGroupNode =
         static_cast<GroupNode*>(outerGroupNode->cloneRecursively(map.worldBounds()));
       setGroupName(*linkedOuterGroupNode, "linkedOuterGroupNode");
       REQUIRE(linkedOuterGroupNode->linkId() == outerGroupNode->linkId());
 
-      addNodes(map, {{parentForNodes(map), {linkedOuterGroupNode}}});
-
       auto* nestedLinkedInnerGroupNode =
         static_cast<GroupNode*>(linkedOuterGroupNode->children().front());
       setGroupName(*nestedLinkedInnerGroupNode, "nestedLinkedInnerGroupNode");
       REQUIRE(nestedLinkedInnerGroupNode->linkId() == innerGroupNode->linkId());
+
+      addNodes(
+        map, {{parentForNodes(map), {linkedInnerGroupNode, linkedOuterGroupNode}}});
 
       /*
       world
@@ -396,7 +398,7 @@ TEST_CASE("UpdateLinkedGroupsHelper")
       SECTION("First propagate changes to innerGroupNode, then outerGroupNode")
       {
         auto helper1 = UpdateLinkedGroupsHelper{{innerGroupNode}};
-        CHECK(helper1.applyLinkedGroupUpdates(map).is_success());
+        CHECK(helper1.applyLinkedGroupUpdates(map));
 
         /*
         world
@@ -433,7 +435,7 @@ TEST_CASE("UpdateLinkedGroupsHelper")
           == originalBrushBounds.translate(vm::vec3d(32.0, 0.0, 8.0)));
 
         auto helper2 = UpdateLinkedGroupsHelper{{outerGroupNode}};
-        CHECK(helper2.applyLinkedGroupUpdates(map).is_success());
+        CHECK(helper2.applyLinkedGroupUpdates(map));
 
         // see end of test for assertions of final state
       }
@@ -441,7 +443,7 @@ TEST_CASE("UpdateLinkedGroupsHelper")
       SECTION("First propagate changes to outerGroupNode, then innerGroupNode")
       {
         auto helper1 = UpdateLinkedGroupsHelper{{outerGroupNode}};
-        REQUIRE(helper1.applyLinkedGroupUpdates(map).is_success());
+        REQUIRE(helper1.applyLinkedGroupUpdates(map));
 
         /*
         world
@@ -477,7 +479,7 @@ TEST_CASE("UpdateLinkedGroupsHelper")
           == originalBrushBounds.translate(vm::vec3d(32.0, 16.0, 8.0)));
 
         auto helper2 = UpdateLinkedGroupsHelper{{innerGroupNode}};
-        REQUIRE(helper2.applyLinkedGroupUpdates(map).is_success());
+        REQUIRE(helper2.applyLinkedGroupUpdates(map));
 
         // see end of test for assertions of final state
       }
@@ -485,7 +487,7 @@ TEST_CASE("UpdateLinkedGroupsHelper")
       SECTION("Propagate both changes at once")
       {
         auto groupNodes = std::vector<GroupNode*>{outerGroupNode, innerGroupNode};
-        std::sort(std::begin(groupNodes), std::end(groupNodes));
+        std::ranges::sort(groupNodes);
 
         // The following code generates both permutations of the group nodes
         const auto permute = GENERATE(true, false);
@@ -495,7 +497,7 @@ TEST_CASE("UpdateLinkedGroupsHelper")
         }
 
         auto helper = UpdateLinkedGroupsHelper{groupNodes};
-        REQUIRE(helper.applyLinkedGroupUpdates(map).is_success());
+        REQUIRE(helper.applyLinkedGroupUpdates(map));
       }
 
       /*

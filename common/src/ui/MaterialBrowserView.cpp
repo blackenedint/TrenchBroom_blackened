@@ -41,6 +41,7 @@
 #include "render/VertexArray.h"
 #include "ui/MapDocument.h"
 
+#include "kdl/ranges/to.h"
 #include "kdl/string_compare.h"
 #include "kdl/string_utils.h"
 #include "kdl/vector_utils.h"
@@ -49,6 +50,7 @@
 #include "vm/mat_ext.h"
 #include "vm/vec.h"
 
+#include <ranges>
 #include <string>
 #include <vector>
 
@@ -229,7 +231,8 @@ std::vector<const mdl::Material*> MaterialBrowserView::getMaterials(
   const mdl::MaterialCollection& collection) const
 {
   return sortMaterials(filterMaterials(
-    kdl::vec_transform(collection.materials(), [](const auto& t) { return &t; })));
+    collection.materials() | std::views::transform([](const auto& t) { return &t; })
+    | kdl::ranges::to<std::vector>()));
 }
 
 std::vector<const mdl::Material*> MaterialBrowserView::getMaterials() const
@@ -250,16 +253,16 @@ std::vector<const mdl::Material*> MaterialBrowserView::filterMaterials(
 {
   if (m_hideUnused)
   {
-    materials = kdl::vec_erase_if(std::move(materials), [](const auto* material) {
-      return material->usageCount() == 0;
-    });
+    std::erase_if(
+      materials, [](const auto* material) { return material->usageCount() == 0; });
   }
   if (!m_filterText.empty())
   {
-    materials = kdl::vec_erase_if(std::move(materials), [&](const auto* material) {
-      return !kdl::all_of(kdl::str_split(m_filterText, " "), [&](const auto& pattern) {
-        return kdl::ci::str_contains(material->name(), pattern);
-      });
+    std::erase_if(materials, [&](const auto* material) {
+      return std::ranges::none_of(
+        kdl::str_split(m_filterText, " "), [&](const auto& pattern) {
+          return kdl::ci::str_contains(material->name(), pattern);
+        });
     });
   }
   return materials;
@@ -454,11 +457,11 @@ void MaterialBrowserView::doContextMenu(
     auto menu = QMenu{this};
     menu.addAction(tr("Select Faces"), this, [&, material = &cellData(*cell)]() {
       auto& map = m_document.map();
-      selectBrushFacesWithMaterial(map, material);
+      selectBrushFacesWithMaterial(map, material->name());
     });
 
     menu.addAction(tr("Select Brushes"), this, [&, material = &cellData(*cell)]() {
-      selectBrushesWithMaterial(m_document.map(), material);
+      selectBrushesWithMaterial(m_document.map(), material->name());
     });
 
     menu.exec(event->globalPos());

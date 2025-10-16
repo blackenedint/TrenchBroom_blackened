@@ -41,6 +41,7 @@
 #include "kdl/map_utils.h"
 #include "kdl/optional_utils.h"
 #include "kdl/overload.h"
+#include "kdl/ranges/to.h"
 #include "kdl/set_temp.h"
 #include "kdl/vector_utils.h"
 
@@ -52,6 +53,7 @@
 
 #include <algorithm>
 #include <optional>
+#include <ranges>
 
 namespace tb::ui
 {
@@ -184,10 +186,10 @@ public:
       counts[index]++;
     }
 
-    const auto first = std::max_element(std::begin(counts), std::end(counts));
+    const auto first = std::ranges::max_element(counts);
     const auto firstIndex = std::distance(std::begin(counts), first);
 
-    const auto next = std::max_element(std::next(first), std::end(counts));
+    const auto next = std::ranges::max_element(std::next(first), std::end(counts));
     if (next == std::end(counts) || *first > *next)
     {
       return vm::vec3d::axis(size_t(firstIndex % 3));
@@ -208,8 +210,9 @@ public:
 
   std::vector<vm::vec3d> combineHelpVectors() const
   {
-    return kdl::vec_flatten(
-      kdl::vec_transform(m_points, [](const auto& point) { return point.helpVectors; }));
+    return m_points
+           | std::views::transform([](const auto& point) { return point.helpVectors; })
+           | std::views::join | kdl::ranges::to<std::vector>();
   }
 
   bool canClip() const override { return m_points.size() == 3 || computeThirdPoint(); }
@@ -220,7 +223,7 @@ public:
   {
     return (m_points.size() < 2
             || (m_points.size() == 2 && !vm::is_colinear(m_points[0].point, m_points[1].point, point)))
-           && kdl::none_of(m_points, [&](const auto& p) {
+           && std::ranges::none_of(m_points, [&](const auto& p) {
                 return vm::is_equal(p.point, point, vm::Cd::almost_zero());
               });
   }
@@ -324,7 +327,8 @@ public:
 
   std::vector<vm::vec3d> getPoints() const override
   {
-    auto result = kdl::vec_transform(m_points, [](const auto& p) { return p.point; });
+    auto result = m_points | std::views::transform([](const auto& p) { return p.point; })
+                  | kdl::ranges::to<std::vector>();
     if (const auto thirdPoint = computeThirdPoint())
     {
       result = kdl::vec_push_back(std::move(result), *thirdPoint);
@@ -418,9 +422,11 @@ public:
     {
       auto renderService = render::RenderService{renderContext, renderBatch};
 
-      const auto positions = kdl::vec_transform(
-        m_faceHandle->face().vertices(),
-        [](const auto& vertex) { return vm::vec3f{vertex->position()}; });
+      const auto positions = m_faceHandle->face().vertices()
+                             | std::views::transform([](const auto& vertex) {
+                                 return vm::vec3f{vertex->position()};
+                               })
+                             | kdl::ranges::to<std::vector>();
 
       renderService.setForegroundColor(pref(Preferences::ClipHandleColor));
       renderService.renderPolygonOutline(positions);

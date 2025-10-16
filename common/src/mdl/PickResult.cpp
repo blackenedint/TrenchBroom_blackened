@@ -23,7 +23,7 @@
 #include "mdl/CompareHits.h"
 #include "mdl/Hit.h"
 
-#include "kdl/vector_utils.h"
+#include "kdl/ranges/to.h"
 
 #include "vm/scalar.h"
 #include "vm/util.h"
@@ -31,6 +31,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <ranges>
 
 namespace tb::mdl
 {
@@ -92,8 +93,7 @@ void PickResult::addHit(const Hit& hit)
   if (!vm::is_nan(hit.distance()) && !vm::is_nan(hit.hitPoint()))
   {
     ensure(m_compare.get() != nullptr, "compare is null");
-    auto pos = std::upper_bound(
-      std::begin(m_hits), std::end(m_hits), hit, CompareWrapper(m_compare.get()));
+    auto pos = std::ranges::upper_bound(m_hits, hit, CompareWrapper{m_compare.get()});
     m_hits.insert(pos, hit);
   }
 }
@@ -152,7 +152,7 @@ const Hit& PickResult::first(const HitFilter& filter) const
 
 std::vector<Hit> PickResult::all(const HitFilter& filter) const
 {
-  return kdl::vec_filter(m_hits, filter);
+  return m_hits | std::views::filter(filter) | kdl::ranges::to<std::vector>();
 }
 
 void PickResult::clear()
