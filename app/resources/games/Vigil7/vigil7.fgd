@@ -2048,6 +2048,11 @@
 	]	
 ]
 
+@PointClass base(Angles) studio() = prop_static : "static prop" 
+[
+	model(studio) : "model"
+]
+
 //
 // ammo
 //

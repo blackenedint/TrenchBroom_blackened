@@ -580,23 +580,25 @@ tb::Result<tb::mdl::EntityModelData> BvmLoader::loadCurrent(
 
 
   // We'll remember per-surface data so we can add meshes after frames are created
-  struct SurfaceTemp
+  struct SubmeshTemp
   {
     std::string name;
     std::vector<BvmTriangle> triangles;
-    std::vector<vm::vec2f> uvs;                      // static per submesh
+    std::vector<vm::vec2f> uvs;
     std::vector<std::vector<vm::vec3f>> perFramePos; // size = Ftotal
     std::vector<std::vector<vm::vec3f>> perFrameNrm; // size = Ftotal
-    mdl::EntityModelSurface* surface = nullptr;      // created now, filled later
   };
-  std::vector<SurfaceTemp> surfaces;
-  surfaces.reserve(submesh_count);
-
+  std::vector<SubmeshTemp> tmp_submeshes;
+  tmp_submeshes.reserve(submesh_count);
 
   // parse all submeshes..
   for (size_t smi = 0; smi < submesh_count; smi++)
   {
     auto smesh = submeshes[smi];
+
+    auto tmp_sm = SubmeshTemp{};
+    tmp_sm.name = smesh.name;
+
     auto sm_skins = std::vector<std::string>{};
     if (smesh.num_skins > 0)
     {
@@ -616,22 +618,19 @@ tb::Result<tb::mdl::EntityModelData> BvmLoader::loadCurrent(
       }
     }
 
-    // create the surface, and load the skins now.
+    // now make the entitymodelsurface...
     auto& surface = model.addSurface(std::move(smesh.name), Ftotal);
     loadSkins(surface, sm_skins, m_fs, logger);
 
-
     // grab UVs
-    auto sm_uvs = std::vector<vm::vec2f>{};
-    sm_uvs.reserve(smesh.num_verts);
+    tmp_sm.uvs.reserve(smesh.num_verts);
     reader.seekFromBegin(smesh.uv_offset);
     for (int uvi = 0; uvi < smesh.num_verts; uvi++)
-      sm_uvs.push_back(reader.readVec<float, 2>());
+      tmp_sm.uvs.push_back(reader.readVec<float, 2>());
 
 
     // triangles
-    auto sm_triangles = std::vector<BvmTriangle>{};
-    sm_triangles.reserve(smesh.num_indices / 3);
+    tmp_sm.triangles.reserve(smesh.num_indices / 3);
     reader.seekFromBegin(smesh.indice_offset);
 
     //  read them into bvmtriangles
@@ -641,18 +640,11 @@ tb::Result<tb::mdl::EntityModelData> BvmLoader::loadCurrent(
       tri.vertices[0] = reader.readSize<uint32_t>();
       tri.vertices[2] = reader.readSize<uint32_t>();
       tri.vertices[1] = reader.readSize<uint32_t>();
-      sm_triangles.push_back(tri);
+      tmp_sm.triangles.push_back(tri);
     }
-    
 
-    auto tmp = SurfaceTemp{};
-    tmp.name = smesh.name;
-    tmp.triangles = std::move(sm_triangles);
-    tmp.uvs = std::move(sm_uvs);
-    tmp.perFramePos.resize(Ftotal);
-    tmp.perFrameNrm.resize(Ftotal);
-    tmp.surface = &surface;
-
+    tmp_sm.perFramePos.resize(Ftotal);
+    tmp_sm.perFrameNrm.resize(Ftotal);
 
     // actually read sequences.
     reader.seekFromBegin(smesh.sequence_offset);
@@ -661,8 +653,8 @@ tb::Result<tb::mdl::EntityModelData> BvmLoader::loadCurrent(
     {
       for (size_t fi = 0; fi < seqs[si].frames; fi++, flatIdx++)
       {
-        auto& posDest = tmp.perFramePos[flatIdx];
-        auto& nrmDest = tmp.perFrameNrm[flatIdx];
+        auto& posDest = tmp_sm.perFramePos[flatIdx];
+        auto& nrmDest = tmp_sm.perFrameNrm[flatIdx];
         posDest.resize(smesh.num_verts);
         nrmDest.resize(smesh.num_verts);
         for (size_t vi = 0; vi < smesh.num_verts; vi++)
@@ -674,38 +666,39 @@ tb::Result<tb::mdl::EntityModelData> BvmLoader::loadCurrent(
         frameBounds[flatIdx].add(posDest.begin(), posDest.end());
       }
     }
-    surfaces.push_back(std::move(tmp));
+
+    tmp_submeshes.push_back(std::move(tmp_sm));
   }
 
-  // add frames, and each surface per-frame mesh
-  auto frames = std::vector<mdl::EntityModelFrame*>{};
-  frames.reserve(Ftotal);
+  // insert all the frames in the model first.
   for (size_t i = 0; i < Ftotal; ++i)
-  {
-    frames.push_back(&model.addFrame(flatFrames[i].name, frameBounds[i].bounds()));
-  }
+    model.addFrame(flatFrames[i].name, frameBounds[i].bounds());
 
-  using Vertex = mdl::EntityModelVertex;
-  for (auto& surf : surfaces)
+  for (size_t i = 0; i < tmp_submeshes.size(); i++)
   {
-    render::IndexRangeMap rangeMap{
-      render::PrimType::Triangles, 0, 3 * surf.triangles.size()};
+    auto& tmp_sm = tmp_submeshes[i];
+
+
     for (size_t fi = 0; fi < Ftotal; ++fi)
     {
-      const auto& pos = surf.perFramePos[fi];
-      std::vector<Vertex> frameVerts;
-      frameVerts.reserve(3 * surf.triangles.size());
-      for (const auto& tri : surf.triangles)
+      auto rangeMap = render::IndexRangeMap{
+        render::PrimType::Triangles, 0, 3 * tmp_sm.triangles.size()};
+      const auto& pos = tmp_sm.perFramePos[fi];
+      std::vector<mdl::EntityModelVertex> frameVerts;
+      frameVerts.reserve(3 * tmp_sm.triangles.size());
+      for (const auto& tri : tmp_sm.triangles)
       {
         const auto i0 = tri.vertices[0];
         const auto i1 = tri.vertices[1];
         const auto i2 = tri.vertices[2];
-        frameVerts.emplace_back(pos[i0], surf.uvs[i0]);
-        frameVerts.emplace_back(pos[i1], surf.uvs[i1]);
-        frameVerts.emplace_back(pos[i2], surf.uvs[i2]);
+        frameVerts.emplace_back(pos[i0], tmp_sm.uvs[i0]);
+        frameVerts.emplace_back(pos[i1], tmp_sm.uvs[i1]);
+        frameVerts.emplace_back(pos[i2], tmp_sm.uvs[i2]);
       }
-      surf.surface->addMesh(
-        *frames[fi], std::move(frameVerts), render::IndexRangeMap{rangeMap});
+
+      auto& frames = model.frames();
+      auto& surface = model.surface(i);
+      surface.addMesh(frames[fi], std::move(frameVerts), std::move(rangeMap));
     }
   }
 
