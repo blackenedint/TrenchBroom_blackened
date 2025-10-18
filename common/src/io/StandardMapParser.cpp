@@ -444,6 +444,7 @@ void StandardMapParser::parseFace(ParserStatus& status, const bool primitive)
     break;
   case mdl::MapFormat::Quake2_Valve:
   case mdl::MapFormat::Quake3_Valve:
+  case mdl::MapFormat::Blackened: //Tony; use this for now until I get the rest.
     parseQuake2ValveFace(status);
     break;
   case mdl::MapFormat::Hexen2:
