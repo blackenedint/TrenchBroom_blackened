@@ -29,6 +29,8 @@
 #include "vm/mat_ext.h"
 #include "vm/vec.h"
 
+#include "catch/CatchConfig.h"
+
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/generators/catch_generators.hpp>
 #include <catch2/matchers/catch_matchers_vector.hpp>
@@ -36,7 +38,6 @@
 namespace tb::mdl
 {
 using namespace Catch::Matchers;
-using namespace PropertyValueTypes;
 
 TEST_CASE("EntityTest")
 {
@@ -94,8 +95,8 @@ TEST_CASE("EntityTest")
       Color{},
       "",
       {
-        {"some_prop", String{}, "", ""},
-        {"some_default_prop", String{"value"}, "", ""},
+        {"some_prop", mdl::PropertyValueTypes::String{}, "", ""},
+        {"some_default_prop", mdl::PropertyValueTypes::String{"value"}, "", ""},
       },
       PointEntityDefinition{vm::bbox3d{32.0}, {}, {}},
     };

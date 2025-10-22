@@ -1,6 +1,7 @@
 set(COMMON_TEST_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 set(COMMON_TEST_UTILS_SOURCE
+        "${COMMON_TEST_SOURCE_DIR}/catch/CatchConfig.h"
         "${COMMON_TEST_SOURCE_DIR}/catch/Matchers.cpp"
         "${COMMON_TEST_SOURCE_DIR}/catch/Matchers.h"
         "${COMMON_TEST_SOURCE_DIR}/catch/StringMakers.cpp"
@@ -154,6 +155,7 @@ set(COMMON_TEST_SOURCE
         "${COMMON_TEST_SOURCE_DIR}/ui/tst_ClipTool.cpp"
         "${COMMON_TEST_SOURCE_DIR}/ui/tst_ClipToolController.cpp"
         "${COMMON_TEST_SOURCE_DIR}/ui/tst_CompilationRunner.cpp"
+        "${COMMON_TEST_SOURCE_DIR}/ui/tst_EntityPropertyModel.cpp"
         "${COMMON_TEST_SOURCE_DIR}/ui/tst_ExtrudeTool.cpp"
         "${COMMON_TEST_SOURCE_DIR}/ui/tst_HandleDragTracker.cpp"
         "${COMMON_TEST_SOURCE_DIR}/ui/tst_InputEvent.cpp"

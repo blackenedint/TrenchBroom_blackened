@@ -75,8 +75,8 @@ std::string getWadPathStr(const std::vector<std::filesystem::path>& wadPaths)
 
 } // namespace
 
-SmartWadEditor::SmartWadEditor(MapDocument& document, QWidget* parent)
-  : SmartPropertyEditor{document, parent}
+SmartWadEditor::SmartWadEditor(mdl::Map& map, QWidget* parent)
+  : SmartPropertyEditor{map, parent}
 {
   auto* header = new TitleBar{"Wad Files"};
 
@@ -243,10 +243,9 @@ bool SmartWadEditor::canRemoveWads() const
   }
 
   const auto wadPaths = getWadPaths(nodes(), propertyKey());
-  return !selections.empty()
-         && std::all_of(selections.begin(), selections.end(), [&](const auto s) {
-              return size_t(s) < wadPaths.size();
-            });
+  return !selections.empty() && std::ranges::all_of(selections, [&](const auto s) {
+    return size_t(s) < wadPaths.size();
+  });
 
   return true;
 }

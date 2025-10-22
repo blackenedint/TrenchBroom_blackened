@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2010 Kristian Duske
+ Copyright (C) 2025 Kristian Duske
 
  This file is part of TrenchBroom.
 
@@ -17,39 +17,6 @@
  along with TrenchBroom. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
+#define CATCH_CONFIG_ENABLE_ALL_STRINGMAKERS 1
 
-#include "ui/Tool.h"
-#include "ui/ToolController.h"
-
-#include <memory>
-
-namespace tb::mdl
-{
-class Map;
-}
-
-namespace tb::ui
-{
-class GestureTracker;
-class UVViewHelper;
-
-class UVOffsetTool : public ToolController, public Tool
-{
-private:
-  mdl::Map& m_map;
-  const UVViewHelper& m_helper;
-
-public:
-  UVOffsetTool(mdl::Map& map, const UVViewHelper& helper);
-
-private:
-  Tool& tool() override;
-  const Tool& tool() const override;
-
-  std::unique_ptr<GestureTracker> acceptMouseDrag(const InputState& inputState) override;
-
-  bool cancel() override;
-};
-
-} // namespace tb::ui
+#include "catch/StringMakers.h" // IWYU pragma: keep

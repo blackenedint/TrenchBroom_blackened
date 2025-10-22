@@ -30,7 +30,6 @@
 #include "mdl/Map.h"
 #include "mdl/PropertyDefinition.h"
 #include "ui/EntityPropertyGrid.h"
-#include "ui/MapDocument.h"
 #include "ui/QtUtils.h"
 #include "ui/SmartPropertyEditorManager.h"
 #include "ui/Splitter.h"
@@ -39,11 +38,11 @@
 
 namespace tb::ui
 {
-EntityPropertyEditor::EntityPropertyEditor(MapDocument& document, QWidget* parent)
+EntityPropertyEditor::EntityPropertyEditor(mdl::Map& map, QWidget* parent)
   : QWidget{parent}
-  , m_document{document}
+  , m_map{map}
 {
-  createGui(m_document);
+  createGui();
   connectObservers();
 }
 
@@ -59,11 +58,10 @@ void EntityPropertyEditor::OnCurrentRowChanged()
 
 void EntityPropertyEditor::connectObservers()
 {
-  auto& map = m_document.map();
-  m_notifierConnection += map.selectionDidChangeNotifier.connect(
+  m_notifierConnection += m_map.selectionDidChangeNotifier.connect(
     this, &EntityPropertyEditor::selectionDidChange);
   m_notifierConnection +=
-    map.nodesDidChangeNotifier.connect(this, &EntityPropertyEditor::nodesDidChange);
+    m_map.nodesDidChangeNotifier.connect(this, &EntityPropertyEditor::nodesDidChange);
 }
 
 void EntityPropertyEditor::selectionDidChange(const mdl::SelectionChange&)
@@ -78,9 +76,8 @@ void EntityPropertyEditor::nodesDidChange(const std::vector<mdl::Node*>&)
 
 void EntityPropertyEditor::updateIfSelectedEntityDefinitionChanged()
 {
-  const auto& map = m_document.map();
   const auto* entityDefinition =
-    mdl::selectEntityDefinition(map.selection().allEntities());
+    mdl::selectEntityDefinition(m_map.selection().allEntities());
 
   if (entityDefinition != m_currentDefinition)
   {
@@ -91,10 +88,9 @@ void EntityPropertyEditor::updateIfSelectedEntityDefinitionChanged()
 
 void EntityPropertyEditor::updateDocumentationAndSmartEditor()
 {
-  const auto& map = m_document.map();
   const auto& propertyKey = m_propertyGrid->selectedRowName();
 
-  m_smartEditorManager->switchEditor(propertyKey, map.selection().allEntities());
+  m_smartEditorManager->switchEditor(propertyKey, m_map.selection().allEntities());
 
   updateDocumentation(propertyKey);
 
@@ -108,13 +104,11 @@ void EntityPropertyEditor::updateDocumentationAndSmartEditor()
 QString EntityPropertyEditor::optionDescriptions(
   const mdl::PropertyDefinition& definition)
 {
-  using namespace mdl::PropertyValueTypes;
-
   static const auto bullet = QString{" "} + QChar{0x2022} + QString{" "};
 
   return std::visit(
     kdl::overload(
-      [](const Choice& valueType) {
+      [](const mdl::PropertyValueTypes::Choice& valueType) {
         auto result = QString{};
         auto stream = QTextStream{&result};
         for (const auto& option : valueType.options)
@@ -128,7 +122,7 @@ QString EntityPropertyEditor::optionDescriptions(
         }
         return result;
       },
-      [](const Flags& valueType) {
+      [](const mdl::PropertyValueTypes::Flags& valueType) {
         // The options are not necessarily sorted by value, so we sort the descriptions
         // here by inserting into a map sorted by the flag value.
         auto flagDescriptors = std::map<int, QString>{};
@@ -161,10 +155,9 @@ void EntityPropertyEditor::updateDocumentation(const std::string& propertyKey)
 {
   m_documentationText->clear();
 
-  const auto& map = m_document.map();
   if (
     const auto* entityDefinition =
-      mdl::selectEntityDefinition(map.selection().allEntities()))
+      mdl::selectEntityDefinition(m_map.selection().allEntities()))
   {
     auto normalFormat = QTextCharFormat{};
     auto boldFormat = QTextCharFormat{};
@@ -240,7 +233,7 @@ void EntityPropertyEditor::updateDocumentation(const std::string& propertyKey)
   m_documentationText->moveCursor(QTextCursor::MoveOperation::Start);
 }
 
-void EntityPropertyEditor::createGui(MapDocument& document)
+void EntityPropertyEditor::createGui()
 {
   m_splitter = new Splitter{Qt::Vertical};
 
@@ -248,8 +241,8 @@ void EntityPropertyEditor::createGui(MapDocument& document)
   // users' view settings.
   m_splitter->setObjectName("EntityAttributeEditor_Splitter");
 
-  m_propertyGrid = new EntityPropertyGrid{document};
-  m_smartEditorManager = new SmartPropertyEditorManager{document};
+  m_propertyGrid = new EntityPropertyGrid{m_map};
+  m_smartEditorManager = new SmartPropertyEditorManager{m_map};
   m_documentationText = new QTextEdit{};
   m_documentationText->setReadOnly(true);
 
