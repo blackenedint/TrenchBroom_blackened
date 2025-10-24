@@ -55,7 +55,12 @@ constexpr uint32_t BVM_SUBMESH_IDENT =
 constexpr size_t MAX_BVM_NAME = 64;
 
 // the most recent version.
-constexpr int32_t BVM_CURRENTVERSION = 3;
+constexpr int32_t BVM_CURRENTVERSION = 4;
+
+
+	// some helpers, so i don't need to put magic numbers.
+constexpr int32_t VTXMDL_VERSION_GROUPS = 4;
+constexpr int32_t VTXMDL_VERSION_COLLISION = 4;
 
 } // namespace BvmLayout
 
@@ -80,6 +85,15 @@ struct BvmFlatFrame
   size_t seq;
   size_t inSeq;
   std::string name;
+};
+
+struct BvmGroupInfo
+{
+	int32_t groupid;
+	std::string groupname; //MAX_VTXMDL_NAME
+	int32_t mass;
+	int32_t num_verts;
+	int32_t num_indices;
 };
 
 void loadSkins(
@@ -179,7 +193,7 @@ Result<mdl::EntityModelData> BvmLoader::load(Logger& logger)
       return loadV2(reader, logger);
     case 3:
     default:
-      return loadCurrent(reader, logger);
+      return loadCurrent(reader, version, logger);
     }
   }
   catch (const ReaderException& e)
@@ -487,7 +501,7 @@ tb::Result<tb::mdl::EntityModelData> BvmLoader::loadV2(Reader& reader, Logger& l
 }
 
 tb::Result<tb::mdl::EntityModelData> BvmLoader::loadCurrent(
-  Reader& reader, Logger& logger)
+  Reader& reader, int version, Logger& logger)
 {
   auto model = mdl::EntityModelData{mdl::PitchType::Normal, mdl::Orientation::Oriented};
   const auto origin = reader.readVec<float, 3>();
@@ -496,11 +510,26 @@ tb::Result<tb::mdl::EntityModelData> BvmLoader::loadCurrent(
   /*const auto mins =*/reader.readVec<float, 3>();
   /*const auto maxs =*/reader.readVec<float, 3>();
 
+  size_t group_count = 0;
+  size_t group_offset = 0;
+  if (version >= BvmLayout::VTXMDL_VERSION_GROUPS)
+  {
+	group_count = reader.readSize<int32_t>();
+	group_offset = reader.readSize<int32_t>();
+  }
+
   const auto sequence_count = reader.readSize<int32_t>();
   const auto sequence_offset = reader.readSize<int32_t>();
 
   const auto submesh_count = reader.readSize<int32_t>();
   const auto submesh_offset = reader.readSize<int32_t>();
+
+  // we don't need the collision in trenchbroom, so just read past it.
+  if (version >= BvmLayout::VTXMDL_VERSION_COLLISION)
+  {
+    /*const auto collision_count =*/ reader.readSize<int32_t>();
+    /*const auto collision_offset =*/ reader.readSize<int32_t>();
+  }
 
   /*const auto metadatasize = */ reader.readSize<int32_t>();
   /*const auto metadataoffset = */ reader.readSize<int32_t>();
@@ -538,6 +567,11 @@ tb::Result<tb::mdl::EntityModelData> BvmLoader::loadCurrent(
   // parse the submesh data out first; and then actually do the reading.
   struct Submesh
   {
+	//v4+
+	int32_t flags;
+	int32_t groupid;
+	int32_t slotid;
+
     std::string name;
     size_t num_skins;
     size_t skin_offset;
@@ -563,6 +597,15 @@ tb::Result<tb::mdl::EntityModelData> BvmLoader::loadCurrent(
 
     auto smesh = Submesh{};
     smesh.name = fmt::format("submesh_{}", smi);
+
+	if ( version >= BvmLayout::VTXMDL_VERSION_GROUPS )
+	{
+		smesh.flags = reader.readInt<int32_t>();
+		smesh.groupid = reader.readInt<int32_t>();
+		smesh.slotid = reader.readInt<int32_t>();
+	}
+
+
     // read counts and offsets.
     smesh.num_skins = reader.readSize<int32_t>();
     smesh.skin_offset = reader.readSize<int32_t>();

@@ -49,7 +49,7 @@ private:
   // backward compatability with older versions.
   Result<mdl::EntityModelData> loadV1(Reader& reader, Logger& logger);
   Result<mdl::EntityModelData> loadV2(Reader& reader, Logger& logger);
-  Result<mdl::EntityModelData> loadCurrent(Reader& reader, Logger& logger);
+  Result<mdl::EntityModelData> loadCurrent(Reader& reader, int version, Logger& logger);
 };
 
 } // namespace tb::io
