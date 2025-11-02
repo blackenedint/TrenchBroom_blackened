@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include "Color.h"
 #include "Macros.h"
 #include "Result.h"
 #include "render/GL.h"
@@ -75,6 +76,13 @@ public:
   void set(const std::string& name, const vm::mat2x2f& value);
   void set(const std::string& name, const vm::mat3x3f& value);
   void set(const std::string& name, const vm::mat4x4f& value);
+
+  template <typename C>
+  void set(const std::string& name, const C& value)
+    requires(Color::AnyColor<C> || std::is_same_v<C, Color>)
+  {
+    set(name, value.toRgbaF().vec());
+  }
 
   GLint findAttributeLocation(const std::string& name) const;
 

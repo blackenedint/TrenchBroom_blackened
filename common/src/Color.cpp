@@ -20,118 +20,432 @@
 
 #include "Color.h"
 
-#include "vm/scalar.h"
-#include "vm/vec.h"
+#include "kdl/reflection_impl.h"
+
 #include "vm/vec_io.h"
 
-#include <sstream>
+#include <optional>
 
 namespace tb
 {
 
-std::optional<Color> Color::parse(const std::string& str)
+kdl_reflect_impl(RgbF);
+kdl_reflect_impl(RgbB);
+kdl_reflect_impl(RgbaF);
+kdl_reflect_impl(RgbaB);
+
+RgbF::RgbF()
+  : m_v{0.0f, 0.0f, 0.0f}
 {
-  if (const auto c4 = vm::parse<float, 4>(str))
+}
+
+RgbF::RgbF(const float r, const float g, const float b)
+  : m_v{r, g, b}
+{
+}
+
+RgbF::RgbF(const vm::vec<float, RgbF::S>& v)
+  : m_v{v}
+{
+}
+
+Result<RgbF> RgbF::parse(const std::string_view str)
+{
+  if (const auto v3f = vm::parse<float, 3>(str); v3f && isFloatColorRange(*v3f))
   {
-    return Color{c4->x(), c4->y(), c4->z(), c4->w()};
+    return RgbF{*v3f};
   }
-  if (const auto c3 = vm::parse<float, 3>(str))
+
+  return Error{fmt::format("Failed to parse '{}' as RgbF", str)};
+}
+
+
+float RgbF::r() const
+{
+  return m_v[0];
+}
+
+float RgbF::g() const
+{
+  return m_v[1];
+}
+
+float RgbF::b() const
+{
+  return m_v[2];
+}
+
+RgbF::operator vm::vec<float, RgbF::S>() const
+{
+  return vec();
+}
+
+vm::vec<float, RgbF::S> RgbF::vec() const
+{
+  return m_v;
+}
+
+bool RgbF::isFloat() const
+{
+  return true;
+}
+
+bool RgbF::isByte() const
+{
+  return false;
+}
+
+RgbF RgbF::toFloat() const
+{
+  return toRgbF();
+}
+
+RgbB RgbF::toByte() const
+{
+  return toRgbB();
+}
+
+RgbF RgbF::toRgbF() const
+{
+  return *this;
+}
+
+RgbB RgbF::toRgbB() const
+{
+  return RgbB{vm::vec<uint8_t, 3>{vec() * 255.0f}};
+}
+
+RgbaF RgbF::toRgbaF() const
+{
+  return RgbaF{r(), g(), b(), 1.0f};
+}
+
+RgbaB RgbF::toRgbaB() const
+{
+  return RgbaB{toRgbB(), 255};
+}
+
+std::string RgbF::toString() const
+{
+  return fmt::format("{} {} {}", r(), g(), b());
+}
+
+RgbB::RgbB()
+  : m_v{0, 0, 0}
+{
+}
+
+RgbB::RgbB(const uint8_t r, const uint8_t g, const uint8_t b)
+  : m_v{r, g, b}
+{
+}
+
+RgbB::RgbB(const vm::vec<uint8_t, RgbB::S>& v)
+  : m_v{v}
+{
+}
+
+Result<RgbB> RgbB::parse(const std::string_view str)
+{
+  if (const auto v3c = vm::parse<uint8_t, 3>(str); v3c && isByteColorRange(*v3c))
   {
-    return Color{c3->x(), c3->y(), c3->z()};
+    return RgbB{*v3c};
   }
-  return std::nullopt;
+
+  return Error{fmt::format("Failed to parse '{}' as RgbB", str)};
 }
 
-std::string Color::toString() const
+uint8_t RgbB::r() const
 {
-  auto ss = std::stringstream{};
-  if (a() == 1.0f)
+  return m_v[0];
+}
+
+uint8_t RgbB::g() const
+{
+  return m_v[1];
+}
+
+uint8_t RgbB::b() const
+{
+  return m_v[2];
+}
+
+RgbB::operator vm::vec<uint8_t, RgbB::S>() const
+{
+  return vec();
+}
+
+vm::vec<uint8_t, RgbB::S> RgbB::vec() const
+{
+  return m_v;
+}
+
+bool RgbB::isFloat() const
+{
+  return false;
+}
+
+bool RgbB::isByte() const
+{
+  return true;
+}
+
+RgbF RgbB::toFloat() const
+{
+  return toRgbF();
+}
+
+RgbB RgbB::toByte() const
+{
+  return toRgbB();
+}
+
+RgbF RgbB::toRgbF() const
+{
+  return RgbF{vm::vec3f{vec()} / 255.0f};
+}
+
+RgbB RgbB::toRgbB() const
+{
+  return *this;
+}
+
+RgbaF RgbB::toRgbaF() const
+{
+  return RgbaF{toRgbF(), 1.0f};
+}
+
+RgbaB RgbB::toRgbaB() const
+{
+  return RgbaB{*this, 255};
+}
+
+std::string RgbB::toString() const
+{
+  return fmt::format("{} {} {}", r(), g(), b());
+}
+
+RgbaF::RgbaF()
+  : m_v{0.0f, 0.0f, 0.0f, 0.0f}
+{
+}
+
+RgbaF::RgbaF(const float r, const float g, const float b, const float a)
+  : m_v{r, g, b, a}
+{
+}
+
+RgbaF::RgbaF(const RgbF& rgb, float a)
+  : m_v{rgb.vec(), a}
+{
+}
+
+RgbaF::RgbaF(const vm::vec<float, RgbaF::S>& v)
+  : m_v{v}
+{
+}
+
+Result<RgbaF> RgbaF::parse(const std::string_view str)
+{
+  if (const auto v4f = vm::parse<float, 4>(str); v4f && isFloatColorRange(*v4f))
   {
-    ss << xyz();
+    return RgbaF{*v4f};
   }
-  else
+
+  return Error{fmt::format("Failed to parse '{}' as RgbaF", str)};
+}
+
+float RgbaF::r() const
+{
+  return m_v[0];
+}
+
+float RgbaF::g() const
+{
+  return m_v[1];
+}
+
+float RgbaF::b() const
+{
+  return m_v[2];
+}
+
+float RgbaF::a() const
+{
+  return m_v[3];
+}
+
+RgbaF::operator vm::vec<float, RgbaF::S>() const
+{
+  return vec();
+}
+
+vm::vec<float, RgbaF::S> RgbaF::vec() const
+{
+  return m_v;
+}
+
+bool RgbaF::isFloat() const
+{
+  return true;
+}
+
+bool RgbaF::isByte() const
+{
+  return false;
+}
+
+RgbaF RgbaF::toFloat() const
+{
+  return toRgbaF();
+}
+
+RgbaB RgbaF::toByte() const
+{
+  return toRgbaB();
+}
+
+RgbF RgbaF::toRgbF() const
+{
+  return RgbF{r(), g(), b()};
+}
+
+RgbB RgbaF::toRgbB() const
+{
+  return toRgbF().toRgbB();
+}
+
+RgbaF RgbaF::toRgbaF() const
+{
+  return *this;
+}
+
+RgbaB RgbaF::toRgbaB() const
+{
+  return RgbaB{vm::vec<uint8_t, 4>{vec() * 255.0f}};
+}
+
+std::string RgbaF::toString() const
+{
+  return fmt::format("{} {} {} {}", r(), g(), b(), a());
+}
+
+RgbaB::RgbaB()
+  : m_v{0, 0, 0, 0}
+{
+}
+
+RgbaB::RgbaB(const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a)
+  : m_v{r, g, b, a}
+{
+}
+
+RgbaB::RgbaB(const RgbB& rgbB, const uint8_t a)
+  : m_v{rgbB.vec(), a}
+{
+}
+
+RgbaB::RgbaB(const vm::vec<uint8_t, RgbaB::S>& v)
+  : m_v{v}
+{
+}
+
+Result<RgbaB> RgbaB::parse(const std::string_view str)
+{
+  if (const auto v4c = vm::parse<uint8_t, 4>(str); v4c && isByteColorRange(*v4c))
   {
-    ss << xyzw();
+    return RgbaB{*v4c};
   }
-  return ss.str();
+
+  return Error{fmt::format("Failed to parse '{}' as RgbaB", str)};
 }
 
-Color::Color()
-  : vec<float, 4>{0.0f, 0.0f, 0.0f, 0.0f}
+uint8_t RgbaB::r() const
 {
+  return m_v[0];
 }
 
-Color::Color(const vec<float, 4>& i_v)
-  : vec<float, 4>{i_v}
+uint8_t RgbaB::g() const
 {
+  return m_v[1];
 }
 
-Color::Color(const float r, const float g, const float b, const float a)
-  : vec<float, 4>{r, g, b, a}
+uint8_t RgbaB::b() const
 {
+  return m_v[2];
 }
 
-Color::Color(const Color& color, const float a)
-  : vec<float, 4>{color.r(), color.g(), color.b(), a}
+uint8_t RgbaB::a() const
 {
+  return m_v[3];
 }
 
-Color::Color(
-  const unsigned char r,
-  const unsigned char g,
-  const unsigned char b,
-  const unsigned char a)
-  : vec<float, 4>{
-      float(r) / 255.0f,
-      float(g) / 255.0f,
-      float(b) / 255.0f,
-      float(a) / 255.0f,
-    }
+RgbaB::operator vm::vec<uint8_t, RgbaB::S>() const
 {
+  return vec();
 }
 
-Color::Color(const int r, const int g, const int b, const int a)
-  : vec<float, 4>{
-      float(r) / 255.0f,
-      float(g) / 255.0f,
-      float(b) / 255.0f,
-      float(a) / 255.0f,
-    }
+vm::vec<uint8_t, RgbaB::S> RgbaB::vec() const
 {
+  return m_v;
 }
 
-Color::Color(const int r, const int g, const int b, const float a)
-  : vec<float, 4>{
-      float(r) / 255.0f,
-      float(g) / 255.0f,
-      float(b) / 255.0f,
-      a,
-    }
+bool RgbaB::isFloat() const
 {
+  return false;
 }
 
-float Color::r() const
+bool RgbaB::isByte() const
 {
-  return x();
+  return true;
 }
 
-float Color::g() const
+RgbaF RgbaB::toFloat() const
 {
-  return y();
+  return toRgbaF();
 }
 
-float Color::b() const
+RgbaB RgbaB::toByte() const
 {
-  return z();
+  return toRgbaB();
 }
 
-float Color::a() const
+RgbF RgbaB::toRgbF() const
 {
-  return w();
+  return toRgbaF().toRgbF();
 }
 
-void Color::rgbToHSB(
-  const float r, const float g, const float b, float& h, float& s, float& br)
+RgbB RgbaB::toRgbB() const
+{
+  return RgbB{r(), g(), b()};
+}
+
+RgbaF RgbaB::toRgbaF() const
+{
+  return RgbaF{vm::vec4f{vec()} / 255.0f};
+}
+
+RgbaB RgbaB::toRgbaB() const
+{
+  return *this;
+}
+
+std::string RgbaB::toString() const
+{
+  return fmt::format("{} {} {} {}", r(), g(), b(), a());
+}
+
+Color mixColors(const Color& lhs, const Color& rhs, const float f)
+{
+  return mixColors(lhs.toRgbF(), rhs.toRgbF(), f);
+}
+
+RgbaF blendColor(const RgbaF& c, const float f)
+{
+  return RgbaF{vm::vec4f{c.toRgbF().vec(), f * c.a()}};
+}
+
+void rgbToHSB(const float r, const float g, const float b, float& h, float& s, float& br)
 {
   assert(r >= 0.0f && r <= 1.0f);
   assert(g >= 0.0f && g <= 1.0f);
