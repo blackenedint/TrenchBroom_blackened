@@ -147,7 +147,7 @@
 
 @BaseClass size(-16 -16 0, 16 16 32) color(0 0 200) base(Targetname, Appearflags, Angles) = Weapon []
 
-@BaseClass base(Appearflags, Angles) size(-16 -16 -36, 16 16 36) color(0 255 0) offset(0 0 36) = PlayerClass []
+@BaseClass base(Appearflags, Angles) size(-16 -16 0, 16 16 72) color(0 255 0) = PlayerClass []
 
 @BaseClass base(Target, Targetname, RenderFields, Angles) color(0 200 200) = Monster 
 [
@@ -954,6 +954,7 @@
 		16: "One-way" : 0
 		64: "X Axis" : 0
 		128: "Y Axis" : 0
+		1024: "Flip Direction On Close" : 0
 	]
 	distance(integer) : "Distance (deg)" : 90
 ]
@@ -1453,9 +1454,9 @@
 
 @PointClass base(Targetname) = info_null : "info_null (spotlight target)" []
 
-@PointClass base(PlayerClass) sequence(2) studio("models/editor/playerstart.mdl") = info_player_start : "Player start" []
-@PointClass base(PlayerClass) sequence(2) studio("models/editor/playerstart.mdl") = info_player_coop : "Player cooperative start" []
-@PointClass base(PlayerClass) sequence(2) studio("models/editor/playerstart.mdl") = info_player_deathmatch : "Player deathmatch start" 
+@PointClass base(PlayerClass) studio("models/editor/playerstart.bvm") = info_player_start : "Player start" []
+@PointClass base(PlayerClass) studio("models/editor/playerstart.bvm") = info_player_coop : "Player cooperative start" []
+@PointClass base(PlayerClass) studio("models/editor/playerstart.bvm") = info_player_deathmatch : "Player deathmatch start" 
 [
 	target(target_destination) : "Target"
 	master(string) : "Master"
