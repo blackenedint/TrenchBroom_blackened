@@ -107,6 +107,17 @@
 	skyaxis(string) : "Vector axis for rotating sky"
 	skyrotate(float) : "Speed of rotation (degrees/second)"
 	gravity(integer) : "Gravity" : 800
+	bgm(choices) : "BGM" : 0 : "if set, the selected track will start at the beginning of the map" =
+	[
+		0 : "None"
+		1 : "Track01"
+		2 : "Track02"
+	]
+	bgm_looped(choices) : "BGM Looped" : 1 : "Should the BGM play looped, or just once" =
+	[
+		0 : "No"
+		1 : "Yes"
+	]
 		
 //	sounds(integer) : "CD track to play" : 1 : "CD track to play when the level begins."
 //	light(integer) : "Default light level"
@@ -1914,7 +1925,7 @@
 	changedelay(string) : "Delay before change target" : "0"
 	spawnflags(flags) =
 	[
-		1: "No Intermission" : 0
+		1: "No Intermission" : 1
 		2: "USE Only" : 0
 	]
 ]
