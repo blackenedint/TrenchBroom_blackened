@@ -1303,11 +1303,11 @@
 		1 : "Starts Open" : 0
 		256:"Use Only" : 0
 	]
-	skin(choices) : "Contents" : -3 =
+	liquidtype(choices) : "Fluid Type" : 32 =
 	[
-		-3: "Water"
-		-4: "Slime"
-		-5: "Lava"
+		32: "Water"
+		16: "Slime"
+		8: "Lava"
 	]
 ]
 
