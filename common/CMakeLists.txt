@@ -437,6 +437,7 @@ set(COMMON_SOURCE
         ${COMMON_SOURCE_DIR}/ui/ModEditor.cpp
         ${COMMON_SOURCE_DIR}/ui/MousePreferencePane.cpp
         ${COMMON_SOURCE_DIR}/ui/MoveHandleDragTracker.cpp
+        ${COMMON_SOURCE_DIR}/ui/MoveHandle.cpp
         ${COMMON_SOURCE_DIR}/ui/MoveObjectsTool.cpp
         ${COMMON_SOURCE_DIR}/ui/MoveObjectsToolController.cpp
         ${COMMON_SOURCE_DIR}/ui/MultiCompletionLineEdit.cpp
@@ -997,6 +998,7 @@ set(COMMON_HEADER
         ${COMMON_SOURCE_DIR}/ui/ModEditor.h
         ${COMMON_SOURCE_DIR}/ui/MousePreferencePane.h
         ${COMMON_SOURCE_DIR}/ui/MoveHandleDragTracker.h
+        ${COMMON_SOURCE_DIR}/ui/MoveHandle.h
         ${COMMON_SOURCE_DIR}/ui/MoveObjectsTool.h
         ${COMMON_SOURCE_DIR}/ui/MoveObjectsToolController.h
         ${COMMON_SOURCE_DIR}/ui/MultiCompletionLineEdit.h

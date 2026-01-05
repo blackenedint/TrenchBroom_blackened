@@ -39,6 +39,11 @@ MoveObjectsTool::MoveObjectsTool(mdl::Map& map)
 {
 }
 
+const mdl::Map& MoveObjectsTool::map() const
+{
+  return m_map;
+}
+
 const mdl::Grid& MoveObjectsTool::grid() const
 {
   return m_map.grid();

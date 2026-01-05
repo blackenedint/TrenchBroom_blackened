@@ -1286,6 +1286,7 @@
 @SolidClass base(Targetname, Appearflags, RenderFields, Global) = func_wall : "Wall" 
 [
 	_minlight(string) : "Minimum light level"
+	surfaceprop(string) : "surfaceprop override"
 ]
 
 @SolidClass base(func_wall) = func_wall_toggle : "Toggleable geometry" 
@@ -1308,6 +1309,15 @@
 		32: "Water"
 		16: "Slime"
 		8: "Lava"
+	]
+]
+
+@SolidClass base(func_wall) = func_physbox : "physically simulated brush"
+[
+	spawnflags(flags) =
+	[
+		1: "Start Asleep" : 0
+		2: "Debris" : 0
 	]
 ]
 
@@ -2058,6 +2068,71 @@
 @PointClass base(Angles) studio() = prop_static : "static prop" 
 [
 	model(studio) : "model"
+]
+
+@PointClass base(Angles) studio() = prop_physics : "physically simulated prop" 
+[
+	model(studio) : "model"
+	spawnflags(flags) =
+	[
+		1: "Start Asleep" : 0
+		2: "Debris" : 0
+	]	
+]
+
+@PointClass base(Targetname, Angles) = physics_constraint_fixed : "Physics constraint (fixed)"
+[
+	attach1(target_destination) : "Attach 1" : : "Targetname of first physics body."
+	attach2(target_destination) : "Attach 2" : : "Targetname of second physics body. Empty means worldspawn."
+	anchor(string) : "Anchor (world)" : : "Optional world-space anchor. Defaults to entity origin."
+]
+
+@PointClass base(Targetname, Angles) = physics_constraint_point : "Physics constraint (point)"
+[
+	attach1(target_destination) : "Attach 1" : : "Targetname of first physics body."
+	attach2(target_destination) : "Attach 2" : : "Targetname of second physics body. Empty means worldspawn."
+	anchor(string) : "Anchor (world)" : : "World-space anchor point. Defaults to entity origin."
+]
+
+@PointClass base(Targetname, Angles) = physics_constraint_hinge : "Physics constraint (hinge)"
+[
+	attach1(target_destination) : "Attach 1" : : "Targetname of first physics body."
+	attach2(target_destination) : "Attach 2" : : "Targetname of second physics body. Empty means worldspawn."
+	anchor(string) : "Anchor (world)" : : "World-space hinge point. Defaults to entity origin."
+	axis(string) : "Hinge axis (world)" : : "World-space axis. Defaults to entity angles forward."
+	limitmin(float) : "Min angle (deg)" : : "Optional hinge limit minimum in degrees."
+	limitmax(float) : "Max angle (deg)" : : "Optional hinge limit maximum in degrees."
+]
+
+@PointClass base(Targetname, Angles) = physics_constraint_slider : "Physics constraint (slider)"
+[
+	attach1(target_destination) : "Attach 1" : : "Targetname of first physics body."
+	attach2(target_destination) : "Attach 2" : : "Targetname of second physics body. Empty means worldspawn."
+	anchor(string) : "Anchor (world)" : : "World-space slider origin. Defaults to entity origin."
+	axis(string) : "Slide axis (world)" : : "World-space axis. Defaults to entity angles forward."
+	limitmin(float) : "Min distance" : : "Optional slider limit minimum (game units)."
+	limitmax(float) : "Max distance" : : "Optional slider limit maximum (game units)."
+]
+
+@PointClass base(Targetname, Angles) = physics_constraint_cone : "Physics constraint (cone)"
+[
+	attach1(target_destination) : "Attach 1" : : "Targetname of first physics body."
+	attach2(target_destination) : "Attach 2" : : "Targetname of second physics body. Empty means worldspawn."
+	anchor(string) : "Anchor (world)" : : "World-space anchor. Defaults to entity origin."
+	axis(string) : "Twist axis (world)" : : "World-space axis. Defaults to entity angles forward."
+	halfangle(float) : "Half cone angle (deg)" : : "Half angle of the cone in degrees."
+]
+
+@PointClass base(Targetname, Angles) = physics_constraint_distance : "Physics constraint (distance/spring)"
+[
+	attach1(target_destination) : "Attach 1" : : "Targetname of first physics body."
+	attach2(target_destination) : "Attach 2" : : "Targetname of second physics body. Empty means worldspawn."
+	point1(string) : "Point 1 (world)" : : "World-space anchor on body 1. Defaults to entity origin."
+	point2(string) : "Point 2 (world)" : : "World-space anchor on body 2. Defaults to attach2 origin."
+	limitmin(float) : "Min distance" : : "Optional minimum distance (game units, -1 = auto)."
+	limitmax(float) : "Max distance" : : "Optional maximum distance (game units, -1 = auto)."
+	springfreq(float) : "Spring frequency" : : "0 = rigid. >0 enables soft spring."
+	springdamp(float) : "Spring damping" : : "Damping ratio."
 ]
 
 //

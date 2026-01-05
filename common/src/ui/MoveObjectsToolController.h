@@ -19,7 +19,10 @@
 
 #pragma once
 
+#include "ui/MoveHandle.h"
 #include "ui/ToolController.h"
+
+#include <optional>
 
 namespace tb::ui
 {
@@ -30,6 +33,7 @@ class MoveObjectsToolController : public ToolController
 {
 private:
   MoveObjectsTool& m_tool;
+  MoveHandle m_handle;
 
 public:
   explicit MoveObjectsToolController(MoveObjectsTool& tool);
@@ -39,9 +43,22 @@ private:
   Tool& tool() override;
   const Tool& tool() const override;
 
+  void pick(const InputState& inputState, mdl::PickResult& pickResult) override;
+
   std::unique_ptr<GestureTracker> acceptMouseDrag(const InputState& inputState) override;
 
+  void setRenderOptions(
+    const InputState& inputState, render::RenderContext& renderContext) const override;
+  void render(
+    const InputState& inputState,
+    render::RenderContext& renderContext,
+    render::RenderBatch& renderBatch) override;
+
   bool cancel() override;
+
+private:
+  std::optional<vm::vec3d> handlePosition() const;
+  bool updateHandlePosition();
 };
 
 } // namespace tb::ui

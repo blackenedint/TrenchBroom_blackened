@@ -133,6 +133,7 @@ Preference<Color> LockedInfoOverlayBackgroundColor(
   "render/Colors/Locked info overlay background", Color(0.0f, 0.0f, 0.0f, 0.6f));
 
 Preference<float> HandleRadius("Controls/Handle radius", 3.0f);
+Preference<float> MoveHandleRadius("Controls/Move handle radius", 6.0f);
 Preference<float> MaximumHandleDistance("Controls/Maximum handle distance", 1000.0f);
 Preference<Color> HandleColor("render/Colors/Handle", Color(248, 230, 60, 1.0f));
 Preference<Color> OccludedHandleColor(
@@ -354,6 +355,7 @@ const std::vector<PreferenceBase*>& staticPreferences()
     &LockedInfoOverlayTextColor,
     &LockedInfoOverlayBackgroundColor,
     &HandleRadius,
+    &MoveHandleRadius,
     &MaximumHandleDistance,
     &HandleColor,
     &OccludedHandleColor,

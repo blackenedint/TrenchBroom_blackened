@@ -51,6 +51,7 @@ public:
   explicit MoveObjectsTool(mdl::Map& map);
 
 public:
+  const mdl::Map& map() const;
   const mdl::Grid& grid() const;
 
   bool startMove(const InputState& inputState);

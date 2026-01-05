@@ -93,6 +93,7 @@ extern Preference<Color> LockedInfoOverlayTextColor;
 extern Preference<Color> LockedInfoOverlayBackgroundColor;
 
 extern Preference<float> HandleRadius;
+extern Preference<float> MoveHandleRadius;
 extern Preference<float> MaximumHandleDistance;
 extern Preference<Color> HandleColor;
 extern Preference<Color> OccludedHandleColor;
