@@ -38,7 +38,8 @@
 namespace tb::ui
 {
 
-AppInfoPanel::AppInfoPanel(AppController& appController, QWidget* parent)
+AppInfoPanel::AppInfoPanel(
+  /* BEGIN #BLACKENED AppController& appController END #BLACKENED,*/ QWidget* parent)
   : QWidget{parent}
 {
   auto appIconImage = loadPixmap("AppIcon.png");

@@ -87,7 +87,11 @@ void WelcomeWindow::createGui()
 QWidget* WelcomeWindow::createAppPanel()
 {
   auto* appPanel = new QWidget{};
-  auto* infoPanel = new AppInfoPanel{m_appController, appPanel};
+  // BEGIN #BLACKENED
+  //auto* infoPanel = new AppInfoPanel{m_appController, appPanel};
+  auto* infoPanel = new AppInfoPanel{appPanel};
+  // END #BLACKENED
+  
 
   m_createNewDocumentButton = new QPushButton{"New map..."};
   m_createNewDocumentButton->setToolTip("Create a new map document");

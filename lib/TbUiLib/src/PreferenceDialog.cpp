@@ -111,7 +111,9 @@ void PreferenceDialog::createGui()
   m_toolBar->addAction(mouseImage, "Mouse", [&]() { switchToPane(PrefPane::Mouse); });
   m_toolBar->addAction(
     keyboardImage, "Keyboard", [&]() { switchToPane(PrefPane::Keyboard); });
+#if !defined(BLACKENED)
   m_toolBar->addAction(updateImage, "Update", [&]() { switchToPane(PrefPane::Update); });
+#endif
 
   // Don't display tooltips for pane switcher buttons...
   for (auto* button : m_toolBar->findChildren<QToolButton*>())
@@ -125,7 +127,7 @@ void PreferenceDialog::createGui()
   m_stackedWidget->addWidget(new ColorsPreferencePane{});
   m_stackedWidget->addWidget(new MousePreferencePane{});
   m_stackedWidget->addWidget(new KeyboardPreferencePane{m_appController, m_document});
-#if !defined( BLACKENED )
+#if !defined(BLACKENED)
   m_stackedWidget->addWidget(new UpdatePreferencePane{m_appController});
 #endif
 

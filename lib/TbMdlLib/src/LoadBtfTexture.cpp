@@ -1,5 +1,6 @@
 /*
  Copyright (C) 2010 Kristian Duske
+ Btf Copyright (C) 2025 Blackened Interactive, Inc
 
  This file is part of TrenchBroom.
 

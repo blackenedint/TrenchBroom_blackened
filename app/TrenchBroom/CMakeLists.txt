@@ -360,7 +360,7 @@ if(WIN32)
         # install only Vigil7 under .../games/Vigil7
         install(DIRECTORY
             "${TB_RESOURCE_DIR}/games/Vigil7"
-            DESTINATION . COMPONENT TrenchBroom)
+            DESTINATION games COMPONENT TrenchBroom)
     else()
         # original behavior: install the entire games tree at the top
         install(DIRECTORY
