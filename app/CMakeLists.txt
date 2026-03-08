@@ -240,10 +240,8 @@ if(WIN32 OR ${CMAKE_SYSTEM_NAME} MATCHES "Linux|FreeBSD")
     # Copy game files to resources directory
     if (TB_BLACKENED)
         add_custom_command(TARGET TrenchBroom POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E make_directory "${APP_RESOURCE_DEST_DIR}/games"
-                COMMAND ${CMAKE_COMMAND} -E copy_directory
-                    "${APP_RESOURCE_DIR}/games/Vigil7"
-                    "${APP_RESOURCE_DEST_DIR}/games/Vigil7")
+            COMMAND ${CMAKE_COMMAND} -E make_directory "${APP_RESOURCE_DEST_DIR}/games"
+            COMMAND ${CMAKE_COMMAND} -E copy_directory "${APP_RESOURCE_DIR}/games/Vigil7" "${APP_RESOURCE_DEST_DIR}/games/Vigil7")
     else()
         add_custom_command(TARGET TrenchBroom POST_BUILD
                 COMMAND ${CMAKE_COMMAND} -E copy_directory "${APP_RESOURCE_DIR}/games/" "${APP_RESOURCE_DEST_DIR}/games")
