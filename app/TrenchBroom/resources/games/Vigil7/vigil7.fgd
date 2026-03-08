@@ -219,7 +219,8 @@
 
 @BaseClass = Light 
 [
-	_light(color255) : "Brightness" : "255 255 128 200" : "First three integer numbers are the color (RGB). The fourth number is the brightness."
+	_light(color255) : "Color" : "255 255 128 200" : "First three integer numbers are the color (RGB). The fourth number is the brightness."
+	intensity(integer) : "Intensity" : 300 : "Only required if intensity is omitted from the Color key above (using trenchbroom color picker). if the intensity is included in the _light key, this key is ignored."
 	style(Choices) : "Appearance" : 0 : "Light appearance. Values:" =
 	[
 		0 : "Normal"
@@ -1474,6 +1475,8 @@
 @PointClass size(-32 -32 0, 32 32 64) color(255 255 0) = info_node_air : "ai air node" []
 
 @PointClass base(Targetname) = info_null : "info_null (spotlight target)" []
+
+@PointClass base(Angles) size(-16 -16 0, 16 16 72) color(255 128 128) studio("models/editor/playerstart.bvm") = nav_seed : "Navigation Seed position; use to aid in navmesh generation by providing additional starting points to move from" []
 
 @PointClass base(PlayerClass) studio("models/editor/playerstart.bvm") = info_player_start : "Player start" []
 @PointClass base(PlayerClass) studio("models/editor/playerstart.bvm") = info_player_coop : "Player cooperative start" []
