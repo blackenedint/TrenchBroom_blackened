@@ -11,6 +11,8 @@ on:
 permissions:
   # This grants the GITHUB_TOKEN the necessary permissions for use with nuget.
   packages: write
+  # Grant the Release step the necessary permissions to upload a release
+  contents: write
 
 jobs:
   ci:
@@ -19,7 +21,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04, macos-14, macos-15-intel, windows-2022]
+        os: [ubuntu-24.04, macos-15, macos-15-intel, windows-2022]
         tb-build-type: [release]
         tb-arch: [default-arch]
         exclude:
@@ -27,7 +29,7 @@ jobs:
             tb-arch: default-arch
         include:
           - os: macos-15-intel
-            tb-build-type: asan
+            tb-build-type: sanitize
           - os: windows-2022
             tb-arch: x64
     env:
@@ -55,7 +57,7 @@ jobs:
       - name: Install Qt
         uses: jurplel/install-qt-action@v4
         with:
-          version: '6.8.*'
+          version: '6.9.*'
 
       # Windows
       - name: Windows - Bootstrap vcpkg
@@ -106,19 +108,18 @@ jobs:
 
       # Linux
       - name: Linux - Bootstrap vcpkg
-        if: ${{ matrix.os == 'ubuntu-22.04' }}
+        if: ${{ matrix.os == 'ubuntu-24.04' }}
         shell: bash
         run: ${{ github.workspace }}/vcpkg/bootstrap-vcpkg.sh
 
       - name: Linux - Install dependencies
-        if: ${{ matrix.os == 'ubuntu-22.04' }}
+        if: ${{ matrix.os == 'ubuntu-24.04' }}
         run: |
-          sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
           sudo apt update
-          sudo apt install gcc-13 g++-13 build-essential libxi-dev libxrandr-dev libxxf86vm-dev freeglut3-dev mesa-common-dev libgl1-mesa-dev libglu1-mesa-dev libglm-dev pandoc cmake p7zip-full ninja-build xvfb libglew-dev libfreeimage-dev libfreetype6-dev libtinyxml2-dev libassimp-dev libfuse2
+          sudo apt install gcc-13 g++-13 build-essential libxi-dev libxrandr-dev libxxf86vm-dev freeglut3-dev mesa-common-dev libgl1-mesa-dev libglu1-mesa-dev libglm-dev pandoc cmake p7zip-full ninja-build xvfb libglew-dev libfreeimage-dev libfreetype6-dev libtinyxml2-dev libassimp-dev libfuse2 mono-complete
 
       - name: Linux - Add NuGet sources
-        if: ${{ matrix.os == 'ubuntu-22.04' }}
+        if: ${{ matrix.os == 'ubuntu-24.04' }}
         shell: bash
         run: |
           mono `${{ env.VCPKG_EXE }} fetch nuget | tail -n 1` \
@@ -133,19 +134,19 @@ jobs:
             -Source "${{ env.FEED_URL }}"
 
       - name: Linux - Set compiler version
-        if: ${{ matrix.os == 'ubuntu-22.04' }}
+        if: ${{ matrix.os == 'ubuntu-24.04' }}
         run: |
           echo "CC=gcc-13" >> $GITHUB_ENV
           echo "CXX=g++-13" >> $GITHUB_ENV
 
       - name: Linux - Build
-        if: ${{ matrix.os == 'ubuntu-22.04' }}
+        if: ${{ matrix.os == 'ubuntu-24.04' }}
         run: |
           ./CI-linux.sh
 
       - name: Linux - Upload artifacts
         uses: actions/upload-artifact@v4
-        if: ${{ matrix.os == 'ubuntu-22.04' }}
+        if: ${{ matrix.os == 'ubuntu-24.04' }}
         with:
           name: ${{ matrix.os }}
           path: |
@@ -153,9 +154,9 @@ jobs:
             cmakebuild/*.md5
 
       # macOS
-      - name: macOS - Switch to Xcode 16.2
+      - name: macOS - Switch to Xcode 26
         if: ${{ startsWith(matrix.os, 'macos') }}
-        run: sudo xcode-select -s /Applications/Xcode_16.2.app/Contents/Developer
+        run: sudo xcode-select -s /Applications/Xcode_26.0.app/Contents/Developer
 
       - name: macOS - Bootstrap vcpkg
         if: ${{ startsWith(matrix.os, 'macos') }}
@@ -165,12 +166,16 @@ jobs:
       - name: macOS - Set up signing environment
         if: ${{ startsWith(matrix.os, 'macos') }}
         run: |
-            if [[ "${{ matrix.tb-build-type }}" == "asan" ]]; then
-              echo "TB_ENABLE_ASAN=true" >> $GITHUB_ENV
+            if [[ "${{ matrix.tb-build-type }}" == "sanitize" ]]; then
+              echo "TB_ENABLE_ASAN=1" >> $GITHUB_ENV
+              echo "TB_ENABLE_TSAN=0" >> $GITHUB_ENV
+              echo "TB_ENABLE_UBSAN=1" >> $GITHUB_ENV
             else
-              echo "TB_ENABLE_ASAN=false" >> $GITHUB_ENV
+              echo "TB_ENABLE_ASAN=0" >> $GITHUB_ENV
+              echo "TB_ENABLE_TSAN=0" >> $GITHUB_ENV
+              echo "TB_ENABLE_UBSAN=0" >> $GITHUB_ENV
             fi
-            if [[ "${{ matrix.tb-build-type }}" != "asan" ]] && 
+            if [[ "${{ matrix.tb-build-type }}" != "sanitize" ]] && 
                [[ -n "${{ secrets.ACTIONS_MAC_SIGN_CERTIFICATES_P12 }}" ]] && 
                [[ -n "${{ secrets.ACTIONS_MAC_SIGN_CERTIFICATES_P12_PASSWORD }}" ]] && 
                [[ -n "${{ secrets.ACTIONS_MAC_SIGN_IDENTITY }}" ]] &&
@@ -191,7 +196,7 @@ jobs:
         run: brew install p7zip pandoc ninja autoconf automake mono
 
       - name: macOS 15 - Uninstall openexr
-        if: ${{ startsWith(matrix.os, 'macos-15') }}
+        if: ${{ matrix.os == 'macos-15-intel' }}
         run: |
           # Uninstall openexr
           # See https://github.com/TrenchBroom/TrenchBroom/pull/4900
@@ -225,7 +230,7 @@ jobs:
 
       - name: macOS - Upload artifacts
         uses: actions/upload-artifact@v4
-        if: ${{ startsWith(matrix.os, 'macos') && matrix.tb-build-type != 'asan' }}
+        if: ${{ startsWith(matrix.os, 'macos') && matrix.tb-build-type != 'sanitize' }}
         with:
           name: ${{ matrix.os }}
           path: |
@@ -238,7 +243,7 @@ jobs:
       # based on a glob, so use https://github.com/softprops/action-gh-release
       - name: Release
         uses: softprops/action-gh-release@v1
-        if: ${{ startsWith(github.ref, 'refs/tags/') && matrix.tb-build-type != 'asan' }}
+        if: ${{ startsWith(github.ref, 'refs/tags/') && matrix.tb-build-type != 'sanitize' }}
         with:
           draft: true
           files: |
@@ -249,7 +254,7 @@ jobs:
 
       - name: Upload compiled manual
         uses: peaceiris/actions-gh-pages@v3
-        if: ${{ startsWith(github.ref, 'refs/tags/') && matrix.os == 'ubuntu-22.04' }}
+        if: ${{ startsWith(github.ref, 'refs/tags/') && matrix.os == 'ubuntu-24.04' }}
         with:
           # I've created a SSH key pair following https://github.com/peaceiris/actions-gh-pages#%EF%B8%8F-create-ssh-deploy-key
           # The TrenchBroom/TrenchBroom repo has a repository secret ACTIONS_DEPLOY_KEY set to the SSH private key

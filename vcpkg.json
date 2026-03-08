@@ -11,6 +11,10 @@
       "version>=": "3.10.0"
     },
     {
+      "name": "cpptrace",
+      "version>=": "1.0.4"
+    },
+    {
       "name": "fmt",
       "version>=": "11.2.0"
     },
@@ -25,13 +29,12 @@
       "platform": "!linux"
     },
     {
-      "name": "glew",
-      "version>=": "2.2.0#2",
-      "platform": "!linux"
-    },
-    {
       "name": "miniz",
       "version>=": "2.2.0#1"
+    },
+    {
+      "name": "stduuid",
+      "version>=": "1.2.3"
     },
     {
       "name": "tinyxml2",
@@ -44,7 +47,7 @@
       "platform": "osx"
     }
   ],
-  "builtin-baseline": "b1b19307e2d2ec1eefbdb7ea069de7d4bcd31f01",
+  "builtin-baseline": "9a5d7860d1e3c0e394495744cecbf0f5cf41306a",
   "overrides": [
     {
       "name": "rapidjson",

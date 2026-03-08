@@ -1,6 +1,6 @@
 # TrenchBroom
 
-[![TrenchBroom Icon](app/resources/graphics/images/AppIcon.png)](https://www.youtube.com/watch?v=shcAvnYp9ow)
+[![TrenchBroom Icon](app/TrenchBroom/resources/graphics/images/AppIcon.png)](https://www.youtube.com/watch?v=shcAvnYp9ow)
 
 TrenchBroom is a modern cross-platform level editor for Quake-engine based games.
 
@@ -63,7 +63,6 @@ TrenchBroom is a modern cross-platform level editor for Quake-engine based games
 - [Qt](https://www.qt.io/)
 - [FreeType](https://www.freetype.org/)
 - [FreeImage](https://freeimage.sourceforge.io/)
-- [GLEW](https://github.com/nigels-com/glew)
 - [TinyXML](http://www.grinninglizard.com/tinyxml/)
 - miniz
 - [Assimp](https://www.assimp.org/)
