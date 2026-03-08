@@ -67,6 +67,10 @@ private:
 public:
   Notifier<const std::filesystem::path&> preferenceDidChangeNotifier;
 
+#if defined BLACKENED
+  static std::optional<std::filesystem::path> resolveSpecialGamePathToken(std::string_view s);
+ #endif
+
   explicit PreferenceManager(
     std::unique_ptr<PreferenceStore> preferenceStore,
     bool saveInstantly = shouldSaveInstantly());

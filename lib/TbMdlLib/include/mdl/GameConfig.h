@@ -121,6 +121,12 @@ struct CompilationTool
   std::optional<std::string> description;
   Preference<std::filesystem::path> pathPreference;
 
+  // BEGIN #BLACKENED
+  // same as the other gameconfig; get path with special tokens resolved.
+  // implementation is in GameInfo.cpp for the time being.
+  std::filesystem::path getResolvedPath() const;
+  // END #BLACKENED
+
   kdl_reflect_decl(CompilationTool, name, description);
 };
 

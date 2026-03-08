@@ -35,4 +35,6 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
   target_link_libraries(KdLib PRIVATE FastFloat::fast_float)
 endif()
 
+if(TB_TESTS)
 add_subdirectory(test)
+endif()

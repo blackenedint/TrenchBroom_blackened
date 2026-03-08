@@ -289,6 +289,11 @@ int main(int argc, char* argv[])
   // actually work with TB.)
   qputenv("QT_OPENGL_BUGLIST", ":/opengl_buglist.json");
 
+  //Tony; forced portable.
+#if defined( BLACKENED )
+	SystemPaths::setPortable();
+	QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, QString("./config"));
+#else
   // parse portable arg out manually at first to ensure it's set before any settings load
   if (argc > 1)
   {
@@ -302,6 +307,7 @@ int main(int argc, char* argv[])
       }
     }
   }
+#endif
 
   // Needs to be set before creating the preference manager
   QApplication::setApplicationName("TrenchBroom");
@@ -328,8 +334,10 @@ int main(int argc, char* argv[])
   installFileEventFilter(*appController);
 #endif
 
+#if !defined( BLACKENED )
   appController->askForAutoUpdates();
   appController->triggerAutoUpdateCheck();
+#endif
 
   if (!parseCommandLineAndOpenFiles(*appController))
   {

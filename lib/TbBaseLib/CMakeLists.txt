@@ -27,5 +27,7 @@ target_link_libraries(TbBaseLib PRIVATE CompilerConfig PrecompileStdHeaders)
 target_link_libraries(TbBaseLib PRIVATE stduuid)
 target_link_libraries(TbBaseLib PUBLIC KdLib VmLib fmt::fmt-header-only)
 
+if(TB_TESTS)
 add_subdirectory(test)
 add_subdirectory(test-utils)
+endif()

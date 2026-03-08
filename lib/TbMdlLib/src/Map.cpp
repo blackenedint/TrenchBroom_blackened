@@ -213,7 +213,11 @@ Result<std::unique_ptr<WorldNode>> createWorldNode(
   {
     if (
       format == MapFormat::Valve || format == MapFormat::Quake2_Valve
-      || format == MapFormat::Quake3_Valve || format == MapFormat::Blackened)
+      || format == MapFormat::Quake3_Valve
+      //BEGIN #BLACKENED
+      || format == MapFormat::Blackened
+      //END #BLACKENED
+      )
     {
       worldEntity.addOrUpdateProperty(EntityPropertyKeys::ValveVersion, "220");
     }

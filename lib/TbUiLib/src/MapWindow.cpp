@@ -510,7 +510,9 @@ void MapWindow::createStatusBar()
 {
   m_statusBarLabel = new QLabel{};
   statusBar()->addWidget(m_statusBarLabel, 1);
+#if !defined(BLACKENED)
   statusBar()->addWidget(m_appController.updater().createUpdateIndicator());
+#endif
 }
 
 namespace
@@ -2534,7 +2536,11 @@ void MapWindow::dropEvent(QDropEvent* event)
     window(),
     pathFromQString(urls.front().toLocalFile()),
     map.path(),
-    pref(gameInfo.gamePathPreference)};
+    // BEGIN #BLACKENED
+    // pref(gameInfo.gamePathPreference)
+    gameInfo.getGamePath()
+    // END #BLACKENED
+  };
 
   const auto result = pathDialog.exec();
   if (result != QDialog::Accepted)
@@ -2548,7 +2554,11 @@ void MapWindow::dropEvent(QDropEvent* event)
       pathDialog.pathType(),
       pathFromQString(url.toLocalFile()),
       map.path(),
-      pref(gameInfo.gamePathPreference));
+      // BEGIN #BLACKENED
+      // pref(gameInfo.gamePathPreference)
+      gameInfo.getGamePath()
+      // END #BLACKENED
+    );
   });
 
   const auto newWadPathsStr = kdl::str_join(

@@ -54,10 +54,14 @@
 #include "ui/QPathUtils.h"
 #include "ui/RecentDocuments.h"
 #include "ui/SystemPaths.h"
+#if !defined( BLACKENED )
 #include "ui/UpdateConfig.h"
+#endif
 #include "ui/WelcomeWindow.h"
+#if !defined( BLACKENED )
 #include "update/QtHttpClient.h"
 #include "update/Updater.h"
+#endif
 
 #include "kd/const_overload.h"
 #include "kd/task_manager.h"
@@ -168,8 +172,10 @@ AppController::AppController(
   , m_networkManager{new QNetworkAccessManager{this}}
   , m_reloadRecentDocumentsTimer{new QTimer{this}}
   , m_processResourcesTimer{new QTimer{this}}
+  #if !defined( BLACKENED )
   , m_httpClient{new upd::QtHttpClient{*m_networkManager}}
   , m_updater{new upd::Updater{*m_httpClient, makeUpdateConfig(), this}}
+#endif  
   , m_mapWindowManager{createMapWindowManager(*this)}
   , m_recentDocuments{createRecentDocuments(this)}
   , m_actionManager{std::make_unique<ActionManager>()}
@@ -222,11 +228,12 @@ mdl::GameManager& AppController::gameManager()
 {
   return *m_gameManager;
 }
-
+#if !defined( BLACKENED )
 upd::Updater& AppController::updater()
 {
   return *m_updater;
 }
+#endif
 
 MapWindowManager& AppController::mapWindowManager()
 {
@@ -250,6 +257,7 @@ ActionManager& AppController::actionManager()
 
 void AppController::askForAutoUpdates()
 {
+  #if !defined( BLACKENED )
   if (pref(Preferences::AskForAutoUpdates))
   {
     auto& prefs = PreferenceManager::instance();
@@ -267,14 +275,17 @@ void AppController::askForAutoUpdates()
     prefs.set(Preferences::AskForAutoUpdates, false);
     prefs.saveChanges();
   }
+  #endif
 }
 
 void AppController::triggerAutoUpdateCheck()
 {
+  #if !defined( BLACKENED )
   if (pref(Preferences::AutoCheckForUpdates))
   {
     m_updater->checkForUpdates();
   }
+  #endif
 }
 
 bool AppController::newDocument()

@@ -70,6 +70,10 @@ inline auto ZAxisColor = Preference<Color>{
   "render/Colors/Z axis",
   RgbaF{0.06f, 0.61f, 1.0f, 0.7f},
   PreferencePersistencePolicy::ReadOnly};
+inline auto NoAxisColor = Preference<Color>{
+  "render/Colors/No axis",
+  RgbaF{1.f, 1.f, 1.0f, 1.f},
+  PreferencePersistencePolicy::ReadOnly};
 inline auto PointFileColor =
   Preference<Color>{"render/Colors/Point file", RgbF{0.0f, 1.0f, 0.0f}};
 inline auto PortalFileBorderColor =
@@ -144,6 +148,9 @@ inline auto LockedInfoOverlayBackgroundColor = Preference<Color>{
   "render/Colors/Locked info overlay background", RgbaF{0.0f, 0.0f, 0.0f, 0.6f}};
 
 inline auto HandleRadius = Preference<float>{"Controls/Handle radius", 3.0f};
+// BEGIN #BLACKENED
+inline auto MoveHandleRadius = Preference<float>{"Controls/Move handle radius", 6.0f};
+// END #BLACKENED
 inline auto MaximumHandleDistance =
   Preference<float>{"Controls/Maximum handle distance", 1000.0f};
 inline auto HandleColor =

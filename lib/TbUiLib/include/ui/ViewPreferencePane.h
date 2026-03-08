@@ -39,8 +39,10 @@ private:
   SliderWithLabel* m_brightnessSlider = nullptr;
   SliderWithLabel* m_gridAlphaSlider = nullptr;
   SliderWithLabel* m_fovSlider = nullptr;
+  // BEGIN #BLACKENED
   SliderWithLabel* m_moveHandleRadiusSlider = nullptr;
   SliderWithLabel* m_rotateHandleRadiusSlider = nullptr;
+  // END #BLACKENED
   QCheckBox* m_showAxes = nullptr;
   QComboBox* m_filterModeCombo = nullptr;
   QCheckBox* m_enableMsaa = nullptr;
@@ -70,8 +72,10 @@ private slots:
   void brightnessChanged(int value);
   void gridAlphaChanged(int value);
   void fovChanged(int value);
+  // BEGIN #BLACKENED
   void moveHandleRadiusChanged(int value);
   void rotateHandleRadiusChanged(int value);
+  // END #BLACKENED
   void showAxesChanged(int state);
   void enableMsaaChanged(int state);
   void filterModeChanged(int index);

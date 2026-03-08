@@ -74,7 +74,10 @@ void combineFlags(
 
 bool loadEntityDefinitionFile(mdl::Map& map, QWidget* parent, const QString& pathStr)
 {
-  const auto gamePath = pref(map.gameInfo().gamePathPreference);
+  // BEGIN #BLACKENED
+  // const auto gamePath = pref(map.gameInfo().gamePathPreference);
+  const auto gamePath = map.gameInfo().getGamePath();
+  // END #BLACKENED
   const auto docPath = map.path();
 
   const auto absPath = pathFromQString(pathStr);

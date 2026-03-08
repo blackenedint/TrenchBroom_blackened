@@ -142,6 +142,7 @@ target_sources(TbUiLib
     ${CMAKE_CURRENT_SOURCE_DIR}/src/ModEditor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/MousePreferencePane.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/MoveHandleDragTracker.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/MoveHandle.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/MoveObjectsTool.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/MoveObjectsToolController.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/MultiCompletionLineEdit.cpp
@@ -371,6 +372,7 @@ target_sources(TbUiLib
     ${CMAKE_CURRENT_SOURCE_DIR}/include/ui/ModEditor.h
     ${CMAKE_CURRENT_SOURCE_DIR}/include/ui/MousePreferencePane.h
     ${CMAKE_CURRENT_SOURCE_DIR}/include/ui/MoveHandleDragTracker.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/ui/MoveHandle.h
     ${CMAKE_CURRENT_SOURCE_DIR}/include/ui/MoveObjectsTool.h
     ${CMAKE_CURRENT_SOURCE_DIR}/include/ui/MoveObjectsToolController.h
     ${CMAKE_CURRENT_SOURCE_DIR}/include/ui/MultiCompletionLineEdit.h
@@ -501,5 +503,8 @@ if(APPLE)
     target_compile_definitions(TbUiLib PRIVATE GL_SILENCE_DEPRECATION)
 endif()
 
+if(TB_TESTS)
 add_subdirectory(test)
 add_subdirectory(test-utils)
+endif()
+

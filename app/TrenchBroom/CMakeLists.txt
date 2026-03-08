@@ -239,10 +239,16 @@ if(WIN32 OR ${CMAKE_SYSTEM_NAME} MATCHES "Linux|FreeBSD")
             COMMAND ${CMAKE_COMMAND} -E copy_directory "${TB_RESOURCE_DIR}/defaults/" "${APP_RESOURCE_DEST_DIR}/defaults")
 
     # Copy game files to resources directory
-    add_custom_command(TARGET TrenchBroom POST_BUILD
+    if (TB_BLACKENED)
+        add_custom_command(TARGET TrenchBroom POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E make_directory "${APP_RESOURCE_DEST_DIR}/games/Vigil7"
+            COMMAND ${CMAKE_COMMAND} -E copy_directory "${TB_RESOURCE_DIR}/games/Vigil7" "${APP_RESOURCE_DEST_DIR}/games/Vigil7")
+    else()
+        add_custom_command(TARGET TrenchBroom POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy_directory "${TB_RESOURCE_DIR}/games/" "${APP_RESOURCE_DEST_DIR}/games")
+    endif()
 
-    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    if(CMAKE_BUILD_TYPE STREQUAL "Debug" AND NOT TB_BLACKENED)
         # Copy untested game files to resources directory
         add_custom_command(TARGET TrenchBroom POST_BUILD
                 COMMAND ${CMAKE_COMMAND} -E copy_directory "${TB_RESOURCE_DIR}/games-testing/" "${APP_RESOURCE_DEST_DIR}/games")
@@ -343,11 +349,25 @@ if(WIN32)
     install(DIRECTORY
             "${TB_RESOURCE_DIR}/defaults"
             "${TB_RESOURCE_DIR}/fonts"
-            "${TB_RESOURCE_DIR}/games"
+#           "${TB_RESOURCE_DIR}/games"
             "${TB_RESOURCE_DIR}/graphics/images"
             "${TB_RESOURCE_DIR}/shader"
             "${TB_RESOURCE_DIR}/stylesheets"
             DESTINATION . COMPONENT TrenchBroom)
+   
+    # games: conditional
+    if (TB_BLACKENED)
+        # install only Vigil7 under .../games/Vigil7
+        install(DIRECTORY
+            "${TB_RESOURCE_DIR}/games/Vigil7"
+            DESTINATION . COMPONENT TrenchBroom)
+    else()
+        # original behavior: install the entire games tree at the top
+        install(DIRECTORY
+            "${TB_RESOURCE_DIR}/games"
+            DESTINATION . COMPONENT TrenchBroom)
+    endif()  
+    
     install(FILES
             ${LIB_UPDATE_SCRIPT}
             DESTINATION update COMPONENT TrenchBroom)

@@ -27,6 +27,7 @@
 #include "mdl/LoadAseModel.h"
 #include "mdl/LoadAssimpModel.h"
 #include "mdl/LoadBspModel.h"
+#include "mdl/LoadBvmModel.h"
 #include "mdl/LoadDkmModel.h"
 #include "mdl/LoadImageSpriteModel.h"
 #include "mdl/LoadMd2Model.h"
@@ -64,7 +65,10 @@ Result<EntityModelData> loadEntityModelData(
   const auto modelName = path.filename().string();
   return fs.openFile(path) | kdl::and_then([&](auto file) -> Result<EntityModelData> {
            auto reader = file->reader().buffer();
-
+           if (canLoadBvmModel(path, reader))
+           {
+             return loadBvmModel(modelName, reader, fs, logger);
+           }
            if (canLoadMdlModel(path, reader))
            {
              return loadPalette(fs, materialConfig) | kdl::and_then([&](auto palette) {

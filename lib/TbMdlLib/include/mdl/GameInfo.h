@@ -38,6 +38,13 @@ struct GameInfo
   Preference<std::filesystem::path> gamePathPreference;
   Preference<std::filesystem::path> defaultEnginePathPreference;
 
+  // BEGIN #BLACKENED
+  // use these to get the paths, instead of reading the preferences directly
+  // so that the path tokens will resolve.
+  std::filesystem::path getGamePath() const;
+  std::filesystem::path getDefaultEnginePath() const;
+  // END #BLACKENED
+
   CompilationConfig compilationConfig = {};
   GameEngineConfig gameEngineConfig = {};
   bool compilationConfigParseFailed = false;

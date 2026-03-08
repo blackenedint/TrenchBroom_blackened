@@ -40,7 +40,10 @@ namespace tb::ui
 CommonVariables::CommonVariables(const mdl::Map& map)
 {
   const auto filename = map.path().filename();
-  const auto gamePath = pref(map.gameInfo().gamePathPreference);
+  // BEGIN #BLACKENED
+  // const auto gamePath = pref(map.gameInfo().gamePathPreference);
+  const auto gamePath = map.gameInfo().getGamePath();
+  // END #BLACKENED
 
   auto mods = std::vector<std::string>{};
   mods.push_back(defaultMod(map));
@@ -57,22 +60,26 @@ CommonVariables::CommonVariables(const mdl::Map& map)
 
   for (const auto& tool : map.gameInfo().gameConfig.compilationTools)
   {
-    const auto toolPath = pref(tool.pathPreference);
+    // BEGIN #BLACKENED
+    // const auto toolPath = pref(tool.pathPreference);
+    const auto toolPath = tool.getResolvedPath();
+    // END #BLACKENED
 
     // e.g. variable name might be "qbsp", and the value is the path to the user's local
     // qbsp executable
     set(tool.name, el::Value{toolPath.string()});
   }
 
-  // Tony; automatically add some specific environment variables that can be used in configuration files.
-#if defined BLACKENED
+  // Tony; automatically add some specific environment variables that can be used in
+  // configuration files.
+#if defined( BLACKENED )
   auto addEnv = [&](const char* envName, const char* varName) {
     if (const char* v = std::getenv(envName))
     {
       set(std::string(varName), el::Value{std::string(v)});
     }
   };
-  
+
   addEnv("BIBASE", "BIBASE");
   addEnv("BIGAME", "BIGAME");
   addEnv("BITOOLS", "BITOOLS");

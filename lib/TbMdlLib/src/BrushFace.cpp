@@ -311,7 +311,7 @@ vm::vec3d BrushFace::center() const
 }
 vm::bbox3d BrushFace::getBounds() const
 {
-  ensure(m_geometry != nullptr, "geometry is null");
+  contract_pre(m_geometry != nullptr);
   const auto* first = m_geometry->boundary().front();
   const auto* current = first;
   auto bounds = vm::bbox3d{};

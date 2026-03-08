@@ -27,5 +27,7 @@ target_sources(TbFsLib
 target_link_libraries(TbFsLib PRIVATE CompilerConfig PrecompileStdHeaders)
 target_link_libraries(TbFsLib PUBLIC KdLib TbBaseLib fmt::fmt-header-only miniz::miniz)
 
+if(TB_TESTS)
 add_subdirectory(test)
 add_subdirectory(test-utils)
+endif()

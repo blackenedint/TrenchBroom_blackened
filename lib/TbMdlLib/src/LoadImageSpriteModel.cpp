@@ -22,6 +22,7 @@
 #include "fs/ReaderException.h"
 #include "gl/IndexRangeMap.h"
 #include "gl/IndexRangeMapBuilder.h"
+#include "mdl/LoadBtfTexture.h"
 #include "mdl/LoadFreeImageTexture.h"
 #include "mdl/MaterialUtils.h"
 
@@ -33,6 +34,17 @@ namespace
 auto loadMaterial(
   const fs::FileSystem& fs, fs::Reader& reader, std::string name, Logger& logger)
 {
+
+  // load btf texture
+  if (name.ends_with(".btf"))
+  {
+    return loadBtfTexture(reader) | kdl::or_else(makeReadTextureErrorHandler(fs, logger))
+           | kdl::and_then([&](auto texture) {
+               auto textureResource = createTextureResource(std::move(texture));
+               return Result<gl::Material>{
+                 gl::Material{std::move(name), std::move(textureResource)}};
+             });
+  }
   return loadFreeImageTexture(reader)
          | kdl::or_else(makeReadTextureErrorHandler(fs, logger))
          | kdl::and_then([&](auto texture) {
@@ -85,7 +97,7 @@ void createFrame(EntityModelData& modelData)
 
 bool canLoadImageSpriteModel(const std::filesystem::path& path)
 {
-  return isSupportedFreeImageExtension(path.extension());
+  return isSupportedFreeImageExtension(path.extension()) || path.extension() == ".btf";
 }
 
 Result<EntityModelData> loadImageSpriteModel(

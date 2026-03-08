@@ -60,7 +60,10 @@ namespace
 
 Result<std::vector<std::string>> findAvailableMods(const mdl::GameInfo& gameInfo)
 {
-  const auto gamePath = pref(gameInfo.gamePathPreference);
+  // BEGIN #BLACKENED
+  // const auto gamePath = pref(gameInfo.gamePathPreference);
+  const auto gamePath = gameInfo.getGamePath();
+  // END #BLACKENED
   if (gamePath.empty() || fs::Disk::pathInfo(gamePath) != fs::PathInfo::Directory)
   {
     return Result<std::vector<std::string>>{std::vector<std::string>{}};
@@ -217,7 +220,10 @@ void ModEditor::modsDidChange()
 
 void ModEditor::preferenceDidChange(const std::filesystem::path& path)
 {
-  if (path == m_document.map().gameInfo().gamePathPreference.path)
+  // BEGIN #BLACKENED
+  // if (path == m_document.map().gameInfo().gamePathPreference.path)
+  if (path == m_document.map().gameInfo().getGamePath())
+  // END #BLACKENED
   {
     updateAvailableMods();
     updateMods();

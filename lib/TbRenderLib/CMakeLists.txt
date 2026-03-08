@@ -48,4 +48,6 @@ target_link_libraries(TbRenderLib PRIVATE CompilerConfig PrecompileStdHeaders)
 target_link_libraries(TbRenderLib PRIVATE KdLib TbBaseLib TbPreferencesLib fmt::fmt-header-only)
 target_link_libraries(TbRenderLib PUBLIC VmLib TbGlLib TbMdlLib)
 
+if(TB_TESTS)
 add_subdirectory(test)
+endif()

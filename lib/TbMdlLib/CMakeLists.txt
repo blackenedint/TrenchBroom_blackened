@@ -97,12 +97,18 @@ target_sources(TbMdlLib
     ${CMAKE_CURRENT_SOURCE_DIR}/src/LoadMd3Model.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/LoadMdlModel.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/LoadMdxModel.cpp
+    # BEGIN BLACKENED
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/LoadBvmModel.cpp
+    # END BLACKENED
     ${CMAKE_CURRENT_SOURCE_DIR}/src/LoadMipTexture.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/LoadShaders.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/LoadSkin.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/LoadSpriteModel.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/LoadTexture.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/LoadWalTexture.cpp
+    # BEGIN BLACKENED
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/LoadBtfTexture.cpp
+    # END BLACKENED
     ${CMAKE_CURRENT_SOURCE_DIR}/src/LockState.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/LongPropertyKeyValidator.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/LongPropertyValueValidator.cpp
@@ -204,5 +210,7 @@ target_link_libraries(TbMdlLib PRIVATE CompilerConfig PrecompileStdHeaders)
 target_link_libraries(TbMdlLib PRIVATE tinyxml2::tinyxml2 miniz::miniz freeimage::FreeImage assimp::assimp fmt::fmt-header-only)
 target_link_libraries(TbMdlLib PUBLIC KdLib TbBaseLib TbElLib TbFsLib TbGlLib)
 
+if(TB_TESTS)
 add_subdirectory(test)
 add_subdirectory(test-utils)
+endif()

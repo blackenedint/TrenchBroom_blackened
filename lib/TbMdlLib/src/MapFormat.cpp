@@ -64,11 +64,13 @@ MapFormat formatFromName(const std::string& formatName)
   if (formatName == "Quake3")
   {
     return MapFormat::Quake3;
-  }
+  }  
+  //BEGIN #BLACKENED
   if (formatName == "Blackened")
   {
     return MapFormat::Blackened;
   }
+  //END #BLACKENED
   return MapFormat::Unknown;
 }
 
@@ -106,9 +108,11 @@ std::ostream& operator<<(std::ostream& lhs, const MapFormat rhs)
   case MapFormat::Quake3:
     lhs << "Quake3";
     break;
+  //BEGIN #BLACKENED
   case MapFormat::Blackened:
     lhs << "Blackened";
-    break;
+    break;  
+  //END #BLACKENED    
   }
   return lhs;
 }
@@ -135,8 +139,10 @@ std::string formatName(const MapFormat format)
     return "Quake3 (Valve)";
   case MapFormat::Quake3:
     return "Quake3";
+  //BEGIN #BLACKENED
   case MapFormat::Blackened:
     return "Blackened";
+  //END #BLACKENED    
   case MapFormat::Unknown:
     return "Unknown";
     switchDefault();
@@ -165,8 +171,10 @@ std::vector<MapFormat> compatibleFormats(const MapFormat format)
     return {MapFormat::Quake3_Valve, MapFormat::Quake3, MapFormat::Quake3_Legacy};
   case MapFormat::Quake3:
     return {MapFormat::Quake3, MapFormat::Quake3_Valve, MapFormat::Quake3_Legacy};
+  //BEGIN #BLACKENED
   case MapFormat::Blackened:
-    return {MapFormat::Blackened, MapFormat::Quake2, MapFormat::Quake2_Valve};
+    return {MapFormat::Blackened, MapFormat::Quake2, MapFormat::Quake2_Valve};    
+  //END #BLACKENED
   case MapFormat::Unknown:
     return {MapFormat::Unknown};
     switchDefault();
@@ -180,7 +188,9 @@ bool isParallelUVCoordSystem(const MapFormat format)
   case MapFormat::Valve:
   case MapFormat::Quake2_Valve:
   case MapFormat::Quake3_Valve:
+  //BEGIN #BLACKENED
   case MapFormat::Blackened:
+  //END #BLACKENED
     return true;
   case MapFormat::Standard:
   case MapFormat::Quake2:

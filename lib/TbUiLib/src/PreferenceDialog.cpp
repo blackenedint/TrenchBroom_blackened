@@ -125,7 +125,9 @@ void PreferenceDialog::createGui()
   m_stackedWidget->addWidget(new ColorsPreferencePane{});
   m_stackedWidget->addWidget(new MousePreferencePane{});
   m_stackedWidget->addWidget(new KeyboardPreferencePane{m_appController, m_document});
+#if !defined( BLACKENED )
   m_stackedWidget->addWidget(new UpdatePreferencePane{m_appController});
+#endif
 
   m_buttonBox = new QDialogButtonBox{
     QDialogButtonBox::RestoreDefaults

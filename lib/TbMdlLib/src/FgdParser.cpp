@@ -400,6 +400,9 @@ EntityDefinitionClassInfo FgdParser::parseClassInfo(
       kdl::ci::str_is_equal(typeName, "model")
       || kdl::ci::str_is_equal(typeName, "studio")
       || kdl::ci::str_is_equal(typeName, "studioprop")
+      // BEGIN #BLACKENED
+      || kdl::ci::str_is_equal(typeName, "lightprop")
+      // END #BLACKENED
       || kdl::ci::str_is_equal(typeName, "sprite")
       || kdl::ci::str_is_equal(typeName, "iconsprite"))
     {
@@ -407,8 +410,10 @@ EntityDefinitionClassInfo FgdParser::parseClassInfo(
       {
         status.warn(token.location(), "Found multiple model properties");
       }
-      classInfo.modelDefinition =
-        parseModel(status, kdl::ci::str_is_equal(typeName, "sprite"));
+      // BEGIN #BLACKENED
+      //classInfo.modelDefinition =
+      //  parseModel(status, kdl::ci::str_is_equal(typeName, "sprite"));
+      classInfo.modelDefinition = parseModel(status);
     }
     else if (kdl::ci::str_is_equal(typeName, "decal"))
     {
@@ -479,10 +484,12 @@ std::vector<std::string> FgdParser::parseSuperClasses()
 }
 
 ModelDefinition FgdParser::parseModel(
-  ParserStatus& status, const bool allowEmptyExpression)
+  ParserStatus& status /*, BEGIN #BLACKENED bool allowEmptyExpression END #BLACKENED */)
 {
   m_tokenizer.nextToken(FgdToken::OParenthesis);
 
+  // BEGIN #BLACKENED
+  /*
   if (allowEmptyExpression && m_tokenizer.peekToken().hasType(FgdToken::CParenthesis))
   {
     const auto location = m_tokenizer.location();
@@ -495,6 +502,13 @@ ModelDefinition FgdParser::parseModel(
     auto defaultExp = el::ExpressionNode{std::move(defaultModel), location};
     return ModelDefinition{std::move(defaultExp)};
   }
+  */
+  if (m_tokenizer.peekToken().hasType(FgdToken::CParenthesis))
+  {
+    m_tokenizer.skipToken();
+    return mdl::ModelDefinition();
+  }
+  // END #BLACKENED 
 
   return parseModelDefinition(m_tokenizer, status, FgdToken::CParenthesis)
          | kdl::if_error([](const auto& e) { throw ParserException{e.msg}; })

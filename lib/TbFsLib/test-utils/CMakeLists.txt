@@ -13,4 +13,6 @@ target_sources(TbFsTestUtilsLib
 target_link_libraries(TbFsTestUtilsLib PRIVATE CompilerConfig PrecompileStdHeaders)
 target_link_libraries(TbFsTestUtilsLib PUBLIC TbFsLib fmt::fmt-header-only)
 
+if(TB_TESTS)
 add_subdirectory(test)
+endif()

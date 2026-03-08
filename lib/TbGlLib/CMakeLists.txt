@@ -55,5 +55,7 @@ target_link_libraries(TbGlLib PRIVATE CompilerConfig PrecompileStdHeaders)
 target_link_libraries(TbGlLib PRIVATE freetype)
 target_link_libraries(TbGlLib PUBLIC TbBaseLib TbFsLib KdLib VmLib fmt::fmt-header-only)
 
+if(TB_TESTS)
 add_subdirectory(test)
 add_subdirectory(test-utils)
+endif()

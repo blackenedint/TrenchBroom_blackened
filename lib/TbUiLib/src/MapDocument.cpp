@@ -129,7 +129,10 @@ Result<void> MapDocument::create(
   return mdl::Map::createMap(
            environmentConfig,
            gameInfo,
-           pref(gameInfo.gamePathPreference),
+           // BEGIN #BLACKENED
+           // pref(gameInfo.gamePathPreference),
+           gameInfo.getGamePath(),
+           // END #BLACKENED
            mapFormat,
            worldBounds,
            *m_taskManager,
@@ -151,7 +154,10 @@ Result<void> MapDocument::load(
   return mdl::Map::loadMap(
            environmentConfig,
            gameInfo,
-           pref(gameInfo.gamePathPreference),
+           // BEGIN #BLACKENED
+           // pref(gameInfo.gamePathPreference),
+           gameInfo.getGamePath(),
+           // END #BLACKENED
            mapFormat,
            worldBounds,
            std::move(path),
@@ -189,7 +195,10 @@ void MapDocument::setMap(std::unique_ptr<mdl::Map> map)
 
 void MapDocument::updateMapFromPreferences()
 {
-  m_map->setGamePath(pref(m_map->gameInfo().gamePathPreference));
+  // BEGIN #BLACKENED
+  //m_map->setGamePath(pref(m_map->gameInfo().gamePathPreference));
+  m_map->setGamePath(m_map->gameInfo().getGamePath());
+  // END #BLACKENED
 
   m_map->editorContext().setShowPointEntities(pref(Preferences::ShowPointEntities));
   m_map->editorContext().setShowBrushes(pref(Preferences::ShowBrushes));

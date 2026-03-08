@@ -30,7 +30,6 @@
 #include "ui/HandleDragTracker.h"
 #include "ui/MoveHandleDragTracker.h"
 #include "ui/MoveObjectsTool.h"
-
 #include "vm/line.h"
 
 #include <cassert>
@@ -90,6 +89,7 @@ public:
   }
 };
 
+// BEGIN #BLACKENED
 class MoveAxisDragDelegate : public HandleDragTrackerDelegate
 {
 private:
@@ -145,6 +145,7 @@ public:
   }
 };
 
+// END #BLACKENED
 } // namespace
 
 MoveObjectsToolController::MoveObjectsToolController(MoveObjectsTool& tool)
@@ -164,6 +165,7 @@ const Tool& MoveObjectsToolController::tool() const
   return m_tool;
 }
 
+// BEGIN #BLACKENED
 void MoveObjectsToolController::pick(
   const InputState& inputState, mdl::PickResult& pickResult)
 {
@@ -183,6 +185,7 @@ void MoveObjectsToolController::pick(
     pickResult.addHit(hit);
   }
 }
+// END #BLACKENED
 
 std::unique_ptr<GestureTracker> MoveObjectsToolController::acceptMouseDrag(
   const InputState& inputState)
@@ -198,6 +201,7 @@ std::unique_ptr<GestureTracker> MoveObjectsToolController::acceptMouseDrag(
     return nullptr;
   }
 
+  // BEGIN #BLACKENED
   if (inputState.camera().perspectiveProjection())
   {
     if (!updateHandlePosition())
@@ -222,6 +226,7 @@ std::unique_ptr<GestureTracker> MoveObjectsToolController::acceptMouseDrag(
 
     return nullptr;
   }
+  // END #BLACKENED
 
   // The transitivelySelected() lets the hit query match entities/brushes inside a
   // selected group, even though the entities/brushes aren't selected themselves.
@@ -233,13 +238,17 @@ std::unique_ptr<GestureTracker> MoveObjectsToolController::acceptMouseDrag(
     if (m_tool.startMove(inputState))
     {
       return createMoveHandleDragTracker(
-        MoveObjectsDragDelegate{m_tool}, inputState, hit.hitPoint(), hit.hitPoint());
+        MoveObjectsDragDelegate{m_tool},
+        inputState,
+        hit.hitPoint(),
+        hit.hitPoint());
     }
   }
 
   return nullptr;
 }
 
+// BEGIN #BLACKENED
 void MoveObjectsToolController::setRenderOptions(
   const InputState& inputState, render::RenderContext& renderContext) const
 {
@@ -280,12 +289,14 @@ void MoveObjectsToolController::render(
     }
   }
 }
+// END #BLACKENED
 
 bool MoveObjectsToolController::cancel()
 {
   return false;
 }
 
+// BEGIN #BLACKENED
 std::optional<vm::vec3d> MoveObjectsToolController::handlePosition() const
 {
   const auto& map = m_tool.map();
@@ -317,5 +328,7 @@ bool MoveObjectsToolController::updateHandlePosition()
   }
   return false;
 }
+
+// END #BLACKENED
 
 } // namespace tb::ui

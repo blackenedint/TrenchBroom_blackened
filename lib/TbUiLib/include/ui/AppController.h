@@ -81,8 +81,10 @@ private:
   QTimer* m_reloadRecentDocumentsTimer = nullptr;
   QTimer* m_processResourcesTimer = nullptr;
 
+#if !defined(BLACKENED)
   upd::HttpClient* m_httpClient = nullptr;
   upd::Updater* m_updater = nullptr;
+#endif
 
   MapWindowManager* m_mapWindowManager = nullptr;
   RecentDocuments* m_recentDocuments = nullptr;
@@ -115,7 +117,9 @@ public:
 
   mdl::GameManager& gameManager();
 
+#if !defined(BLACKENED)
   upd::Updater& updater();
+#endif
 
   MapWindowManager& mapWindowManager();
 

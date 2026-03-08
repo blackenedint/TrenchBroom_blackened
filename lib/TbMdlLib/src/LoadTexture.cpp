@@ -21,6 +21,7 @@
 
 #include "fs/FileSystem.h"
 #include "gl/Texture.h"
+#include "mdl/LoadBtfTexture.h"
 #include "mdl/LoadDdsTexture.h"
 #include "mdl/LoadFreeImageTexture.h"
 #include "mdl/LoadM8Texture.h"
@@ -74,6 +75,16 @@ Result<gl::Texture> loadTexture(
     return fs.openFile(path) | kdl::and_then([&](auto file) {
              auto reader = file->reader().buffer();
              return loadWalTexture(reader, palette);
+           });
+  }
+  // Tony; blackened texture format.
+  else if (extension == ".btf")
+  {
+    return fs.openFile(path) | kdl::and_then([&](auto file) {
+             auto reader = file->reader().buffer();
+             // okay due to trenchbroom combining everything.. this needs to be true if
+             // loading for a skin otherwise for a map texture it needs to be false.
+             return loadBtfTexture(reader /*, true*/);
            });
   }
   else if (extension == ".m8")

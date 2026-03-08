@@ -50,7 +50,12 @@ auto makeGameDisplayInfo(const mdl::GameInfo& gameInfo)
     gameInfo.gameConfig.name
     + (gameInfo.gameConfig.experimental ? " (experimental)" : ""));
 
-  const auto gamePath = pref(gameInfo.gamePathPreference);
+  
+  // BEGIN #BLACKENED
+  // const auto gamePath = pref(gameInfo.gamePathPreference);
+  const auto gamePath = gameInfo.getGamePath();
+  // END #BLACKENED
+
   auto subTitle = QString::fromStdString(
     gamePath.empty() ? std::string("Game not found") : gamePath.string());
 

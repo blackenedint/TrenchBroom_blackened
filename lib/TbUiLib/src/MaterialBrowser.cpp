@@ -192,7 +192,10 @@ void MaterialBrowser::connectObservers()
   m_notifierConnection +=
     prefs.preferenceDidChangeNotifier.connect([&](const auto& path) {
       if (
-        path == pref(m_document.map().gameInfo().gamePathPreference)
+        // BEGIN #BLACKENED
+        // path == pref(m_document.map().gameInfo().gamePathPreference)
+        path == m_document.map().gameInfo().getGamePath()
+        // END #BLACKENED
         || path == Preferences::MaterialBrowserIconSize.path)
       {
         reload();

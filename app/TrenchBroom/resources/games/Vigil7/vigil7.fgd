@@ -1483,13 +1483,20 @@
 	master(string) : "Master"
 ]
 
-@PointClass base(Targetname) size(-4 -4 -4, 4 4 4) color(200 100 50) = info_target : "Target point" []
+@PointClass base(Targetname) size(-4 -4 -4, 4 4 4) color(200 100 50) = info_target : "Beam Target" []
 @PointClass size(-8 -8 0, 8 8 16) base(PlayerClass, Targetname) = info_teleport_destination : "Teleport destination" []
 
 //
 // items
 //
-
+//@PointClass size(-16 -16 0, 16 16 16) base(Weapon, Targetx) studio("models/items/health_25.bvm") = item_health : "Health Kit"
+//[
+//	spawnflags(flags) = 
+//	[
+//		1 : "Rotten" : 0
+//		2 : "Megahealth" : 0
+//	]	
+//]
 @PointClass size(-8 -8 0, 8 8 8) base(Weapon, Targetx) studio("models/items/health_stim.bvm") = item_stimpack : "Stim Pack" []
 @PointClass size(-16 -16 0, 16 16 16) base(Weapon, Targetx) studio("models/items/health_15.bvm") = item_health_sm : "Health Kit (15)" []
 @PointClass size(-16 -16 0, 16 16 16) base(Weapon, Targetx) studio("models/items/health_25.bvm") = item_health_md : "Health Kit (25)" []
@@ -1504,7 +1511,7 @@
 // lights
 //
 
-@PointClass iconsprite("textures/sprites/editor/light.btf") base(Target, Targetname, Light) = light : "Invisible point light source"
+@PointClass iconsprite("textures/sprites/editor/light.btf") base(Target, Targetname, Light) = light : "Invisible lightsource."
 [
 	spawnflags(Flags) = [ 1 : "Initially dark" : 0 : "If this is enabled, the entity will need to be triggered to work." ]
 ]

@@ -33,7 +33,9 @@ class MoveObjectsToolController : public ToolController
 {
 private:
   MoveObjectsTool& m_tool;
+  // BEGIN #BLACKENED
   MoveHandle m_handle;
+  // END #BLACKENED
 
 public:
   explicit MoveObjectsToolController(MoveObjectsTool& tool);
@@ -43,22 +45,21 @@ private:
   Tool& tool() override;
   const Tool& tool() const override;
 
+  // BEGIN #BLACKENED
   void pick(const InputState& inputState, mdl::PickResult& pickResult) override;
-
-  std::unique_ptr<GestureTracker> acceptMouseDrag(const InputState& inputState) override;
-
+  std::optional<vm::vec3d> handlePosition() const;
+  bool updateHandlePosition();
   void setRenderOptions(
     const InputState& inputState, render::RenderContext& renderContext) const override;
   void render(
     const InputState& inputState,
     render::RenderContext& renderContext,
     render::RenderBatch& renderBatch) override;
+  // END #BLACKENED
+
+  std::unique_ptr<GestureTracker> acceptMouseDrag(const InputState& inputState) override;
 
   bool cancel() override;
-
-private:
-  std::optional<vm::vec3d> handlePosition() const;
-  bool updateHandlePosition();
 };
 
 } // namespace tb::ui

@@ -70,14 +70,18 @@ AppInfoPanel::AppInfoPanel(AppController& appController, QWidget* parent)
   connect(build, &ClickableLabel::clicked, this, &AppInfoPanel::versionInfoClicked);
   connect(qtVersion, &ClickableLabel::clicked, this, &AppInfoPanel::versionInfoClicked);
 
+#if !defined( BLACKENED )
   auto* updateIndicator = appController.updater().createUpdateIndicator();
   setInfoStyle(updateIndicator);
+#endif
 
   auto* versionLayout = new QHBoxLayout{};
   versionLayout->setContentsMargins(0, 0, 0, 0);
   versionLayout->setSpacing(LayoutConstants::MediumHMargin);
   versionLayout->addWidget(version);
+#if !defined( BLACKENED )
   versionLayout->addWidget(updateIndicator);
+#endif
 
   auto* versionWidget = new QWidget{};
   versionWidget->setLayout(versionLayout);

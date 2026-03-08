@@ -19,5 +19,7 @@ target_sources(TbElLib
 target_link_libraries(TbElLib PRIVATE CompilerConfig PrecompileStdHeaders)
 target_link_libraries(TbElLib PUBLIC KdLib TbBaseLib fmt::fmt-header-only)
 
+if(TB_TESTS)
 add_subdirectory(test)
 add_subdirectory(test-utils)
+endif()

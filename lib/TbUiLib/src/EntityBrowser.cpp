@@ -143,7 +143,10 @@ void EntityBrowser::connectObservers()
   auto& prefs = PreferenceManager::instance();
   m_notifierConnection +=
     prefs.preferenceDidChangeNotifier.connect([&](const auto& path) {
-      if (path == pref(m_document.map().gameInfo().gamePathPreference))
+      // BEGIN #BLACKENED
+      // if (path == pref(m_document.map().gameInfo().gamePathPreference))
+      if (path == m_document.map().gameInfo().getGamePath())
+      // END #BLACKENED
       {
         reload();
       }

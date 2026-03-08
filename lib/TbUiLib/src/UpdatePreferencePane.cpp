@@ -80,8 +80,9 @@ To download and install an available update, click on the link labeled "Update a
         const auto value = state == Qt::Checked;
         auto& prefs = PreferenceManager::instance();
         prefs.set(Preferences::IncludePreReleaseUpdates, value);
-
+#if !defined(BLACKENED)
         m_appController.updater().reset();
+#endif
       }
     });
 
@@ -93,8 +94,9 @@ To download and install an available update, click on the link labeled "Update a
         const auto value = state == Qt::Checked;
         auto& prefs = PreferenceManager::instance();
         prefs.set(Preferences::IncludeDraftReleaseUpdates, value);
-
+#if !defined(BLACKENED)
         m_appController.updater().reset();
+#endif
       }
     });
 
@@ -102,7 +104,9 @@ To download and install an available update, click on the link labeled "Update a
     R"(Pre-releases are versions of TrenchBroom that are not yet considered stable. 
 They may contain new features or bug fixes that are not yet part of a stable release.)")};
 
+#if !defined(BLACKENED)
   auto* updateIndicator = m_appController.updater().createUpdateIndicator();
+#endif
 
   m_layout = new FormWithSectionsLayout{};
   m_layout->setContentsMargins(
@@ -114,7 +118,9 @@ They may contain new features or bug fixes that are not yet part of a stable rel
 
   m_layout->addSection("Automatic Updates");
   m_layout->addRow(updateInfo);
+#if !defined(BLACKENED)
   m_layout->addRow(updateIndicator);
+#endif
   m_layout->addSection("Update Preferences");
   m_layout->addRow("Check for updates on startup", m_autoCheckForUpdates);
   m_layout->addRow("Include pre-releases", m_includePreReleaseUpdates);

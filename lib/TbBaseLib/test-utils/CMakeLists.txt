@@ -15,4 +15,6 @@ target_link_libraries(TbBaseTestUtilsLib PRIVATE CompilerConfig PrecompileStdHea
 target_link_libraries(TbBaseTestUtilsLib PRIVATE Catch2::Catch2)
 target_link_libraries(TbBaseTestUtilsLib PUBLIC TbBaseLib)
 
+if(TB_TESTS)
 add_subdirectory(test)
+endif()

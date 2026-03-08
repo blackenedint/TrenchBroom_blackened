@@ -273,6 +273,31 @@ private:
   }
 };
 
+// BEGIN #BLACKENED
+// Todo; finish new features.
+class BlackenedFileSerializer : public Quake2ValveFileSerializer
+{
+public:
+  explicit BlackenedFileSerializer(std::ostream& stream)
+    : Quake2ValveFileSerializer{stream}
+  {
+  }
+
+private:
+  void doWriteBrushFace(std::ostream& stream, const mdl::BrushFace& face) const override
+  {
+    writeFacePoints(stream, face);
+    writeValveMaterialInfo(stream, face);
+
+    if (face.attributes().hasSurfaceAttributes())
+    {
+      writeSurfaceAttributes(stream, face);
+    }
+
+    fmt::format_to(std::ostreambuf_iterator<char>{stream}, "\n");
+  }
+};
+// END #BLACKENED
 std::unique_ptr<NodeSerializer> MapFileSerializer::create(
   const MapFormat format, std::ostream& stream)
 {
@@ -294,6 +319,8 @@ std::unique_ptr<NodeSerializer> MapFileSerializer::create(
     return std::make_unique<ValveFileSerializer>(stream);
   case MapFormat::Hexen2:
     return std::make_unique<Hexen2FileSerializer>(stream);
+  case mdl::MapFormat::Blackened:
+    return std::make_unique<BlackenedFileSerializer>(stream);    
   case MapFormat::Unknown:
     contract_assert(false);
     switchDefault();

@@ -145,6 +145,17 @@ QWidget* ViewPreferencePane::createViewPreferences()
   m_fovSlider->setMaximumWidth(400);
   m_fovSlider->setToolTip("Sets the field of vision in the 3D editing view.");
 
+  // BEGIN #BLACKENED
+  m_moveHandleRadiusSlider = new SliderWithLabel{1, 20};
+  m_moveHandleRadiusSlider->setMaximumWidth(400);
+  m_moveHandleRadiusSlider->setToolTip(
+    "Sets the thickness and end knob size for the move gizmo in 3D view.");
+  m_rotateHandleRadiusSlider = new SliderWithLabel{16, 256};
+  m_rotateHandleRadiusSlider->setMaximumWidth(400);
+  m_rotateHandleRadiusSlider->setToolTip(
+    "Sets the radius of the rotate gizmo in 3D view.");
+  // END #BLACKENED
+
   m_showAxes = new QCheckBox{};
   m_showAxes->setToolTip(
     "Toggle showing the coordinate system axes in the 3D editing view.");
@@ -197,6 +208,10 @@ QWidget* ViewPreferencePane::createViewPreferences()
   layout->addRow("Brightness", m_brightnessSlider);
   layout->addRow("Grid", m_gridAlphaSlider);
   layout->addRow("FOV", m_fovSlider);
+  // BEGIN #BLACKENED
+  layout->addRow("Move handle thickness", m_moveHandleRadiusSlider);
+  layout->addRow("Rotate handle radius", m_rotateHandleRadiusSlider);
+  // END #BLACKENED
   layout->addRow("Show axes", m_showAxes);
   layout->addRow("Filter mode", m_filterModeCombo);
   layout->addRow("Enable multisampling", m_enableMsaa);
@@ -237,6 +252,18 @@ void ViewPreferencePane::bindEvents()
     &ViewPreferencePane::gridAlphaChanged);
   connect(
     m_fovSlider, &SliderWithLabel::valueChanged, this, &ViewPreferencePane::fovChanged);
+  // BEGIN #BLACKENED
+  connect(
+    m_moveHandleRadiusSlider,
+    &SliderWithLabel::valueChanged,
+    this,
+    &ViewPreferencePane::moveHandleRadiusChanged);
+  connect(
+    m_rotateHandleRadiusSlider,
+    &SliderWithLabel::valueChanged,
+    this,
+    &ViewPreferencePane::rotateHandleRadiusChanged);
+  // END #BLACKENED
   connect(
     m_showAxes,
     &QCheckBox::checkStateChanged,
@@ -282,6 +309,10 @@ void ViewPreferencePane::doResetToDefaults()
   prefs.resetToDefault(Preferences::Brightness);
   prefs.resetToDefault(Preferences::GridAlpha);
   prefs.resetToDefault(Preferences::CameraFov);
+  // BEGIN #BLACKENED
+  prefs.resetToDefault(Preferences::MoveHandleRadius);
+  prefs.resetToDefault(Preferences::RotateHandleRadius);
+  // END #BLACKENED
   prefs.resetToDefault(Preferences::ShowAxes);
   prefs.resetToDefault(Preferences::EnableMSAA);
   prefs.resetToDefault(Preferences::TextureMinFilter);
@@ -301,6 +332,10 @@ void ViewPreferencePane::updateControls()
     brightnessToUI(prefs.getPendingValue(Preferences::Brightness)));
   m_gridAlphaSlider->setRatio(prefs.getPendingValue(Preferences::GridAlpha));
   m_fovSlider->setValue(int(prefs.getPendingValue(Preferences::CameraFov)));
+  // BEGIN #BLACKENED
+  m_moveHandleRadiusSlider->setValue(int(pref(Preferences::MoveHandleRadius)));
+  m_rotateHandleRadiusSlider->setValue(int(pref(Preferences::RotateHandleRadius)));
+  // END #BLACKENED
 
   const auto filterModeIndex = findFilterMode(
                                  prefs.getPendingValue(Preferences::TextureMinFilter),
@@ -399,6 +434,20 @@ void ViewPreferencePane::fovChanged(const int value)
   auto& prefs = PreferenceManager::instance();
   prefs.set(Preferences::CameraFov, float(value));
 }
+
+// BEGIN #BLACKENED
+void ViewPreferencePane::moveHandleRadiusChanged(const int value)
+{
+  auto& prefs = PreferenceManager::instance();
+  prefs.set(Preferences::MoveHandleRadius, float(value));
+}
+
+void ViewPreferencePane::rotateHandleRadiusChanged(const int value)
+{
+  auto& prefs = PreferenceManager::instance();
+  prefs.set(Preferences::RotateHandleRadius, float(value));
+}
+// END #BLACKENED
 
 void ViewPreferencePane::showAxesChanged(const int state)
 {

@@ -40,11 +40,12 @@ MoveObjectsTool::MoveObjectsTool(MapDocument& document)
 {
 }
 
+// BEGIN #BLACKENED
 const mdl::Map& MoveObjectsTool::map() const
 {
-  return m_map;
+  return m_document.map();
 }
-
+// END #BLACKENED
 const mdl::Grid& MoveObjectsTool::grid() const
 {
   return m_document.map().grid();

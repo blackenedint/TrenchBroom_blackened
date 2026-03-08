@@ -28,6 +28,7 @@ namespace tb
 namespace mdl
 {
 class Grid;
+class Map;
 } // namespace mdl
 
 namespace ui
@@ -53,7 +54,9 @@ public:
   explicit MoveObjectsTool(MapDocument& document);
 
 public:
+  // BEGIN #BLACKENED
   const mdl::Map& map() const;
+  // END #BLACKENED
   const mdl::Grid& grid() const;
 
   bool startMove(const InputState& inputState);
