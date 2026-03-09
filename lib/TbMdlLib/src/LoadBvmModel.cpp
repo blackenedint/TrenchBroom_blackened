@@ -178,7 +178,7 @@ Result<EntityModelData> loadV1(
   triangles.reserve(num_indices / 3);
 
   // read indices.
-  for (uint32_t i = 0; i < num_indices; i += 3)
+  for (size_t i = 0; i < num_indices; i += 3)
   {
     auto tri = BvmTriangle{};
     tri.vertices[0] = reader.readSize<int32_t>();
@@ -195,7 +195,7 @@ Result<EntityModelData> loadV1(
   uvs.reserve(num_verts);
 
   // read verts, normals, uvs
-  for (uint32_t i = 0; i < num_verts; i++)
+  for (size_t i = 0; i < num_verts; i++)
   {
     auto pos = reader.readVec<float, 3>();
     verts.push_back((pos + origin) * scale); // just apply the origin and scale now.
@@ -330,7 +330,7 @@ Result<EntityModelData> loadV2(
 
     auto sm_skins = std::vector<std::string>{};
     sm_skins.push_back(tex_diffuse); // insert skin0 first.
-    for (uint32_t sk = 0; sk < num_skins; sk++)
+    for (size_t sk = 0; sk < num_skins; sk++)
     {
       const auto sk_ident = reader.readInt<uint32_t>();
       if (sk_ident != BvmLayout::BVM_SKIN_IDENT)
@@ -349,7 +349,7 @@ Result<EntityModelData> loadV2(
     sm_triangles.reserve(num_indices / 3);
 
     // read indices.
-    for (int i = 0; i < num_indices; i += 3)
+    for (size_t i = 0; i < num_indices; i += 3)
     {
       auto tri = BvmTriangle{};
       tri.vertices[0] = reader.readSize<int32_t>();
@@ -366,7 +366,7 @@ Result<EntityModelData> loadV2(
     sm_uvs.reserve(num_verts);
 
     // read verts, normals, uvs
-    for (uint32_t i = 0; i < num_verts; i++)
+    for (size_t i = 0; i < num_verts; i++)
     {
       auto pos = reader.readVec<float, 3>();
       sm_basepos.push_back((pos + origin) * scale);
@@ -467,12 +467,12 @@ Result<EntityModelData> loadCurrent(
   /*const auto maxs =*/reader.readVec<float, 3>();
 
   // TB doesn't need these at the moment, so we'll just skip them.
-  //size_t group_count = 0;
-  //size_t group_offset = 0;
+  // size_t group_count = 0;
+  // size_t group_offset = 0;
   if (version >= BvmLayout::VTXMDL_VERSION_GROUPS)
   {
-	/*group_count = */reader.readSize<int32_t>();
-	/*group_offset = */reader.readSize<int32_t>();
+    /*group_count = */ reader.readSize<int32_t>();
+    /*group_offset = */ reader.readSize<int32_t>();
   }
 
   const auto sequence_count = reader.readSize<int32_t>();
@@ -484,8 +484,8 @@ Result<EntityModelData> loadCurrent(
   // we don't need the collision in trenchbroom, so just read past it.
   if (version >= BvmLayout::VTXMDL_VERSION_COLLISION)
   {
-    /*const auto collision_count =*/ reader.readSize<int32_t>();
-    /*const auto collision_offset =*/ reader.readSize<int32_t>();
+    /*const auto collision_count =*/reader.readSize<int32_t>();
+    /*const auto collision_offset =*/reader.readSize<int32_t>();
   }
 
   /*const auto metadatasize = */ reader.readSize<int32_t>();
@@ -524,10 +524,10 @@ Result<EntityModelData> loadCurrent(
   // parse the submesh data out first; and then actually do the reading.
   struct Submesh
   {
-	//v4+
-	int32_t flags;
-	int32_t groupid;
-	int32_t slotid;
+    // v4+
+    int32_t flags;
+    int32_t groupid;
+    int32_t slotid;
 
     std::string name;
     size_t num_skins;
@@ -544,7 +544,7 @@ Result<EntityModelData> loadCurrent(
   std::vector<Submesh> submeshes;
   submeshes.reserve(submesh_count);
   reader.seekFromBegin(submesh_offset);
-  for (uint32_t smi = 0; smi < submesh_count; smi++)
+  for (size_t smi = 0; smi < submesh_count; smi++)
   {
     const auto ident = reader.readInt<uint32_t>();
     if (ident != BvmLayout::BVM_SUBMESH_IDENT)
@@ -555,12 +555,12 @@ Result<EntityModelData> loadCurrent(
     auto smesh = Submesh{};
     smesh.name = fmt::format("submesh_{}", smi);
 
-	if ( version >= BvmLayout::VTXMDL_VERSION_GROUPS )
-	{
-		smesh.flags = reader.readInt<int32_t>();
-		smesh.groupid = reader.readInt<int32_t>();
-		smesh.slotid = reader.readInt<int32_t>();
-	}
+    if (version >= BvmLayout::VTXMDL_VERSION_GROUPS)
+    {
+      smesh.flags = reader.readInt<int32_t>();
+      smesh.groupid = reader.readInt<int32_t>();
+      smesh.slotid = reader.readInt<int32_t>();
+    }
 
 
     // read counts and offsets.
@@ -603,7 +603,7 @@ Result<EntityModelData> loadCurrent(
     if (smesh.num_skins > 0)
     {
       reader.seekFromBegin(smesh.skin_offset);
-      for (uint32_t sk = 0; sk < smesh.num_skins; sk++)
+      for (size_t sk = 0; sk < smesh.num_skins; sk++)
       {
         const auto sk_ident = reader.readInt<uint32_t>();
         if (sk_ident != BvmLayout::BVM_SKIN_IDENT)
@@ -625,7 +625,7 @@ Result<EntityModelData> loadCurrent(
     // grab UVs
     tmp_sm.uvs.reserve(smesh.num_verts);
     reader.seekFromBegin(smesh.uv_offset);
-    for (int uvi = 0; uvi < smesh.num_verts; uvi++)
+    for (size_t uvi = 0; uvi < smesh.num_verts; uvi++)
       tmp_sm.uvs.push_back(reader.readVec<float, 2>());
 
 
@@ -634,7 +634,7 @@ Result<EntityModelData> loadCurrent(
     reader.seekFromBegin(smesh.indice_offset);
 
     //  read them into bvmtriangles
-    for (uint32_t i = 0; i < smesh.num_indices; i += 3)
+    for (size_t i = 0; i < smesh.num_indices; i += 3)
     {
       auto tri = BvmTriangle{};
       tri.vertices[0] = reader.readSize<uint32_t>();
@@ -681,8 +681,8 @@ Result<EntityModelData> loadCurrent(
 
     for (size_t fi = 0; fi < Ftotal; ++fi)
     {
-      auto rangeMap = gl::IndexRangeMap{
-        gl::PrimType::Triangles, 0, 3 * tmp_sm.triangles.size()};
+      auto rangeMap =
+        gl::IndexRangeMap{gl::PrimType::Triangles, 0, 3 * tmp_sm.triangles.size()};
       const auto& pos = tmp_sm.perFramePos[fi];
       std::vector<mdl::EntityModelVertex> frameVerts;
       frameVerts.reserve(3 * tmp_sm.triangles.size());
