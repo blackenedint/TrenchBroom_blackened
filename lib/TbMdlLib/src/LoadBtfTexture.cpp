@@ -63,9 +63,13 @@ constexpr uint32 HighestVersion()
 // +0 +1 +2 +3 +4 +5 +6 +7 +8 +9 (sequence)
 // -0 -1 -2 -3 -4 -5 -6 -7 -8 -9 (random)
 // +a +b +c +d +e +f +g +h +i +j (alternates)
-constexpr size_t MAX_TEXTURE_FRAMES = 10;
-constexpr size_t MAX_ALTERNATE_TEX = 10;
-constexpr const char* BITEXTURE_EXT = "btf";
+
+// error: unused variable 'MAX_TEXTURE_FRAMES' [-Werror,-Wunused-const-variable]
+// error : unused variable 'MAX_ALTERNATE_TEX'[-Werror, -Wunused - const - variable]
+// error: unused variable 'BITEXTURE_EXT' [-Werror,-Wunused-const-variable]
+// constexpr size_t MAX_TEXTURE_FRAMES = 10;
+// constexpr size_t MAX_ALTERNATE_TEX = 10;
+// constexpr const char* BITEXTURE_EXT = "btf";
 
 constexpr size_t SHA1_BUFFER_SIZE = 20;
 constexpr size_t MAX_TEXTURE_NAME = 64; // 32 can probably fit, but this is safer.
@@ -182,7 +186,7 @@ static_assert(sizeof(metadata_q2_t) == 84, "metadata_q2_t size");
 static_assert(sizeof(metadata_sprite_t) == 12, "metadata_sprite_t size");
 } // namespace Btf
 
-//LoadFreeImageTexture.cpp
+// LoadFreeImageTexture.cpp
 Color getAverageColor(const gl::TextureBuffer& buffer, GLenum format);
 Result<gl::Texture> loadBtfTexture(fs::Reader& reader, bool bVerticalFlip /*= false*/)
 {
@@ -311,7 +315,7 @@ Result<gl::Texture> loadBtfTexture(fs::Reader& reader, bool bVerticalFlip /*= fa
       }
     }
 
-    //static auto averageColor = Color{};
+    // static auto averageColor = Color{};
     const auto averageColor = getAverageColor(buffers[0], GL_BGRA);
     auto embeddedDefaults = gl::Q2EmbeddedDefaults{flags, contents, lightvalue};
     return gl::Texture{

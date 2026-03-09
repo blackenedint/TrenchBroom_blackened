@@ -118,7 +118,10 @@ void MoveHandle::renderHandle3D(
   auto renderService = render::RenderService{renderContext, renderBatch};
   renderService.setShowOccludedObjectsTransparent();
   // todo; fix this..i may need to use a different range.
-  renderService.setLineWidth(handleRadius() * 2.0f);
+  //  error: conversion from ‘double’ to ‘float’ may change value
+  //  [-Werror=float-conversion]
+  // adding cast.
+  renderService.setLineWidth(static_cast<float>(handleRadius()) * 2.0f);
 
   const auto& camera = renderContext.camera();
   for (const auto area : {HitArea::XAxis, HitArea::YAxis, HitArea::ZAxis})
@@ -155,7 +158,10 @@ void MoveHandle::renderHighlight3D(
   auto renderService = render::RenderService{renderContext, renderBatch};
   renderService.setShowOccludedObjectsTransparent();
   // todo; fix this..i may need to use a different range.
-  renderService.setLineWidth((handleRadius() * 2.0f) + 1.0f);
+  // error: conversion from ‘double’ to ‘float’ may change value
+  // [-Werror=float-conversion]
+  // adding cast.
+  renderService.setLineWidth((static_cast<float>(handleRadius()) * 2.0f) + 1.0f);
 
   Color color;
   switch (area)
