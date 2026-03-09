@@ -30,7 +30,11 @@ class AppInfoPanel : public QWidget
   Q_OBJECT
 
 public:
-  explicit AppInfoPanel(/* BEGIN #BLACKENED AppController& appController END #BLACKENED,*/ QWidget* parent = nullptr);
+#if defined(BLACKENED)
+  explicit AppInfoPanel(QWidget* parent = nullptr);
+#else
+  explicit AppInfoPanel(AppController& appController, QWidget* parent = nullptr);
+#endif
 
 private:
   void versionInfoClicked();

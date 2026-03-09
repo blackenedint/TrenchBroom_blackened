@@ -86,9 +86,12 @@ Source Sans Pro (Font)<br />
 Font Awesome 5 Free (Icons)<br />)");
   setWindowIconTB(this);
 
-  // BEGIN #BLACKENED 
-  //auto* infoPanel = new AppInfoPanel{m_appController};
+// BEGIN #BLACKENED
+#if defined(BLACKENED)
   auto* infoPanel = new AppInfoPanel();
+#else
+  auto* infoPanel = new AppInfoPanel{m_appController};
+#endif
   // END #BLACKENED
   auto* creditsText = new QLabel{creditsString};
   creditsText->setWordWrap(true);

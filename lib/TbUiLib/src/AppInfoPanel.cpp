@@ -37,9 +37,11 @@
 
 namespace tb::ui
 {
-
-AppInfoPanel::AppInfoPanel(
-  /* BEGIN #BLACKENED AppController& appController END #BLACKENED,*/ QWidget* parent)
+#if defined(BLACKENED)
+AppInfoPanel::AppInfoPanel(QWidget* parent)
+#else
+AppInfoPanel::AppInfoPanel(AppController& appController, QWidget* parent)
+#endif
   : QWidget{parent}
 {
   auto appIconImage = loadPixmap("AppIcon.png");
@@ -71,7 +73,7 @@ AppInfoPanel::AppInfoPanel(
   connect(build, &ClickableLabel::clicked, this, &AppInfoPanel::versionInfoClicked);
   connect(qtVersion, &ClickableLabel::clicked, this, &AppInfoPanel::versionInfoClicked);
 
-#if !defined( BLACKENED )
+#if !defined(BLACKENED)
   auto* updateIndicator = appController.updater().createUpdateIndicator();
   setInfoStyle(updateIndicator);
 #endif
@@ -80,7 +82,7 @@ AppInfoPanel::AppInfoPanel(
   versionLayout->setContentsMargins(0, 0, 0, 0);
   versionLayout->setSpacing(LayoutConstants::MediumHMargin);
   versionLayout->addWidget(version);
-#if !defined( BLACKENED )
+#if !defined(BLACKENED)
   versionLayout->addWidget(updateIndicator);
 #endif
 
