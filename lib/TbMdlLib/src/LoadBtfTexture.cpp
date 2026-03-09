@@ -20,11 +20,11 @@
 
 #include "mdl/LoadBtfTexture.h"
 
-
 #include "Color.h"
 #include "fs/Reader.h"
 #include "fs/ReaderException.h"
 #include "mdl/MaterialUtils.h"
+
 #include "kd/contracts.h"
 
 #include <fmt/format.h>
@@ -33,12 +33,15 @@
 
 namespace tb::mdl
 {
-// so I can copy and paste without having to keep altering.
-using uint32 = uint32_t;
-using int32 = int32_t;
-using uint16 = uint16_t;
-using int16 = int16_t;
-using byte = int8_t;
+// so I can copy and paste without having to keep altering;
+// changing to defines
+#define uint32 uint32_t
+#define int32 int32_t
+#define uint16 uint16_t
+#define int16 int16_t
+#ifndef byte
+#define byte int8_t
+#endif
 
 namespace Btf
 {
@@ -179,8 +182,9 @@ static_assert(sizeof(metadata_q2_t) == 84, "metadata_q2_t size");
 static_assert(sizeof(metadata_sprite_t) == 12, "metadata_sprite_t size");
 } // namespace Btf
 
-Result<gl::Texture> loadBtfTexture(
-  fs::Reader& reader, bool bVerticalFlip /*= false*/)
+//LoadFreeImageTexture.cpp
+Color getAverageColor(const gl::TextureBuffer& buffer, GLenum format);
+Result<gl::Texture> loadBtfTexture(fs::Reader& reader, bool bVerticalFlip /*= false*/)
 {
   try
   {
@@ -219,7 +223,8 @@ Result<gl::Texture> loadBtfTexture(
 
     // meh!
     Btf::metadata_q2_t meta_q2{};
-    Btf::metadata_sprite_t meta_spr{};
+    // ignore sprite meta for now as well, until it's actually needed.
+    // Btf::metadata_sprite_t meta_spr{};
     if (metadatasize > 0)
     {
       // read the metadata first; even though it's at the end.
@@ -240,8 +245,8 @@ Result<gl::Texture> loadBtfTexture(
       }
       break;
       case Btf::BTF_METASPR: {
-        meta_spr.orientation = reader.read<int32_t, int32_t>();
-        meta_spr.rendertype = reader.read<int32_t, int32_t>();
+        /*meta_spr.orientation = */ reader.read<int32_t, int32_t>();
+        /*meta_spr.rendertype = */ reader.read<int32_t, int32_t>();
         // skip the frame intervals; we won't be animating sprites in TB (for now)
       }
       break;
@@ -277,26 +282,26 @@ Result<gl::Texture> loadBtfTexture(
     setMipBufferSize(buffers, numMips, width, height, GL_RGBA);
     reader.read(buffers[0].data(), buffers[0].size());
 
-	// flip vertically if required (usually only models)
+    // flip vertically if required (usually only models)
     if (bVerticalFlip)
     {
       const size_t rowBytes = static_cast<size_t>(width) * 4; // RGBA
       const size_t h = static_cast<size_t>(height);
       auto* data = static_cast<std::uint8_t*>(buffers[0].data());
 
-      //std::vector<std::uint8_t> tmp(rowBytes);
-      //for (size_t y = 0; y < h / 2; ++y)
+      // std::vector<std::uint8_t> tmp(rowBytes);
+      // for (size_t y = 0; y < h / 2; ++y)
       //{
-      //  auto* rowTop = data + y * rowBytes;
-      //  auto* rowBot = data + (h - 1 - y) * rowBytes;
-	  //
+      //   auto* rowTop = data + y * rowBytes;
+      //   auto* rowBot = data + (h - 1 - y) * rowBytes;
+      //
       //  // swap rows
       //  std::memcpy(tmp.data(), rowTop, rowBytes);
       //  std::memcpy(rowTop, rowBot, rowBytes);
       //  std::memcpy(rowBot, tmp.data(), rowBytes);
       //}
 
-	  // non-alloc --slightly-- slower version.
+      // non-alloc --slightly-- slower version.
       for (size_t y = 0; y < h / 2; ++y)
       {
         auto* rowTop = data + y * rowBytes;
@@ -306,7 +311,8 @@ Result<gl::Texture> loadBtfTexture(
       }
     }
 
-    static auto averageColor = Color{};
+    //static auto averageColor = Color{};
+    const auto averageColor = getAverageColor(buffers[0], GL_BGRA);
     auto embeddedDefaults = gl::Q2EmbeddedDefaults{flags, contents, lightvalue};
     return gl::Texture{
       width,
