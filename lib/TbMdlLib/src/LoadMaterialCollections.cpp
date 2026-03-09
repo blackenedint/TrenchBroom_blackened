@@ -122,7 +122,7 @@ Result<std::vector<std::filesystem::path>> findAllMaterialPaths(
                // marked to be ignored.
                // ensure that there are no backslashes, only forward slashes for
                // filtering.
-               auto cpath = kdl::str_replace_every(texturePath.string(), "\\", "/");
+               const auto cpath = kdl::str_replace_every(texturePath.string(), "\\", "/");
                if (shouldExclude(cpath, materialConfig.excludes))
                  continue;
                // END #BLACKENED
