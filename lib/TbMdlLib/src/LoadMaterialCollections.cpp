@@ -48,6 +48,9 @@
 #include "kd/string_compare.h"
 #include "kd/string_format.h"
 #include "kd/vector_utils.h"
+// BEGIN #BLACKENED
+#include "kd/string_utils.h"
+// END #BLACKENED
 
 #include <fmt/format.h>
 #include <fmt/std.h>
@@ -113,6 +116,16 @@ Result<std::vector<std::filesystem::path>> findAllMaterialPaths(
                kdl::path_hash>{};
              for (const auto& texturePath : texturePaths)
              {
+               // BEGIN #BLACKENED
+               // check the WHOLE path; not just a material, for if it should be excluded
+               // too. this stops things like model textures, sprites, etc, if they are
+               // marked to be ignored.
+               // ensure that there are no backslashes, only forward slashes for
+               // filtering.
+               auto cpath = kdl::str_replace_every(texturePath.string(), "\\", "/");
+               if (shouldExclude(cpath, materialConfig.excludes))
+                 continue;
+               // END #BLACKENED
                pathStemToPath[kdl::path_remove_extension(texturePath)] = texturePath;
              }
              for (const auto& shader : shaders)
