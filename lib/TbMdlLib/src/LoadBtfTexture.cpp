@@ -49,7 +49,7 @@ constexpr int16 BTF_VER_MINOR = 0;
 
 constexpr uint32 Version(int16 major, int16 minor)
 {
-  return (uint32)(major * 100 + minor * 10);
+  return static_cast<uint32_t>(major * 100 + minor * 10);
 }
 constexpr uint32 HighestVersion()
 {
