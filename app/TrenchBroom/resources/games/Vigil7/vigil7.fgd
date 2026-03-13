@@ -1476,7 +1476,7 @@
 
 @PointClass base(Targetname) = info_null : "info_null (spotlight target)" []
 
-@PointClass base(Angles) size(-16 -16 0, 16 16 72) color(255 128 128) studio("models/editor/playerstart.bvm") = nav_seed : "Navigation Seed position; use to aid in navmesh generation by providing additional starting points to move from" []
+@PointClass base(Angles) size(-16 -16 0, 16 16 72) color(255 128 128) = nav_seed : "Navigation Seed position; use to aid in navmesh generation by providing additional starting points to move from" []
 
 @PointClass base(PlayerClass) studio("models/editor/playerstart.bvm") = info_player_start : "Player start" []
 @PointClass base(PlayerClass) studio("models/editor/playerstart.bvm") = info_player_coop : "Player cooperative start" []
