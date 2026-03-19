@@ -52,13 +52,13 @@ constexpr uint32_t BVM_SUBMESH_IDENT =
 
 constexpr size_t MAX_BVM_NAME = 64;
 
-// the most recent version.
-constexpr int32_t BVM_CURRENTVERSION = 4;
 
+// groups + collision added
+constexpr int32_t BVM_VER_GROUPS_COLLISION = 4;
+// sequence activities, and attachments
+constexpr int32_t BVM_VER_ACTIVITIES_ATTACHMENTS = 5;
 
-// some helpers, so i don't need to put magic numbers.
-constexpr int32_t VTXMDL_VERSION_GROUPS = 4;
-constexpr int32_t VTXMDL_VERSION_COLLISION = 4;
+constexpr int32_t BVM_CURRENTVERSION = BVM_VER_ACTIVITIES_ATTACHMENTS;
 
 } // namespace BvmLayout
 
@@ -74,6 +74,8 @@ struct BvmSeq
   size_t frames;
   int framerate;
   float scale;
+  std::string activityName;
+  int activityWeight;
 };
 
 struct BvmFlatFrame
@@ -469,7 +471,7 @@ Result<EntityModelData> loadCurrent(
   // TB doesn't need these at the moment, so we'll just skip them.
   // size_t group_count = 0;
   // size_t group_offset = 0;
-  if (version >= BvmLayout::VTXMDL_VERSION_GROUPS)
+  if (version >= BvmLayout::BVM_VER_GROUPS_COLLISION)
   {
     /*group_count = */ reader.readSize<int32_t>();
     /*group_offset = */ reader.readSize<int32_t>();
@@ -482,7 +484,7 @@ Result<EntityModelData> loadCurrent(
   const auto submesh_offset = reader.readSize<int32_t>();
 
   // we don't need the collision in trenchbroom, so just read past it.
-  if (version >= BvmLayout::VTXMDL_VERSION_COLLISION)
+  if (version >= BvmLayout::BVM_VER_GROUPS_COLLISION)
   {
     /*const auto collision_count =*/reader.readSize<int32_t>();
     /*const auto collision_offset =*/reader.readSize<int32_t>();
@@ -490,6 +492,13 @@ Result<EntityModelData> loadCurrent(
 
   /*const auto metadatasize = */ reader.readSize<int32_t>();
   /*const auto metadataoffset = */ reader.readSize<int32_t>();
+
+  if (version >= BvmLayout::BVM_VER_ACTIVITIES_ATTACHMENTS)
+  {
+    // may not even need to do this in trenchbroom at the moment
+    /*const auto attachment_count =*/reader.readSize<int32_t>();
+    /*const auto attachment_offset =*/reader.readSize<int32_t>();
+  }
 
   auto seqs = std::vector<BvmSeq>{};
 
@@ -505,6 +514,13 @@ Result<EntityModelData> loadCurrent(
     seq.scale = reader.readFloat<float>();
     if (seq.scale <= 0)
       seq.scale = 1.f;
+
+    if (version >= BvmLayout::BVM_VER_ACTIVITIES_ATTACHMENTS)
+    {
+      seq.activityName = reader.readString(BvmLayout::MAX_BVM_NAME);
+      seq.activityWeight = reader.readInt<int32_t>();
+    }
+
     seqs.push_back(std::move(seq));
   }
 
@@ -555,7 +571,7 @@ Result<EntityModelData> loadCurrent(
     auto smesh = Submesh{};
     smesh.name = fmt::format("submesh_{}", smi);
 
-    if (version >= BvmLayout::VTXMDL_VERSION_GROUPS)
+    if (version >= BvmLayout::BVM_VER_GROUPS_COLLISION)
     {
       smesh.flags = reader.readInt<int32_t>();
       smesh.groupid = reader.readInt<int32_t>();

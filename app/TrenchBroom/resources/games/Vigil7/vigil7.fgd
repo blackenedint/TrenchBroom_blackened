@@ -103,7 +103,7 @@
 [
 	message(string) : "Map Description / Title"
 	nextmap(string) : "Next map (DM only)"	
-	skyname(sky) : "Environment map (sv_skyname)" : : "Lets you choose what sky image you want. Values are: 2desert, alien1, alien2, alien3, black, city, cliff, desert, dusk, morning, neb1, neb2, neb6, neb7, night, space, xen8, xen9, xen10. More skies exist in Half-Life modifications, and you can also make your own skies."
+	skyname(sky) : "Environment map (sv_skyname)" : "night01" : "Lets you choose what sky image you want."
 	skyaxis(string) : "Vector axis for rotating sky"
 	skyrotate(float) : "Speed of rotation (degrees/second)"
 	gravity(integer) : "Gravity" : 800
@@ -119,7 +119,6 @@
 		1 : "Yes"
 	]
 		
-//	sounds(integer) : "CD track to play" : 1 : "CD track to play when the level begins."
 //	light(integer) : "Default light level"
 //	WaveHeight(string) : "Default Wave Height" : : "Set the default wave height here (can be overridden by the properties in func_water)."
 //	MaxRange(string) : "Max viewable distance" : "4096" : "Maximum distance the player can see."
@@ -154,9 +153,29 @@
 [
 ]
 
-@BaseClass size(0 0 0, 32 32 32) color(80 0 200) base(Appearflags) = Ammo []
+@BaseClass size(0 0 0, 32 32 32) color(0 0 200) base(Targetname, Appearflags, Angles, Targetx) = Item 
+[
+	spawnflags(Flags) = 
+	[
+		16: "Always Respawn" 				: 0
+		128: "Floating (don't fall)"		: 0
+		256: "No Effects"					: 0
+		512: "Physics"						: 0
+	]
+]
 
-@BaseClass size(-16 -16 0, 16 16 32) color(0 0 200) base(Targetname, Appearflags, Angles) = Weapon []
+@BaseClass size(-16 -16 0, 16 16 16) color(80 0 200) base(Item) = Ammo
+[
+	spawnflags(Flags) = 
+	[
+		1: "Big Ammo"		: 0
+	]
+]
+
+@BaseClass size(-16 -16 0, 16 16 16) color(0 0 200) base(Item) = Weapon
+[
+
+]
 
 @BaseClass base(Appearflags, Angles) size(-16 -16 0, 16 16 72) color(0 255 0) = PlayerClass []
 
@@ -265,27 +284,9 @@
 	spawnobject(choices) : "Spawn On Break" : 0 =
 	[
 		0: "Nothing"
-		1: "Battery"
-		2: "Healthkit"
-		3: "9mm Handgun"
-		4: "9mm Clip"
-		5: "Machine Gun"
-		6: "Machine Gun Clip"
-		7: "Machine Gun Grenades"
-		8: "Shotgun"
-		9: "Shotgun Shells"
-		10: "Crossbow"
-		11: "Crossbow Bolts"
-		12: "357"
-		13: "357 clip"
-		14: "RPG"
-		15: "RPG Clip"
-		16: "Gauss clip"
-		17: "Hand grenade"
-		18: "Tripmine"
-		19: "Satchel Charge"
-		20: "Snark"
-		21: "Hornet Gun"
+		1: "Stim-Pack"
+		2: "Small Health"
+		3: "Medium Health"
 	]
 	explodemagnitude(integer) : "Explode Magnitude (0=none)" : 0
 ]
@@ -1490,27 +1491,6 @@
 @PointClass size(-8 -8 0, 8 8 16) base(PlayerClass, Targetname) = info_teleport_destination : "Teleport destination" []
 
 //
-// items
-//
-//@PointClass size(-16 -16 0, 16 16 16) base(Weapon, Targetx) studio("models/items/health_25.bvm") = item_health : "Health Kit"
-//[
-//	spawnflags(flags) = 
-//	[
-//		1 : "Rotten" : 0
-//		2 : "Megahealth" : 0
-//	]	
-//]
-@PointClass size(-8 -8 0, 8 8 8) base(Weapon, Targetx) studio("models/items/health_stim.bvm") = item_stimpack : "Stim Pack" []
-@PointClass size(-16 -16 0, 16 16 16) base(Weapon, Targetx) studio("models/items/health_15.bvm") = item_health_sm : "Health Kit (15)" []
-@PointClass size(-16 -16 0, 16 16 16) base(Weapon, Targetx) studio("models/items/health_25.bvm") = item_health_md : "Health Kit (25)" []
-@PointClass size(-16 -16 0, 16 16 16) base(Weapon, Targetx) studio("models/items/health_mega.bvm") = item_health_mega : "Mega Health" []
-
-//@PointClass size(-16 -16 0, 16 16 36) base(Weapon, Targetx) studio("models/w_oxygen.mdl") = item_airtank : "Oxygen tank" []
-//@PointClass size(-16 -16 0, 16 16 36) base(Weapon, Targetx) studio("models/w_antidote.mdl") = item_antidote : "Poison antidote" []
-//@PointClass size(-16 -16 0, 16 16 36) base(Weapon, Targetx) studio("models/w_battery.mdl") = item_battery : "HEV battery" []
-//@PointClass size(-16 -16 0, 16 16 36) base(Weapon, Targetx) studio("models/w_security.mdl") = item_security : "Security card" []
-
-//
 // lights
 //
 
@@ -2138,53 +2118,43 @@
 	springdamp(float) : "Spring damping" : : "Damping ratio."
 ]
 
+
+//
+// items
+//
+
+@PointClass size(-8 -8 0, 8 8 8) base(Item) studio("models/items/health_stim.bvm") = item_stimpack : "Stim Pack" []
+@PointClass size(-16 -16 0, 16 16 16) base(Item) studio("models/items/health_15.bvm") = item_health_sm : "Health Kit (15)" []
+@PointClass size(-16 -16 0, 16 16 16) base(Item) studio("models/items/health_25.bvm") = item_health_md : "Health Kit (25)" []
+@PointClass size(-16 -16 0, 16 16 16) base(Item) studio("models/items/health_mega.bvm") = item_health_mega : "Mega Health" []
+
+//@PointClass size(-16 -16 0, 16 16 36) base(Item) studio("models/w_oxygen.mdl") = item_airtank : "Oxygen tank" []
+//@PointClass size(-16 -16 0, 16 16 36) base(Item) studio("models/w_antidote.mdl") = item_antidote : "Poison antidote" []
+//@PointClass size(-16 -16 0, 16 16 36) base(Item) studio("models/w_battery.mdl") = item_battery : "HEV battery" []
+//@PointClass size(-16 -16 0, 16 16 36) base(Item) studio("models/w_security.mdl") = item_security : "Security card" []
+
 //
 // ammo
 //
-@PointClass base(Ammo) studio("models/editor/ammo_bullets.mdl") = ammo_bullets : "Pistol/Rifle Ammo" []
-@PointClass base(Ammo) studio("models/editor/ammo_shells.mdl") = ammo_shells : "Shotgun ammo" []
-@PointClass base(Ammo) studio("models/editor/ammo_cells.mdl") = ammo_cells : "Laser Ammo" []
-@PointClass base(Ammo) studio("models/editor/ammo_rockets.mdl") = ammo_rockets : "Rockets" []
-@PointClass base(Ammo) studio("models/editor/ammo_grenades.mdl") = ammo_grenades : "Grenades" []
-
-//@PointClass base(Weapon, Targetx) studio("models/w_9mmclip.mdl") = ammo_9mmclip : "Spawns a 9mm handgun ammo clip." []
-//@PointClass base(Weapon, Targetx) studio("models/w_9mmarclip.mdl") = ammo_9mmAR : "Spawns ammo for the 9mm AR / handgun." []
-//@PointClass base(Weapon, Targetx) studio("models/w_chainammo.mdl") = ammo_9mmbox : "Spawns a large amount (200) of 9mm ammo in a box." []
-//@PointClass base(Weapon, Targetx) studio("models/w_argrenade.mdl") = ammo_ARgrenades : "Spawns 2 grenades for the 9mm AR's secondary fire." []
-//@PointClass base(Weapon, Targetx) studio("models/w_shotbox.mdl") = ammo_buckshot : "Spawns ammo for the shotgun." []
-//@PointClass base(Weapon, Targetx) studio("models/w_357ammobox.mdl") = ammo_357 : "Spawns ammo for the .357 Magnum." []
-//@PointClass base(Weapon, Targetx) studio("models/w_rpgammo.mdl") = ammo_rpgclip : "Spawns rockets for the RPG." []
-//@PointClass base(Weapon, Targetx) studio("models/w_gaussammo.mdl") = ammo_gaussclip : "Spawns ammo for the gauss and egon weapons." []
-//@PointClass base(Weapon, Targetx) studio("models/w_crossbow_clip.mdl") = ammo_crossbow : "Spawns crossbow ammo." []
+@PointClass base(Ammo) studio("models/editor/ammo_9mm.mdl") = ammo_pistol : "Pistol Ammo" []
+@PointClass base(Ammo) studio("models/editor/ammo_9mm_smg.mdl") = ammo_smg : "SMG Ammo" []
+@PointClass base(Ammo) studio("models/editor/ammo_shells.mdl") = ammo_shells : "Buckshot" []
+@PointClass base(Ammo) studio("models/editor/ammo_cells.mdl") = ammo_cells : "Energy Ammo" []
 
 
-
+@PointClass base(Ammo) studio("models/editor/ammo_grenades.mdl") = ammo_grenade : "HE Grenades" []
 //
 // weapons
 //
-
-//@PointClass base(Weapon, Targetx) studio("models/w_crowbar.mdl") = weapon_crowbar : "Crowbar" []
-//@PointClass base(Weapon, Targetx) studio("models/w_9mmhandgun.mdl") = weapon_9mmhandgun : "9mm Handgun" []
-//@PointClass base(Weapon, Targetx) studio("models/w_357.mdl") = weapon_357 : "357 Handgun" []
-//@PointClass base(Weapon, Targetx) studio("models/w_9mmar.mdl") = weapon_9mmAR : "9mm Assault Rifle" []
-//@PointClass base(Weapon, Targetx) studio("models/w_shotgun.mdl") = weapon_shotgun : "Shotgun" []
-//@PointClass base(Weapon, Targetx) studio("models/w_rpg.mdl") = weapon_rpg : "RPG" []
-//@PointClass base(Weapon, Targetx) studio("models/w_gauss.mdl") = weapon_gauss : "Gauss Gun" []
-//@PointClass base(Weapon, Targetx) studio("models/w_crossbow.mdl") = weapon_crossbow : "Crossbow" 
-//[
-//	sequence(choices) : "Placement" : 0 =
-//	[
-//		0 : "Normal (flat)"
-//		1 : "Realistic (tilted)"
-//	]
-//]
-//@PointClass base(Weapon, Targetx) studio("models/w_egon.mdl") = weapon_egon : "Egon Gun" []
-//@PointClass base(Weapon, Targetx) studio("models/v_tripmine.mdl") body(3) sequence(8) size(-16 -16 -5, 16 16 27) = weapon_tripmine : "Tripmine Ammo" []
-//@PointClass base(Weapon, Targetx) studio("models/w_satchel.mdl") = weapon_satchel : "Satchel Charge Ammo" []
-//@PointClass base(Weapon, Targetx) studio("models/w_grenade.mdl") = weapon_handgrenade : "Handgrenade Ammo" []
-//@PointClass base(Weapon, Targetx) studio("models/w_squeak.mdl") = weapon_snark : "Squeak Grenade" []
-//@PointClass base(Weapon, Targetx) studio("models/w_hgun.mdl") = weapon_hornetgun : "Hornet Gun" []
-//@PointClass size(-16 -16 0, 16 16 64) color(0 128 0) studio("models/w_chainammo.mdl") =  weaponbox : "Weapon/Ammo Container" []
-
+@PointClass base(Weapon) studio("models/weapons/w_knife.bvm") = weapon_knife : "Combat Knife" []
+@PointClass base(Weapon) studio("models/weapons/w_usp.bvm") = weapon_usp : "USP (handgun)" []
+@PointClass base(Weapon) studio("models/weapons/w_mp5a2.bvm") = weapon_mp5 : "MP5"
+[
+	addon(choices) : "Addon" : 0 =
+	[
+		0 : "None"
+		1 : "Suppressor (MP5SD)"
+	]
+]
 
 
