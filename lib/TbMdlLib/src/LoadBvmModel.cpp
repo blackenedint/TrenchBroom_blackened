@@ -257,7 +257,12 @@ Result<EntityModelData> loadV2(
   if (num_sequences == 0)
   {
     // no sequences to read; we're a static pose;
-    seqs.push_back({"staticpose", 1, 10, 1.f});
+    auto seq = BvmSeq{};
+    seq.name = "staticpos";
+    seq.frames = 1;
+    seq.framerate = 1;
+    seq.scale = 1.f;
+    seqs.push_back(seq);
   }
   else
   {
