@@ -48,7 +48,7 @@ namespace Btf
 constexpr uint32 BTF_IDENT = (('F' << 24) + ('T' << 16) + ('I' << 8) + 'B');
 constexpr uint32 BTF_FRAMEID = (('M' << 24) + ('A' << 16) + ('R' << 8) + 'F');
 constexpr int16 BTF_VER_MAJOR = 1;
-constexpr int16 BTF_VER_MINOR = 0;
+constexpr int16 BTF_VER_MINOR = 1;
 
 constexpr uint32 Version(int16 major, int16 minor)
 {
@@ -59,6 +59,10 @@ constexpr uint32 HighestVersion()
   return Version(BTF_VER_MAJOR, BTF_VER_MINOR);
 }
 
+constexpr uint32 VersionReflectivity()
+{
+  return Version(1, 1);
+}
 // maintaining the same limit of named textures.
 // +0 +1 +2 +3 +4 +5 +6 +7 +8 +9 (sequence)
 // -0 -1 -2 -3 -4 -5 -6 -7 -8 -9 (random)
@@ -132,13 +136,16 @@ struct texinfo_t
   int32 metadatasize;
   int32 metadataoffset;
 };
-// frames... shouldn't need to change;
-// but there are 36 bytes available to decrement from as necessary.
+
+// frames... shouldn't need to change often.
+// ver 1.0; reserved[40]
+// ver 1.1; reserved[28]
 struct frame_t
 {
   uint32_t ident;
   std::string sha1; // SHA1_BUFFER_SIZE;
-  byte reserved[40];
+  float reflectivity[3];
+  byte reserved[28];
 };
 
 
@@ -272,11 +279,20 @@ Result<gl::Texture> loadBtfTexture(fs::Reader& reader, bool bVerticalFlip /*= fa
     if (frame.ident != Btf::BTF_FRAMEID)
       return Error("invalid frame data: " + std::to_string(frame.ident));
 
-    // skip sha1 for now.
+    // read sha1 (is actually calculated since 1.1)
     frame.sha1 = reader.readString(Btf::SHA1_BUFFER_SIZE);
 
-    // skip over the 40 reserved bytes.
-    reader.readVec<byte, 40>();
+    // note; we could use the reflectivity for average color
+    // since reflectivity is average color; just.. based on a gamma value.
+    if (Btf::Version(hdr.ver_major, hdr.ver_minor) >= Btf::VersionReflectivity())
+    {
+      reader.readVec<float, 3>();
+      reader.readVec<byte, 28>();
+    }
+    else
+
+      // skip over the 40 reserved bytes.
+      reader.readVec<byte, 40>();
 
     const size_t width = static_cast<size_t>(tnfo.width);
     const size_t height = static_cast<size_t>(tnfo.height);
