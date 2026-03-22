@@ -2156,5 +2156,6 @@
 		1 : "Suppressor (MP5SD)"
 	]
 ]
+@PointClass base(Weapon) studio("models/weapons/w_ak5.bvm") = weapon_ak5 : "AK5" []
 
 

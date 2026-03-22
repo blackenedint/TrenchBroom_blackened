@@ -57,8 +57,9 @@ constexpr size_t MAX_BVM_NAME = 64;
 constexpr int32_t BVM_VER_GROUPS_COLLISION = 4;
 // sequence activities, and attachments
 constexpr int32_t BVM_VER_ACTIVITIES_ATTACHMENTS = 5;
+constexpr int32_t BVM_VER_UV2 = 6;
 
-constexpr int32_t BVM_CURRENTVERSION = BVM_VER_ACTIVITIES_ATTACHMENTS;
+constexpr int32_t BVM_CURRENTVERSION = BVM_VER_UV2;
 
 } // namespace BvmLayout
 
@@ -117,7 +118,8 @@ auto makeFrameTriangles(
   const std::vector<BvmTriangle>& triangles,
   const std::vector<vm::vec3f>& verts,
   /*const std::vector<vm::vec3f>& normals,*/
-  const std::vector<vm::vec2f>& uvs)
+  const std::vector<vm::vec2f>& uvs
+  /*,const std::vector<vm::vec2f>& uv2*/)
 {
   auto frameTriangles = std::vector<EntityModelVertex>{};
   frameTriangles.reserve(triangles.size());
@@ -192,9 +194,11 @@ Result<EntityModelData> loadV1(
   auto verts = std::vector<vm::vec3f>{};
   auto normals = std::vector<vm::vec3f>{};
   auto uvs = std::vector<vm::vec2f>{};
+  // auto uv2 = std::vector<vm::vec2f>{};
   verts.reserve(num_verts);
   normals.reserve(num_verts);
   uvs.reserve(num_verts);
+  // uv2.reserve(num_verts);
 
   // read verts, normals, uvs
   for (size_t i = 0; i < num_verts; i++)
@@ -647,7 +651,12 @@ Result<EntityModelData> loadCurrent(
     tmp_sm.uvs.reserve(smesh.num_verts);
     reader.seekFromBegin(smesh.uv_offset);
     for (size_t uvi = 0; uvi < smesh.num_verts; uvi++)
+    {
       tmp_sm.uvs.push_back(reader.readVec<float, 2>());
+	  // parse and ignore the uv2.
+      if (version >= BvmLayout::BVM_VER_UV2)
+        reader.readVec<float, 2>();
+    }
 
 
     // triangles
