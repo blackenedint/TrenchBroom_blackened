@@ -42,6 +42,9 @@
 #include "mdl/Transaction.h"
 #include "mdl/UpdateBrushFaceAttributes.h"
 #include "mdl/WorldNode.h"
+// BEGIN #BLACKEND
+#include "mdl/GameInfo.h"
+// END #BLACKEND
 
 #include "kd/contracts.h"
 #include "kd/ranges/to.h"
@@ -253,7 +256,7 @@ bool pasteBrushFaces(Map& map, const std::vector<BrushFace>& faces)
 std::string serializeSelectedNodes(Map& map)
 {
   auto stream = std::stringstream{};
-  auto writer = NodeWriter{map.worldNode(), stream};
+  auto writer = NodeWriter{map.worldNode(), stream, map.gameInfo().gameConfig};
   writer.writeNodes(map.selection().nodes, map.taskManager());
   return stream.str();
 }
@@ -261,7 +264,7 @@ std::string serializeSelectedNodes(Map& map)
 std::string serializeSelectedBrushFaces(Map& map)
 {
   auto stream = std::stringstream{};
-  auto writer = NodeWriter{map.worldNode(), stream};
+  auto writer = NodeWriter{map.worldNode(), stream, map.gameInfo().gameConfig};
   writer.writeBrushFaces(
     map.selection().brushFaces | std::views::transform([](const auto& h) {
       return h.face();

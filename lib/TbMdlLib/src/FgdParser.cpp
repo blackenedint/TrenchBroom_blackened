@@ -411,9 +411,10 @@ EntityDefinitionClassInfo FgdParser::parseClassInfo(
         status.warn(token.location(), "Found multiple model properties");
       }
       // BEGIN #BLACKENED
-      //classInfo.modelDefinition =
+      // classInfo.modelDefinition =
       //  parseModel(status, kdl::ci::str_is_equal(typeName, "sprite"));
       classInfo.modelDefinition = parseModel(status);
+      // END #BLACKENED
     }
     else if (kdl::ci::str_is_equal(typeName, "decal"))
     {
@@ -508,7 +509,7 @@ ModelDefinition FgdParser::parseModel(
     m_tokenizer.skipToken();
     return mdl::ModelDefinition();
   }
-  // END #BLACKENED 
+  // END #BLACKENED
 
   return parseModelDefinition(m_tokenizer, status, FgdToken::CParenthesis)
          | kdl::if_error([](const auto& e) { throw ParserException{e.msg}; })

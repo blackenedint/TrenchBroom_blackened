@@ -25,6 +25,7 @@
 #include "gl/ResourceId.h"
 #include "mdl/BrushFaceHandle.h"
 #include "mdl/ExportOptions.h"
+#include "mdl/MapFormat.h"
 #include "mdl/NodeIndex.h"
 #include "mdl/Selection.h"
 
@@ -56,7 +57,6 @@ struct ProcessContext;
 
 namespace mdl
 {
-enum class MapFormat;
 enum class MapTextEncoding;
 enum class PasteType;
 enum class TransactionScope;
@@ -299,9 +299,13 @@ public: // persistence
   Result<std::unique_ptr<Map>> reload();
 
   Result<void> save();
-  Result<void> saveAs(const std::filesystem::path& path);
-  Result<void> saveTo(const std::filesystem::path& path) const;
-  Result<void> exportAs(const ExportOptions& options) const;
+  Result<void> saveAs(
+    const std::filesystem::path& path, MapFormat formatOverride = MapFormat::Unknown);
+  Result<void> saveTo(
+    const std::filesystem::path& path,
+    MapFormat formatOverride = MapFormat::Unknown) const;
+  Result<void> exportAs(
+    const ExportOptions& options, MapFormat formatOverride = MapFormat::Unknown) const;
 
   bool persistent() const;
   std::string filename() const;

@@ -213,14 +213,17 @@ Result<std::unique_ptr<WorldNode>> createWorldNode(
   {
     if (
       format == MapFormat::Valve || format == MapFormat::Quake2_Valve
-      || format == MapFormat::Quake3_Valve
-      //BEGIN #BLACKENED
-      || format == MapFormat::Blackened
-      //END #BLACKENED
-      )
+      || format == MapFormat::Quake3_Valve)
     {
       worldEntity.addOrUpdateProperty(EntityPropertyKeys::ValveVersion, "220");
     }
+
+    // BEGIN #BLACKENED
+    if (format == MapFormat::Blackened)
+    { // 221 = with lightmap scale.
+      worldEntity.addOrUpdateProperty(EntityPropertyKeys::ValveVersion, "221");
+    }
+    // END #BLACKENED
 
     if (config.materialConfig.property)
     {
@@ -847,16 +850,18 @@ Result<void> Map::save()
   return saveAs(m_path);
 }
 
-Result<void> Map::saveAs(const std::filesystem::path& path)
+Result<void> Map::saveAs(
+  const std::filesystem::path& path, const MapFormat formatOverride)
 {
-  return saveTo(path).transform([&]() {
+  return saveTo(path, formatOverride).transform([&]() {
     setLastSaveModificationCount();
     setPath(path);
     mapWasSavedNotifier();
   });
 }
 
-Result<void> Map::saveTo(const std::filesystem::path& path) const
+Result<void> Map::saveTo(
+  const std::filesystem::path& path, const MapFormat formatOverride) const
 {
   if (!path.is_absolute())
   {
@@ -865,10 +870,14 @@ Result<void> Map::saveTo(const std::filesystem::path& path) const
 
   m_logger.info() << "Saving document to " << path;
 
-  fs::Disk::withOutputStream(path, [&](auto& stream) {
-    writeMapHeader(stream, gameInfo().gameConfig.name, m_worldNode->mapFormat());
+  const auto effectiveFormat =
+    (formatOverride != MapFormat::Unknown) ? formatOverride : m_worldNode->mapFormat();
 
-    auto writer = NodeWriter{*m_worldNode, stream};
+  fs::Disk::withOutputStream(path, [&](auto& stream) {
+    writeMapHeader(stream, gameInfo().gameConfig.name, effectiveFormat);
+
+    auto writer =
+      NodeWriter{*m_worldNode, stream, gameInfo().gameConfig, effectiveFormat};
     writer.setExporting(false);
     writer.writeMap(m_taskManager);
   }) | kdl::transform_error([&](const auto& e) {
@@ -878,7 +887,8 @@ Result<void> Map::saveTo(const std::filesystem::path& path) const
   return Result<void>{};
 }
 
-Result<void> Map::exportAs(const ExportOptions& options) const
+Result<void> Map::exportAs(
+  const ExportOptions& options, const MapFormat formatOverride) const
 {
   return std::visit(
     kdl::overload(
@@ -897,7 +907,14 @@ Result<void> Map::exportAs(const ExportOptions& options) const
       },
       [&](const MapExportOptions& mapOptions) {
         return fs::Disk::withOutputStream(mapOptions.exportPath, [&](auto& stream) {
-          auto writer = NodeWriter{*m_worldNode, stream};
+          auto writer = NodeWriter{
+            *m_worldNode,
+            stream,
+            // BEGIN #BLACKEND
+            gameInfo().gameConfig,
+            formatOverride
+            // END #BLACKENED
+          };
           writer.setExporting(true);
           writer.setStripTbProperties(mapOptions.stripTbProperties);
           writer.writeMap(m_taskManager);

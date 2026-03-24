@@ -443,9 +443,6 @@ void StandardMapParser::parseFace(ParserStatus& status, const bool primitive)
     break;
   case MapFormat::Quake2_Valve:
   case MapFormat::Quake3_Valve:
-  //BEGIN #BLACKENED
-  case mdl::MapFormat::Blackened: //Tony; use this for now until I get the rest.
-  //END #BLACKENED
     parseQuake2ValveFace(status);
     break;
   case MapFormat::Hexen2:
@@ -467,6 +464,11 @@ void StandardMapParser::parseFace(ParserStatus& status, const bool primitive)
       parseQuake2Face(status);
     }
     break;
+  // BEGIN #BLACKENED
+  case mdl::MapFormat::Blackened:
+    parseBlackenedFace(status);
+    break;
+    // END #BLACKENED
   case MapFormat::Unknown:
     // cannot happen
     break;
@@ -658,6 +660,39 @@ void StandardMapParser::parsePrimitiveFace(ParserStatus& status)
   // brushFace(line, p1, p2, p3, attribs, uAxis, vAxis, status);
 }
 
+// BEGIN #BLACKENED
+void StandardMapParser::parseBlackenedFace(ParserStatus& status)
+{
+  const auto location = m_tokenizer.location();
+
+  const auto [p1, p2, p3] = parseFacePoints(status);
+  const auto materialName = parseMaterialName(status);
+
+  const auto [uAxis, uOffset, vAxis, vOffset] = parseValveUVAxes(status);
+
+  auto attribs = BrushFaceAttributes{materialName};
+  attribs.setXOffset(uOffset);
+  attribs.setYOffset(vOffset);
+  attribs.setRotation(parseFloat());
+  attribs.setXScale(parseFloat());
+  attribs.setYScale(parseFloat());
+  attribs.setLightmapScale(parseFloat());
+
+  // Quake 2 extra info is still optional (for now) ; i _may_ remove it.
+  if (!m_tokenizer.peekToken().hasType(
+        QuakeMapToken::OParenthesis | QuakeMapToken::CBrace | QuakeMapToken::Eof))
+  {
+    attribs.setSurfaceContents(parseInteger());
+    attribs.setSurfaceFlags(parseInteger());
+    attribs.setSurfaceValue(parseFloat());
+  }
+
+  onValveBrushFace(
+    location, m_targetMapFormat, p1, p2, p3, attribs, uAxis, vAxis, status);
+}
+
+
+// END #BLACKENED
 void StandardMapParser::parsePatch(
   ParserStatus& status, const FileLocation& startLocation)
 {

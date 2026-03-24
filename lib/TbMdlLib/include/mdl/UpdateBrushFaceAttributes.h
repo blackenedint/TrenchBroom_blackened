@@ -110,6 +110,9 @@ struct UpdateBrushFaceAttributes
   std::optional<ValueOp> rotation = std::nullopt;
   std::optional<ValueOp> xScale = std::nullopt;
   std::optional<ValueOp> yScale = std::nullopt;
+  // BEGIN #BLACKENED
+  std::optional<ValueOp> lightmapScale = std::nullopt;
+  // END #BLACKENED
   std::optional<FlagOp> surfaceFlags = std::nullopt;
   std::optional<FlagOp> surfaceContents = std::nullopt;
   std::optional<ValueOp> surfaceValue = std::nullopt;
@@ -124,6 +127,9 @@ struct UpdateBrushFaceAttributes
     rotation,
     xScale,
     yScale,
+    // BEGIN #BLACKENED
+    lightmapScale,
+    // END #BLACKENED
     surfaceFlags,
     surfaceContents,
     surfaceValue,

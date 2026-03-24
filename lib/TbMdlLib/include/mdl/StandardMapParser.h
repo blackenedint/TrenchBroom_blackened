@@ -137,6 +137,10 @@ private:
   void parseValveFace(ParserStatus& status);
   void parsePrimitiveFace(ParserStatus& status);
 
+  // BEGIN #BLACKENED
+  void parseBlackenedFace(ParserStatus& status);
+  // END #BLACKENED
+
   void parsePatch(ParserStatus& status, const FileLocation& startLocation);
 
   std::tuple<vm::vec3d, vm::vec3d, vm::vec3d> parseFacePoints(ParserStatus& status);

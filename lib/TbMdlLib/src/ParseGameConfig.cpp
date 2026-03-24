@@ -401,6 +401,15 @@ FlagsConfig parseFlagsConfig(const el::EvaluationContext& context, const el::Val
 
   return FlagsConfig{flags};
 }
+// BEGIN #BLACKENED
+float parseDefaultLightmapScale(
+  const el::EvaluationContext& context, const el::Value& value)
+{
+  if (value == el::Value::Null)
+    return 1.0f;
+  return vm::clamp((float)value.numberValue(context), 0.5f, 4.0f);
+}
+// END #BLACKENED
 
 FaceAttribsConfig parseFaceAttribsConfig(
   const el::EvaluationContext& context, const el::Value& value)
@@ -418,11 +427,18 @@ FaceAttribsConfig parseFaceAttribsConfig(
   auto contentFlags = parseFlagsConfig(context, value.at(context, "contentflags"));
   auto defaults = parseFaceAttribsDefaults(
     context, value.atOrDefault(context, "defaults"), surfaceFlags, contentFlags);
+  // BEGIN #BLACKENED
+  auto defaultLightmapScale =
+    parseDefaultLightmapScale(context, value.at(context, "defaultLightmapScale"));
+  // END #BLACKENED
 
   return FaceAttribsConfig{
     std::move(surfaceFlags),
     std::move(contentFlags),
     std::move(defaults),
+    // BEGIN #BLACKENED
+    std::move(defaultLightmapScale)
+    // END #BLACKENED
   };
 }
 

@@ -125,6 +125,18 @@ const std::optional<Color>& BrushFaceAttributes::color() const
 {
   return m_color;
 }
+// BEGIN #BLACKENED
+bool BrushFaceAttributes::hasLightmapScale() const
+{
+  return m_lightmapScale.has_value();
+}
+
+const std::optional<float>& BrushFaceAttributes::lightmapScale() const
+{
+  return m_lightmapScale;
+}
+// END #BLACKENED
+
 
 bool BrushFaceAttributes::valid() const
 {
@@ -252,4 +264,15 @@ bool BrushFaceAttributes::setColor(const std::optional<Color>& color)
   return false;
 }
 
+// BEGIN #BLACKENED
+bool BrushFaceAttributes::setLightmapScale(const std::optional<float>& scaleValue)
+{
+  if (scaleValue != m_lightmapScale)
+  {
+    m_lightmapScale = scaleValue;
+    return true;
+  }
+  return false;
+  // END #BLACKENED
+}
 } // namespace tb::mdl

@@ -51,6 +51,9 @@ private:
   SpinControl* m_xScaleEditor = nullptr;
   SpinControl* m_yScaleEditor = nullptr;
   SpinControl* m_rotationEditor = nullptr;
+  // BEGIN #BLACKENED
+  SpinControl* m_lightmapScaleEditor = nullptr;
+  // END #BLACKENED
   QLabel* m_surfaceValueLabel = nullptr;
   QWidget* m_surfaceValueEditorLayout = nullptr;
   SpinControl* m_surfaceValueEditor = nullptr;
@@ -86,6 +89,9 @@ private:
   void rotationChanged(double value);
   void xScaleChanged(double value);
   void yScaleChanged(double value);
+  // BEGIN #BLACKENED
+  void lightmapScaleChanged(double value);
+  // END #BLACKENED
   void surfaceFlagChanged(size_t index, int value, int setFlag, int mixedFlag);
   void contentFlagChanged(size_t index, int value, int setFlag, int mixedFlag);
   void surfaceValueChanged(double value);

@@ -74,6 +74,16 @@ void NodeSerializer::setStripTbProperties(const bool stripTbProperties)
   m_stripTbProperties = stripTbProperties;
 }
 
+MapFormat NodeSerializer::mapFormat() const
+{
+  return m_mapFormat;
+}
+
+void NodeSerializer::setMapFormat(const MapFormat mapFormat)
+{
+  m_mapFormat = mapFormat;
+}
+
 void NodeSerializer::beginFile(
   const std::vector<const Node*>& rootNodes, kdl::task_manager& taskManager)
 {
@@ -93,6 +103,11 @@ void NodeSerializer::endFile()
 void NodeSerializer::defaultLayer(const WorldNode& world)
 {
   auto worldEntity = world.entity();
+
+  if (mapFormat() == MapFormat::Blackened)
+  {
+    worldEntity.addOrUpdateProperty(EntityPropertyKeys::ValveVersion, "221");
+  }
 
   // Transfer the color, locked state, and hidden state from the default layer Layer
   // object to worldspawn

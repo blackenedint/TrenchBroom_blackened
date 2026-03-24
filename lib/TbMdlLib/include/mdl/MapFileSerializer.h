@@ -21,6 +21,9 @@
 
 #include "mdl/MapFormat.h"
 #include "mdl/NodeSerializer.h"
+// BEGIN #BLACKENED
+#include "mdl/GameConfig.h"
+// END #BLACKEND
 
 #include <iosfwd>
 #include <memory>
@@ -56,7 +59,13 @@ private:
   std::unordered_map<const Node*, PrecomputedString> m_nodeToPrecomputedString;
 
 public:
-  static std::unique_ptr<NodeSerializer> create(MapFormat format, std::ostream& stream);
+  static std::unique_ptr<NodeSerializer> create(
+    MapFormat format,
+    std::ostream& stream,
+    // BEGIN #BLACKENED
+    const GameConfig& gameConfig
+    // END #BLACKENED
+  );
 
 protected:
   explicit MapFileSerializer(std::ostream& stream);

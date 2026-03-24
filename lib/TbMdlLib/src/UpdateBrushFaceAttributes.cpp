@@ -96,6 +96,9 @@ UpdateBrushFaceAttributes copyAllExceptContentFlags(const BrushFaceAttributes& a
     .rotation = SetValue{attributes.rotation()},
     .xScale = SetValue{attributes.xScale()},
     .yScale = SetValue{attributes.yScale()},
+	// BEGIN #BLACKENED
+    .lightmapScale = setValueIfSet(attributes.lightmapScale()),
+	// END #BLACKEND
     .surfaceFlags = replaceFlagsIfSet(attributes.surfaceFlags()),
     .surfaceValue = setValueIfSet(attributes.surfaceValue()),
     .color = attributes.color(),
@@ -193,6 +196,12 @@ void evaluate(const UpdateBrushFaceAttributes& update, BrushFace& brushFace)
   attributes.setRotation(*evaluate(update.rotation, attributes.rotation()));
   attributes.setXScale(*evaluate(update.xScale, attributes.xScale()));
   attributes.setYScale(*evaluate(update.yScale, attributes.yScale()));
+
+  if (update.lightmapScale)
+  {
+    attributes.setLightmapScale(
+      evaluate(update.lightmapScale, attributes.lightmapScale()));
+  }
 
   if (update.surfaceFlags)
   {

@@ -205,6 +205,9 @@ public:
   int resolvedSurfaceFlags() const;
   float resolvedSurfaceValue() const;
   std::optional<Color> resolvedColor() const;
+  // BEGIN #BLACKENED
+  float resolvedLightmapScale() const;
+  // END #BLACKENED
 
   void resetUVCoordSystemCache();
   const UVCoordSystem& uvCoordSystem() const;

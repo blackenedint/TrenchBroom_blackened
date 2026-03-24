@@ -144,6 +144,21 @@ void FaceAttribsEditor::yScaleChanged(const double value)
     updateControls();
   }
 }
+// BEGIN #BLACKENED
+void FaceAttribsEditor::lightmapScaleChanged(const double value)
+{
+  auto& map = m_document.map();
+  if (!map.selection().hasAnyBrushFaces())
+  {
+    return;
+  }
+
+  if (!setBrushFaceAttributes(map, {.lightmapScale = mdl::SetValue{float(value)}}))
+  {
+    updateControls();
+  }
+}
+// END #BLACKENED
 
 void FaceAttribsEditor::surfaceFlagChanged(
   const size_t /* index */, const int value, const int setFlag, const int /* mixedFlag */)
@@ -348,6 +363,14 @@ void FaceAttribsEditor::createGui(AppController& appController)
   m_rotationEditor->setRange(min, max);
   m_rotationEditor->setDigits(0, 6);
 
+  // BEGIN #BLACKENED
+  auto* lightmapScaleLabel = new QLabel{"Lightmap Scale"};
+  setEmphasizedStyle(lightmapScaleLabel);
+  m_lightmapScaleEditor = new SpinControl{};
+  m_lightmapScaleEditor->setRange(0.5f, 4.0f);
+  m_lightmapScaleEditor->setDigits(0, 6);
+  // END #BLACKENED
+
   m_surfaceValueLabel = new QLabel{"Value"};
   setEmphasizedStyle(m_surfaceValueLabel);
   m_surfaceValueEditor = new SpinControl{};
@@ -419,6 +442,13 @@ void FaceAttribsEditor::createGui(AppController& appController)
 
   faceAttribsLayout->addWidget(rotationLabel, r, c++, LabelFlags);
   faceAttribsLayout->addWidget(m_rotationEditor, r, c++);
+  // BEGIN #BLACKENED
+  faceAttribsLayout->addWidget(lightmapScaleLabel, r, c++, LabelFlags);
+  faceAttribsLayout->addWidget(m_lightmapScaleEditor, r, c++);
+  ++r;
+  c = 0;
+  // END #BLACKENED
+
   faceAttribsLayout->addWidget(m_surfaceValueLabel, r, c++, LabelFlags);
   faceAttribsLayout->addWidget(m_surfaceValueEditorLayout, r, c++);
   ++r;
@@ -479,6 +509,13 @@ void FaceAttribsEditor::bindEvents()
     QOverload<double>::of(&QDoubleSpinBox::valueChanged),
     this,
     &FaceAttribsEditor::rotationChanged);
+  // BEGIN #BLACKENED
+  connect(
+    m_lightmapScaleEditor,
+    QOverload<double>::of(&QDoubleSpinBox::valueChanged),
+    this,
+    &FaceAttribsEditor::lightmapScaleChanged);
+  // END #BLACKENED
   connect(
     m_surfaceValueEditor,
     QOverload<double>::of(&QDoubleSpinBox::valueChanged),
@@ -571,6 +608,11 @@ void FaceAttribsEditor::updateControls()
   const auto blockRotationEditor = QSignalBlocker{m_rotationEditor};
   const auto blockXScaleEditor = QSignalBlocker{m_xScaleEditor};
   const auto blockYScaleEditor = QSignalBlocker{m_yScaleEditor};
+
+  // BEGIN #BLACKENED
+  const auto blocklightmapScaleEditor = QSignalBlocker{m_lightmapScaleEditor};
+  // END #BLACKENED
+
   const auto blockSurfaceValueEditor = QSignalBlocker{m_surfaceValueEditor};
   const auto blockSurfaceFlagsEditor = QSignalBlocker{m_surfaceFlagsEditor};
   const auto blockContentFlagsEditor = QSignalBlocker{m_contentFlagsEditor};
@@ -616,6 +658,11 @@ void FaceAttribsEditor::updateControls()
     auto rotationMulti = false;
     auto xScaleMulti = false;
     auto yScaleMulti = false;
+
+    // BEGIN #BLACKENED
+    auto lightmapScaleMulti = false;
+    // END #BLACKENED
+
     auto surfaceValueMulti = false;
     auto colorValueMulti = false;
 
@@ -626,6 +673,9 @@ void FaceAttribsEditor::updateControls()
     const auto rotation = firstFace.attributes().rotation();
     const auto xScale = firstFace.attributes().xScale();
     const auto yScale = firstFace.attributes().yScale();
+    // BEGIN #BLACKENED
+    const auto lightmapScale = firstFace.resolvedLightmapScale();
+    // END #BLACKENED
     auto setSurfaceFlags = firstFace.resolvedSurfaceFlags();
     auto setSurfaceContents = firstFace.resolvedSurfaceContents();
     auto mixedSurfaceFlags = 0;
@@ -646,6 +696,9 @@ void FaceAttribsEditor::updateControls()
       rotationMulti |= (rotation != face.attributes().rotation());
       xScaleMulti |= (xScale != face.attributes().xScale());
       yScaleMulti |= (yScale != face.attributes().yScale());
+      // BEGIN #BLACKENED
+      lightmapScaleMulti |= (lightmapScale != face.resolvedLightmapScale());
+      // END #BLACKENED
       surfaceValueMulti |= (surfaceValue != face.resolvedSurfaceValue());
       colorValueMulti |= (colorValue != face.attributes().color());
       hasSurfaceValue |= face.attributes().surfaceValue().has_value();
@@ -667,6 +720,9 @@ void FaceAttribsEditor::updateControls()
     m_rotationEditor->setEnabled(true);
     m_xScaleEditor->setEnabled(true);
     m_yScaleEditor->setEnabled(true);
+    // BEGIN #BLACKENED
+    m_lightmapScaleEditor->setEnabled(true);
+    // END #BLACKENED
     m_surfaceValueEditor->setEnabled(true);
     m_surfaceFlagsEditor->setEnabled(true);
     m_contentFlagsEditor->setEnabled(true);
@@ -711,6 +767,10 @@ void FaceAttribsEditor::updateControls()
     setValueOrMulti(m_rotationEditor, rotationMulti, double(rotation));
     setValueOrMulti(m_xScaleEditor, xScaleMulti, double(xScale));
     setValueOrMulti(m_yScaleEditor, yScaleMulti, double(yScale));
+    // BEGIN #BLACKENED
+    setValueOrMulti(m_lightmapScaleEditor, lightmapScaleMulti, double(lightmapScale));
+    // END #BLACKENED
+
     setValueOrMulti(m_surfaceValueEditor, surfaceValueMulti, double(surfaceValue));
     if (hasColorValue)
     {
@@ -745,6 +805,9 @@ void FaceAttribsEditor::updateControls()
     disableAndSetPlaceholder(m_xScaleEditor, "n/a");
     disableAndSetPlaceholder(m_yScaleEditor, "n/a");
     disableAndSetPlaceholder(m_rotationEditor, "n/a");
+    // BEGIN #BLACKENED
+    disableAndSetPlaceholder(m_lightmapScaleEditor, "n/a");
+    // END #BLACKENED
     disableAndSetPlaceholder(m_surfaceValueEditor, "n/a");
 
     m_surfaceFlagsEditor->setEnabled(false);

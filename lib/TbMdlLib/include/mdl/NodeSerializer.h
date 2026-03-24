@@ -19,6 +19,8 @@
 
 #pragma once
 
+#include "mdl/MapFormat.h"
+
 #include <string>
 #include <vector>
 
@@ -63,6 +65,7 @@ private:
   ObjectNo m_brushNo = 0;
   bool m_exporting = false;
   bool m_stripTbProperties = false;
+  MapFormat m_mapFormat = MapFormat::Unknown;
 
 public:
   virtual ~NodeSerializer();
@@ -77,6 +80,9 @@ public:
 
   bool stripTbProperties() const;
   void setStripTbProperties(bool stripTbProperties);
+
+  MapFormat mapFormat() const;
+  void setMapFormat(MapFormat mapFormat);
 
 public:
   /**

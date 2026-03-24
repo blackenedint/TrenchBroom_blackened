@@ -124,6 +124,7 @@
 #include <algorithm>
 #include <chrono>
 #include <iterator>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <variant>
@@ -155,6 +156,77 @@ QString lastCompilationProfileSettingsKey(const std::string& gameName)
   return QString::fromLatin1("Compilation/LastProfile/%1")
     .arg(QString::fromStdString(gameName));
 }
+// BEGIN #BLACKENED
+struct MapSaveDialogResult
+{
+  std::filesystem::path path;
+  mdl::MapFormat formatOverride = mdl::MapFormat::Unknown;
+};
+
+std::vector<mdl::MapFormat> saveableMapFormats(const mdl::Map& map)
+{
+  auto formats = std::vector<mdl::MapFormat>{};
+
+  for (const auto& formatConfig : map.gameInfo().gameConfig.fileFormats)
+  {
+    const auto format = mdl::formatFromName(formatConfig.format);
+    if (format == mdl::MapFormat::Unknown)
+    {
+      continue;
+    }
+
+    if (std::find(formats.begin(), formats.end(), format) == formats.end())
+    {
+      formats.push_back(format);
+    }
+  }
+
+  return formats;
+}
+
+QString mapFormatFilter(const mdl::MapFormat format)
+{
+  return QString::fromStdString(fmt::format("{} (*.map)", mdl::formatName(format)));
+}
+
+std::optional<MapSaveDialogResult> showMapSaveDialog(
+  QWidget* parent, const mdl::Map& map, const QString& dialogTitle)
+{
+  const auto formats = saveableMapFormats(map);
+
+  auto nameFilters = QStringList{};
+  for (const auto format : formats)
+  {
+    nameFilters << mapFormatFilter(format);
+  }
+
+  if (nameFilters.empty())
+  {
+    nameFilters << QStringLiteral("Map files (*.map)");
+  }
+
+  auto selectedFilter = nameFilters.front();
+  const auto selectedPath = QFileDialog::getSaveFileName(
+    parent,
+    dialogTitle,
+    pathAsQPath(map.path()),
+    nameFilters.join(";;"),
+    &selectedFilter);
+  if (selectedPath.isEmpty())
+  {
+    return std::nullopt;
+  }
+
+  auto selectedFormat = mdl::MapFormat::Unknown;
+  const auto selectedFilterIndex = nameFilters.indexOf(selectedFilter);
+  if (selectedFilterIndex >= 0 && selectedFilterIndex < static_cast<int>(formats.size()))
+  {
+    selectedFormat = formats[static_cast<size_t>(selectedFilterIndex)];
+  }
+
+  return MapSaveDialogResult{pathFromQString(selectedPath), selectedFormat};
+}
+// END #BLACKENED
 
 } // namespace
 
@@ -986,21 +1058,16 @@ bool MapWindow::saveDocument()
 bool MapWindow::saveDocumentAs()
 {
   auto& map = m_document->map();
-  const auto& originalPath = map.path();
-  const auto directory = originalPath.parent_path();
-  const auto fileName = originalPath.filename();
-
-  const auto newFileName = QFileDialog::getSaveFileName(
-    this, tr("Save map file"), pathAsQPath(originalPath), "Map files (*.map)");
-  if (newFileName.isEmpty())
+  const auto saveResult = showMapSaveDialog(this, map, tr("Save map file"));
+  if (!saveResult)
   {
     return false;
   }
 
-  const auto path = pathFromQString(newFileName);
+  const auto path = saveResult->path;
 
   const auto startTime = std::chrono::high_resolution_clock::now();
-  return map.saveAs(path) | kdl::transform([&]() {
+  return map.saveAs(path, saveResult->formatOverride) | kdl::transform([&]() {
            const auto endTime = std::chrono::high_resolution_clock::now();
 
            logger().info() << "Saved " << map.path() << " in "
@@ -1046,21 +1113,18 @@ bool MapWindow::exportDocumentAsObj()
 bool MapWindow::exportDocumentAsMap()
 {
   const auto& map = m_document->map();
-  const auto& originalPath = map.path();
-
-  const auto newFileName = QFileDialog::getSaveFileName(
-    this, tr("Export Map file"), pathAsQPath(originalPath), "Map files (*.map)");
-  if (newFileName.isEmpty())
+  const auto saveResult = showMapSaveDialog(this, map, tr("Export map file"));
+  if (!saveResult)
   {
     return false;
   }
 
-  const auto options =
-    mdl::MapExportOptions{pathFromQString(newFileName), !K(stripTbProperties)};
-  return exportDocument(options);
+  const auto options = mdl::MapExportOptions{saveResult->path, !K(stripTbProperties)};
+  return exportDocument(options, saveResult->formatOverride);
 }
 
-bool MapWindow::exportDocument(const mdl::ExportOptions& options)
+bool MapWindow::exportDocument(
+  const mdl::ExportOptions& options, const mdl::MapFormat formatOverride)
 {
   const auto& map = m_document->map();
   const auto exportPath = std::visit([](const auto& o) { return o.exportPath; }, options);
@@ -1076,7 +1140,7 @@ bool MapWindow::exportDocument(const mdl::ExportOptions& options)
     return false;
   }
 
-  return map.exportAs(options) | kdl::transform([&]() {
+  return map.exportAs(options, formatOverride) | kdl::transform([&]() {
            logger().info() << "Exported " << exportPath;
            return true;
          })

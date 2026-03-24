@@ -92,8 +92,17 @@ void doWriteNodes(
 
 } // namespace
 
-NodeWriter::NodeWriter(const WorldNode& world, std::ostream& stream)
-  : NodeWriter{world, MapFileSerializer::create(world.mapFormat(), stream)}
+NodeWriter::NodeWriter(
+  const WorldNode& world,
+  std::ostream& stream,
+  const GameConfig& gameConfig,
+  mdl::MapFormat formatOverride /*= MapFormat::Unknown*/)
+  : NodeWriter{
+      world,
+      MapFileSerializer::create(
+        formatOverride != mdl::MapFormat::Unknown ? formatOverride : world.mapFormat(),
+        stream,
+        gameConfig)}
 {
 }
 

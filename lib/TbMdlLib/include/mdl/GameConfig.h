@@ -111,8 +111,19 @@ struct FaceAttribsConfig
   FlagsConfig surfaceFlags;
   FlagsConfig contentFlags;
   BrushFaceAttributes defaults{BrushFaceAttributes::NoMaterialName};
+  // BEGIN #BLACKENED
+  float defaultLightmapScale;
+  // END #BLACKEND
 
-  kdl_reflect_decl(FaceAttribsConfig, surfaceFlags, contentFlags);
+
+  kdl_reflect_decl(
+    FaceAttribsConfig,
+    surfaceFlags,
+    contentFlags,
+    // BEGIN #BLACKENED
+    defaultLightmapScale
+    // END #BLACKEND
+  );
 };
 
 struct CompilationTool

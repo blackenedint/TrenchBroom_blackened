@@ -29,6 +29,9 @@
 #include "mdl/LayerNode.h"
 #include "mdl/PatchNode.h"
 #include "mdl/WorldNode.h"
+// BEGIN #BLACKENED
+#include "mdl/GameConfig.h"
+// END #BLACKENED
 
 #include "kd/contracts.h"
 #include "kd/overload.h"
@@ -274,20 +277,22 @@ private:
 };
 
 // BEGIN #BLACKENED
-// Todo; finish new features.
-class BlackenedFileSerializer : public Quake2ValveFileSerializer
+class BlackenedFileSerializer : public Quake2FileSerializer
 {
 public:
-  explicit BlackenedFileSerializer(std::ostream& stream)
-    : Quake2ValveFileSerializer{stream}
+  explicit BlackenedFileSerializer(std::ostream& stream, const GameConfig& gameConfig)
+    : Quake2FileSerializer{stream}
   {
+    // just pull out what I need from config.
+    m_DefaultLightmapScale = gameConfig.faceAttribsConfig.defaultLightmapScale;
   }
 
 private:
+  float m_DefaultLightmapScale;
   void doWriteBrushFace(std::ostream& stream, const mdl::BrushFace& face) const override
   {
     writeFacePoints(stream, face);
-    writeValveMaterialInfo(stream, face);
+    writeBlackenedMaterialInfo(stream, face);
 
     if (face.attributes().hasSurfaceAttributes())
     {
@@ -296,35 +301,89 @@ private:
 
     fmt::format_to(std::ostreambuf_iterator<char>{stream}, "\n");
   }
+  void writeBlackenedMaterialInfo(std::ostream& stream, const BrushFace& face) const
+  {
+    const auto& materialName = face.attributes().materialName().empty()
+                                 ? BrushFaceAttributes::NoMaterialName
+                                 : face.attributes().materialName();
+    const auto uAxis = face.uAxis();
+    const auto vAxis = face.vAxis();
+
+    fmt::format_to(
+      std::ostreambuf_iterator<char>{stream},
+      " {} [ {} {} {} {} ] [ {} {} {} {} ] {} {} {} {}",
+      shouldQuoteMaterialName(materialName) ? quoteMaterialName(materialName)
+                                            : materialName,
+
+      uAxis.x(),
+      uAxis.y(),
+      uAxis.z(),
+      face.attributes().xOffset(),
+
+      vAxis.x(),
+      vAxis.y(),
+      vAxis.z(),
+      face.attributes().yOffset(),
+
+      face.attributes().rotation(),
+      face.attributes().xScale(),
+      face.attributes().yScale(),
+      // do an explicit check; and set default otherwise; not sure if this is the best way
+      // to handle it or not.
+      face.attributes().lightmapScale().has_value()
+        ? face.attributes().lightmapScale().value()
+        : m_DefaultLightmapScale);
+  }
 };
 // END #BLACKENED
+
 std::unique_ptr<NodeSerializer> MapFileSerializer::create(
-  const MapFormat format, std::ostream& stream)
+  const MapFormat format,
+  std::ostream& stream,
+  // BEGIN #BLACKENED
+  const GameConfig& gameConfig
+  // END #BLACKENED
+)
 {
+  auto serializer = std::unique_ptr<NodeSerializer>{};
+
   switch (format)
   {
   case MapFormat::Standard:
-    return std::make_unique<QuakeFileSerializer>(stream);
+    serializer = std::make_unique<QuakeFileSerializer>(stream);
+    break;
   case MapFormat::Quake2:
     // TODO 2427: Implement Quake3 serializers and use them
   case MapFormat::Quake3:
   case MapFormat::Quake3_Legacy:
-    return std::make_unique<Quake2FileSerializer>(stream);
+    serializer = std::make_unique<Quake2FileSerializer>(stream);
+    break;
   case MapFormat::Quake2_Valve:
   case MapFormat::Quake3_Valve:
-    return std::make_unique<Quake2ValveFileSerializer>(stream);
+    serializer = std::make_unique<Quake2ValveFileSerializer>(stream);
+    break;
   case MapFormat::Daikatana:
-    return std::make_unique<DaikatanaFileSerializer>(stream);
+    serializer = std::make_unique<DaikatanaFileSerializer>(stream);
+    break;
   case MapFormat::Valve:
-    return std::make_unique<ValveFileSerializer>(stream);
+    serializer = std::make_unique<ValveFileSerializer>(stream);
+    break;
   case MapFormat::Hexen2:
-    return std::make_unique<Hexen2FileSerializer>(stream);
+    serializer = std::make_unique<Hexen2FileSerializer>(stream);
+    break;
+    // BEGIN #BLACKEND
   case mdl::MapFormat::Blackened:
-    return std::make_unique<BlackenedFileSerializer>(stream);    
+    serializer = std::make_unique<BlackenedFileSerializer>(stream, gameConfig);
+    break;
+    // END #BLACKEND
   case MapFormat::Unknown:
     contract_assert(false);
     switchDefault();
   }
+
+  contract_assert(serializer != nullptr);
+  serializer->setMapFormat(format);
+  return serializer;
 }
 
 MapFileSerializer::MapFileSerializer(std::ostream& stream)

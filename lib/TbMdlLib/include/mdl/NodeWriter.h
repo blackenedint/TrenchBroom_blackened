@@ -23,6 +23,12 @@
 #include <memory>
 #include <vector>
 
+// BEGIN #BLACKENED
+#include "mdl/GameConfig.h"
+#include "mdl/MapFormat.h"
+// END #BLACKENED
+
+
 namespace kdl
 {
 class task_manager;
@@ -49,7 +55,11 @@ private:
   std::unique_ptr<NodeSerializer> m_serializer;
 
 public:
-  NodeWriter(const WorldNode& world, std::ostream& stream);
+  NodeWriter(
+    const WorldNode& world,
+    std::ostream& stream,
+    const GameConfig& gameConfig,
+    mdl::MapFormat formatOverride = mdl::MapFormat::Unknown);
   NodeWriter(const WorldNode& world, std::unique_ptr<NodeSerializer> serializer);
   ~NodeWriter();
 

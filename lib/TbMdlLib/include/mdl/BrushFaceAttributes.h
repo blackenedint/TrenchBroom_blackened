@@ -50,6 +50,12 @@ private:
 
   std::optional<Color> m_color;
 
+  // BEGIN #BLACKENED
+  // make it optional
+  std::optional<float> m_lightmapScale;
+  // END #BLACKENED
+
+
 public:
   explicit BrushFaceAttributes(std::string_view materialName);
   BrushFaceAttributes(std::string_view materialName, const BrushFaceAttributes& other);
@@ -63,7 +69,11 @@ public:
     m_surfaceContents,
     m_surfaceFlags,
     m_surfaceValue,
-    m_color);
+    m_color,
+    // BEGIN #BLACKENED
+    m_lightmapScale
+    // END #BLACKENED
+  );
 
   const std::string& materialName() const;
 
@@ -86,6 +96,11 @@ public:
   bool hasColor() const;
   const std::optional<Color>& color() const;
 
+  // BEGIN #BLACKENED
+  bool hasLightmapScale() const;
+  const std::optional<float>& lightmapScale() const;
+  // END #BLACKENED
+
   bool valid() const;
 
   bool setMaterialName(const std::string& materialName);
@@ -100,6 +115,10 @@ public:
   bool setSurfaceFlags(const std::optional<int>& surfaceFlags);
   bool setSurfaceValue(const std::optional<float>& surfaceValue);
   bool setColor(const std::optional<Color>& color);
+
+  // BEGIN #BLACKENED
+  bool setLightmapScale(const std::optional<float>& scaleValue);
+  // END #BLACKENED
 };
 
 } // namespace tb::mdl
