@@ -68,6 +68,7 @@
 #include "mdl/Node.h"
 #include "mdl/PasteType.h"
 #include "mdl/PatchNode.h"
+#include "mdl/VisualEffect.h"
 #include "mdl/WorldNode.h"
 #include "ui/Action.h"
 #include "ui/ActionBuilder.h"
@@ -260,7 +261,6 @@ MapWindow::MapWindow(AppController& appController, std::unique_ptr<MapDocument> 
   loadLastCompilationProfileName();
 
   m_document->setTargetLogger(m_console);
-  m_document->setViewEffectsService(m_mapView);
 
   m_autosaveTimer->start(1000);
 
@@ -309,8 +309,6 @@ MapWindow::~MapWindow()
 
   // let's trigger a final autosave before releasing the document
   m_document->triggerAutosave();
-
-  m_document->setViewEffectsService(nullptr);
   m_document.reset();
 
   // FIXME: m_contextManager is deleted via smart pointer; it may release openGL resources
@@ -560,6 +558,7 @@ void MapWindow::createToolBar()
     });
 
   m_gridChoice = new QComboBox{};
+  m_gridChoice->setObjectName("MapWindow_GridChoice");
   for (int i = mdl::Grid::MinSize; i <= mdl::Grid::MaxSize; ++i)
   {
     const auto gridSize = mdl::Grid::actualSize(i);
@@ -853,6 +852,8 @@ void MapWindow::connectObservers()
     this, &MapWindow::nodeVisibilityDidChange);
   m_notifierConnection += m_document->editorContextDidChangeNotifier.connect(
     this, &MapWindow::editorContextDidChange);
+  m_notifierConnection += m_document->triggerVisualEffectNotifier.connect(
+    this, &MapWindow::triggerVisualEffect);
 
   m_notifierConnection +=
     m_document->transactionDoneNotifier.connect(this, &MapWindow::transactionDone);
@@ -876,6 +877,7 @@ void MapWindow::documentWasLoaded()
   updateTitle();
   updateActionState();
   updateUndoRedoActions();
+  updateToolBarWidgets();
   updateRecentDocumentsMenu();
   loadLastCompilationProfileName();
 }
@@ -978,6 +980,16 @@ void MapWindow::editorContextDidChange()
   // e.g. changing the view filters may cause the number of hidden brushes/entities to
   // change
   updateStatusBarDelayed();
+}
+
+void MapWindow::triggerVisualEffect(const mdl::VisualEffect visualEffect)
+{
+  switch (visualEffect)
+  {
+  case mdl::VisualEffect::FlashSelection:
+    m_mapView->flashSelection();
+    break;
+  }
 }
 
 void MapWindow::pointFileDidChange()

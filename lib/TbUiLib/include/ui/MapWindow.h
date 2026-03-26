@@ -62,6 +62,7 @@ class Map;
 class Node;
 
 enum class PasteType;
+enum class VisualEffect;
 
 struct CompilationProfile;
 struct SelectionChange;
@@ -193,6 +194,8 @@ private: // notification handlers
   void groupWasClosed();
   void nodeVisibilityDidChange(const std::vector<mdl::Node*>& nodes);
   void editorContextDidChange();
+  void triggerVisualEffect(mdl::VisualEffect visualEffect);
+
   void pointFileDidChange();
   void portalFileDidChange();
 
