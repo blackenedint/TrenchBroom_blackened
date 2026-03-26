@@ -1524,10 +1524,12 @@
 	pattern(string) : "Custom Appearance" : : "Use a string of letters to provide a custom light style. The property allows you to enter a string of letters from a to z, representing brightness. If you entered 'abcdefghihgfedcba' then the light would go from bright to dim and back again and then repeat. Complicating things, to use this feature, you must name the light. However, if you then use a trigger to activate it, then it will behave as a normal light."
 ]
 
-@PointClass base(Targetname, Angles) iconsprite("textures/sprites/editor/light_environment.btf") = light_environment : "This entity makes a map's sky emit light. The only practical way of lighting outdoor maps."
+@PointClass base(Targetname, Angles) iconsprite("textures/sprites/editor/light_sun.btf") = light_sun : "The sun"
 [
 	pitch(integer) : "Pitch" : -90 : "Negative pitch points downward (-90 is straight down, 90 is straight up)."
 	_light(color255) : "Brightness" : "255 255 128 200" : "First three integer numbers are the color (RGB). The fourth number is the brightness."
+	_ambient(color255) : "Ambient light" : "255 255 255 20"
+	sunspreadangle(float) : "SpreadAngle" : 0 : "The angular extent of the light for casting soft shadows. Higher numbers are more diffuse. 5 is a good starting value."
 ]
 
 @SolidClass base(Door) = momentary_door : "Momentary/Continuous door" 
@@ -2159,3 +2161,14 @@
 @PointClass base(Weapon) studio("models/weapons/w_ak5.bvm") = weapon_ak5 : "AK5" []
 
 
+@PointClass base(Appearflags, Targetname, Target) color(76 25 153) size(-8 -8 -8, 8 8 8) = func_timer : "Timer (Quake2 Style)"
+[
+	spawnflags(Flags) =
+	[
+		1 : "Start On" : 0
+	]
+	wait(integer) : "Base wait time" : 1
+	random(integer) : "Wait variance (+/-)"
+	delay(integer) : "Delay before first firing"
+	pausetime(integer) : "Additional delay"
+]

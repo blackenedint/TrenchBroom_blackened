@@ -50,7 +50,7 @@ PreferenceManager& PreferenceManager::instance()
   return *m_instance;
 }
 
-#if defined( BLACKENED )
+#if defined(BLACKENED)
 std::optional<std::filesystem::path> PreferenceManager::resolveSpecialGamePathToken(
   std::string_view s)
 {
@@ -66,7 +66,20 @@ std::optional<std::filesystem::path> PreferenceManager::resolveSpecialGamePathTo
     {
       return std::filesystem::path{v2};
     }
-    return std::nullopt;
+  }
+  else if (s == "$BIBASE")
+  {
+    if (const char* v2 = std::getenv("BIBASE"); v2 && *v2)
+    {
+      return std::filesystem::path{v2};
+    }
+  }
+  else if (s == "$BICONTENT")
+  {
+    if (const char* v2 = std::getenv("BICONTENT"); v2 && *v2)
+    {
+      return std::filesystem::path{v2};
+    }
   }
   return std::nullopt;
 }

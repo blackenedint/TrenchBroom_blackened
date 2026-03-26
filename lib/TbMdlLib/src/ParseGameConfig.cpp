@@ -407,7 +407,7 @@ float parseDefaultLightmapScale(
 {
   if (value == el::Value::Null)
     return 1.0f;
-  return vm::clamp((float)value.numberValue(context), 0.5f, 4.0f);
+  return vm::clamp((float)value.numberValue(context), 0.25f, 6.0f);
 }
 // END #BLACKENED
 

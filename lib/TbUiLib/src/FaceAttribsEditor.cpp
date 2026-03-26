@@ -367,7 +367,7 @@ void FaceAttribsEditor::createGui(AppController& appController)
   auto* lightmapScaleLabel = new QLabel{"Lightmap Scale"};
   setEmphasizedStyle(lightmapScaleLabel);
   m_lightmapScaleEditor = new SpinControl{};
-  m_lightmapScaleEditor->setRange(0.5f, 4.0f);
+  m_lightmapScaleEditor->setRange(0.25f, 6.0f);
   m_lightmapScaleEditor->setDigits(0, 6);
   // END #BLACKENED
 

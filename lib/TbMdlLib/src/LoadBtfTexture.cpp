@@ -29,7 +29,11 @@
 
 #include <fmt/format.h>
 
+#include <algorithm>
+#include <array>
 #include <cassert>
+#include <cstring>
+#include <vector>
 
 namespace tb::mdl
 {
@@ -40,7 +44,7 @@ namespace tb::mdl
 #define uint16 uint16_t
 #define int16 int16_t
 #ifndef byte
-#define byte int8_t
+#define byte uint8_t
 #endif
 
 namespace Btf
@@ -48,7 +52,7 @@ namespace Btf
 constexpr uint32 BTF_IDENT = (('F' << 24) + ('T' << 16) + ('I' << 8) + 'B');
 constexpr uint32 BTF_FRAMEID = (('M' << 24) + ('A' << 16) + ('R' << 8) + 'F');
 constexpr int16 BTF_VER_MAJOR = 1;
-constexpr int16 BTF_VER_MINOR = 1;
+constexpr int16 BTF_VER_MINOR = 2;
 
 constexpr uint32 Version(int16 major, int16 minor)
 {
@@ -62,6 +66,11 @@ constexpr uint32 HighestVersion()
 constexpr uint32 VersionReflectivity()
 {
   return Version(1, 1);
+}
+
+constexpr uint32 VersionFrameDataSize()
+{
+  return Version(1, 2);
 }
 // maintaining the same limit of named textures.
 // +0 +1 +2 +3 +4 +5 +6 +7 +8 +9 (sequence)
@@ -85,12 +94,11 @@ constexpr uint32 BTF_METASPR = (('T' << 24) + ('M' << 16) + ('P' << 8) + 'S'); /
 enum ECompression
 {
   None = 0,
-
-  // FUTURE (TBD)
-  DXT1,
-  DXT5,
   BC4,
-  BC5
+  BC5,
+  BC7,
+  DXT1,
+  DXT5
 };
 
 // currently only RGBA is written
@@ -140,12 +148,14 @@ struct texinfo_t
 // frames... shouldn't need to change often.
 // ver 1.0; reserved[40]
 // ver 1.1; reserved[28]
+// ver 1.2; framedatasize + reserved[24]
 struct frame_t
 {
   uint32_t ident;
   std::string sha1; // SHA1_BUFFER_SIZE;
   float reflectivity[3];
-  byte reserved[28];
+  int32 framedatasize;
+  byte reserved[24];
 };
 
 
@@ -192,6 +202,378 @@ static_assert(sizeof(texinfo_t) == 32, "texinfo_t size");
 static_assert(sizeof(metadata_q2_t) == 84, "metadata_q2_t size");
 static_assert(sizeof(metadata_sprite_t) == 12, "metadata_sprite_t size");
 } // namespace Btf
+
+namespace
+{
+using u8 = std::uint8_t;
+
+static inline std::uint16_t readLE16(const u8* p)
+{
+  return static_cast<std::uint16_t>(
+    static_cast<std::uint16_t>(p[0]) | (static_cast<std::uint16_t>(p[1]) << 8));
+}
+
+static inline std::uint32_t readLE24(const u8* p)
+{
+  return static_cast<std::uint32_t>(p[0]) | (static_cast<std::uint32_t>(p[1]) << 8) |
+         (static_cast<std::uint32_t>(p[2]) << 16);
+}
+
+static inline std::uint32_t readLE32(const u8* p)
+{
+  return static_cast<std::uint32_t>(p[0]) | (static_cast<std::uint32_t>(p[1]) << 8) |
+         (static_cast<std::uint32_t>(p[2]) << 16) | (static_cast<std::uint32_t>(p[3]) << 24);
+}
+
+static inline bool isBlockCompressionType(const Btf::ECompression compressionType)
+{
+  switch (compressionType)
+  {
+  case Btf::ECompression::DXT1:
+  case Btf::ECompression::DXT5:
+  case Btf::ECompression::BC4:
+  case Btf::ECompression::BC5:
+  case Btf::ECompression::BC7: return true;
+  default: return false;
+  }
+}
+
+static inline int compressionBlockBytes(const Btf::ECompression compressionType)
+{
+  switch (compressionType)
+  {
+  case Btf::ECompression::DXT1:
+  case Btf::ECompression::BC4: return 8;
+  case Btf::ECompression::DXT5:
+  case Btf::ECompression::BC5:
+  case Btf::ECompression::BC7: return 16;
+  default: return 0;
+  }
+}
+
+static inline std::size_t formatRowPitch(const Btf::EFormat format, const int width)
+{
+  switch (format)
+  {
+  case Btf::EFormat::RGBA: return static_cast<std::size_t>(width) * 4u;
+  case Btf::EFormat::RGB: return static_cast<std::size_t>(width) * 3u;
+  case Btf::EFormat::ARGB: return static_cast<std::size_t>(width) * 4u;
+  default: return 0u;
+  }
+}
+
+static inline std::size_t frameBytes(
+  const Btf::ECompression compressionType,
+  const Btf::EFormat format,
+  const int width,
+  const int height)
+{
+  if (width <= 0 || height <= 0)
+  {
+    return 0u;
+  }
+
+  if (isBlockCompressionType(compressionType))
+  {
+    const int blockBytes = compressionBlockBytes(compressionType);
+    if (blockBytes <= 0)
+    {
+      return 0u;
+    }
+
+    const int blocksX = (width + 3) / 4;
+    const int blocksY = (height + 3) / 4;
+    return static_cast<std::size_t>(blocksX) * static_cast<std::size_t>(blocksY) *
+           static_cast<std::size_t>(blockBytes);
+  }
+
+  return formatRowPitch(format, width) * static_cast<std::size_t>(height);
+}
+
+static inline void decodeRGB565(std::uint16_t c, u8& r, u8& g, u8& b)
+{
+  const std::uint32_t rv = (c >> 11) & 31u;
+  const std::uint32_t gv = (c >> 5) & 63u;
+  const std::uint32_t bv = c & 31u;
+  r = static_cast<u8>((rv * 255u + 15u) / 31u);
+  g = static_cast<u8>((gv * 255u + 31u) / 63u);
+  b = static_cast<u8>((bv * 255u + 15u) / 31u);
+}
+
+static void decodeDXTColorBlock(const u8* block, std::array<std::array<u8, 4>, 4>& palette)
+{
+  const std::uint16_t c0 = readLE16(block + 0);
+  const std::uint16_t c1 = readLE16(block + 2);
+
+  decodeRGB565(c0, palette[0][0], palette[0][1], palette[0][2]);
+  decodeRGB565(c1, palette[1][0], palette[1][1], palette[1][2]);
+  palette[0][3] = 255;
+  palette[1][3] = 255;
+
+  if (c0 > c1)
+  {
+    for (int i = 0; i < 3; ++i)
+    {
+      palette[2][i] =
+        static_cast<u8>((2 * static_cast<int>(palette[0][i]) + static_cast<int>(palette[1][i])) / 3);
+      palette[3][i] =
+        static_cast<u8>((static_cast<int>(palette[0][i]) + 2 * static_cast<int>(palette[1][i])) / 3);
+    }
+    palette[2][3] = 255;
+    palette[3][3] = 255;
+  }
+  else
+  {
+    for (int i = 0; i < 3; ++i)
+    {
+      palette[2][i] =
+        static_cast<u8>((static_cast<int>(palette[0][i]) + static_cast<int>(palette[1][i])) / 2);
+    }
+    palette[2][3] = 255;
+    palette[3][0] = 0;
+    palette[3][1] = 0;
+    palette[3][2] = 0;
+    palette[3][3] = 0;
+  }
+}
+
+static void decodeBC4Block(const u8* block, u8 outValues[16])
+{
+  const u8 r0 = block[0];
+  const u8 r1 = block[1];
+
+  u8 table[8] = {};
+  table[0] = r0;
+  table[1] = r1;
+  if (r0 > r1)
+  {
+    table[2] = static_cast<u8>((6 * r0 + 1 * r1) / 7);
+    table[3] = static_cast<u8>((5 * r0 + 2 * r1) / 7);
+    table[4] = static_cast<u8>((4 * r0 + 3 * r1) / 7);
+    table[5] = static_cast<u8>((3 * r0 + 4 * r1) / 7);
+    table[6] = static_cast<u8>((2 * r0 + 5 * r1) / 7);
+    table[7] = static_cast<u8>((1 * r0 + 6 * r1) / 7);
+  }
+  else
+  {
+    table[2] = static_cast<u8>((4 * r0 + 1 * r1) / 5);
+    table[3] = static_cast<u8>((3 * r0 + 2 * r1) / 5);
+    table[4] = static_cast<u8>((2 * r0 + 3 * r1) / 5);
+    table[5] = static_cast<u8>((1 * r0 + 4 * r1) / 5);
+    table[6] = 0;
+    table[7] = 255;
+  }
+
+  std::uint64_t idxBits = 0;
+  idxBits |= static_cast<std::uint64_t>(readLE24(block + 2));
+  idxBits |= static_cast<std::uint64_t>(readLE24(block + 5)) << 24;
+
+  for (int i = 0; i < 16; ++i)
+  {
+    const int idx = static_cast<int>((idxBits >> (i * 3)) & 0x7ull);
+    outValues[i] = table[idx];
+  }
+}
+
+static bool decodeFrameToRGBA(
+  const u8* payload,
+  const std::size_t payloadSize,
+  const int width,
+  const int height,
+  const Btf::ECompression compressionType,
+  const Btf::EFormat format,
+  std::vector<u8>& outRGBA)
+{
+  if (width <= 0 || height <= 0)
+  {
+    return false;
+  }
+
+  const std::size_t rgbaSize = static_cast<std::size_t>(width) * static_cast<std::size_t>(height) * 4u;
+  outRGBA.resize(rgbaSize);
+
+  if (compressionType == Btf::ECompression::None)
+  {
+    const std::size_t rawSize = frameBytes(compressionType, format, width, height);
+    if (rawSize == 0 || payloadSize < rawSize)
+    {
+      return false;
+    }
+
+    switch (format)
+    {
+    case Btf::EFormat::RGBA:
+      std::memcpy(outRGBA.data(), payload, rgbaSize);
+      return true;
+    case Btf::EFormat::RGB:
+      for (int i = 0; i < width * height; ++i)
+      {
+        outRGBA[i * 4 + 0] = payload[i * 3 + 0];
+        outRGBA[i * 4 + 1] = payload[i * 3 + 1];
+        outRGBA[i * 4 + 2] = payload[i * 3 + 2];
+        outRGBA[i * 4 + 3] = 255;
+      }
+      return true;
+    case Btf::EFormat::ARGB:
+      for (int i = 0; i < width * height; ++i)
+      {
+        outRGBA[i * 4 + 0] = payload[i * 4 + 1];
+        outRGBA[i * 4 + 1] = payload[i * 4 + 2];
+        outRGBA[i * 4 + 2] = payload[i * 4 + 3];
+        outRGBA[i * 4 + 3] = payload[i * 4 + 0];
+      }
+      return true;
+    default: return false;
+    }
+  }
+
+  if (compressionType == Btf::ECompression::BC7)
+  {
+    return false;
+  }
+
+  const int blockBytes = compressionBlockBytes(compressionType);
+  if (blockBytes <= 0)
+  {
+    return false;
+  }
+
+  const int blocksX = (width + 3) / 4;
+  const int blocksY = (height + 3) / 4;
+  const std::size_t required =
+    static_cast<std::size_t>(blocksX) * static_cast<std::size_t>(blocksY) * static_cast<std::size_t>(blockBytes);
+  if (payloadSize < required)
+  {
+    return false;
+  }
+
+  std::array<std::array<u8, 4>, 4> palette{};
+  u8 bc4R[16] = {};
+  u8 bc4G[16] = {};
+
+  for (int by = 0; by < blocksY; ++by)
+  {
+    for (int bx = 0; bx < blocksX; ++bx)
+    {
+      const std::size_t blockIndex =
+        static_cast<std::size_t>(by) * static_cast<std::size_t>(blocksX) + static_cast<std::size_t>(bx);
+      const u8* block = payload + blockIndex * static_cast<std::size_t>(blockBytes);
+
+      if (compressionType == Btf::ECompression::DXT1)
+      {
+        decodeDXTColorBlock(block, palette);
+        const std::uint32_t idxBits = readLE32(block + 4);
+
+        for (int py = 0; py < 4; ++py)
+        {
+          for (int px = 0; px < 4; ++px)
+          {
+            const int x = bx * 4 + px;
+            const int y = by * 4 + py;
+            if (x >= width || y >= height)
+            {
+              continue;
+            }
+
+            const int pi = py * 4 + px;
+            const int idx = (idxBits >> (pi * 2)) & 0x3;
+            const std::size_t dst =
+              (static_cast<std::size_t>(y) * static_cast<std::size_t>(width) + static_cast<std::size_t>(x)) * 4u;
+            outRGBA[dst + 0] = palette[idx][0];
+            outRGBA[dst + 1] = palette[idx][1];
+            outRGBA[dst + 2] = palette[idx][2];
+            outRGBA[dst + 3] = palette[idx][3];
+          }
+        }
+      }
+      else if (compressionType == Btf::ECompression::DXT5)
+      {
+        decodeBC4Block(block, bc4R);
+        decodeDXTColorBlock(block + 8, palette);
+        const std::uint32_t idxBits = readLE32(block + 12);
+
+        for (int py = 0; py < 4; ++py)
+        {
+          for (int px = 0; px < 4; ++px)
+          {
+            const int x = bx * 4 + px;
+            const int y = by * 4 + py;
+            if (x >= width || y >= height)
+            {
+              continue;
+            }
+
+            const int pi = py * 4 + px;
+            const int idx = (idxBits >> (pi * 2)) & 0x3;
+            const std::size_t dst =
+              (static_cast<std::size_t>(y) * static_cast<std::size_t>(width) + static_cast<std::size_t>(x)) * 4u;
+            outRGBA[dst + 0] = palette[idx][0];
+            outRGBA[dst + 1] = palette[idx][1];
+            outRGBA[dst + 2] = palette[idx][2];
+            outRGBA[dst + 3] = bc4R[pi];
+          }
+        }
+      }
+      else if (compressionType == Btf::ECompression::BC4)
+      {
+        decodeBC4Block(block, bc4R);
+        for (int py = 0; py < 4; ++py)
+        {
+          for (int px = 0; px < 4; ++px)
+          {
+            const int x = bx * 4 + px;
+            const int y = by * 4 + py;
+            if (x >= width || y >= height)
+            {
+              continue;
+            }
+
+            const int pi = py * 4 + px;
+            const auto v = bc4R[pi];
+            const std::size_t dst =
+              (static_cast<std::size_t>(y) * static_cast<std::size_t>(width) + static_cast<std::size_t>(x)) * 4u;
+            outRGBA[dst + 0] = v;
+            outRGBA[dst + 1] = v;
+            outRGBA[dst + 2] = v;
+            outRGBA[dst + 3] = 255;
+          }
+        }
+      }
+      else if (compressionType == Btf::ECompression::BC5)
+      {
+        decodeBC4Block(block + 0, bc4R);
+        decodeBC4Block(block + 8, bc4G);
+        for (int py = 0; py < 4; ++py)
+        {
+          for (int px = 0; px < 4; ++px)
+          {
+            const int x = bx * 4 + px;
+            const int y = by * 4 + py;
+            if (x >= width || y >= height)
+            {
+              continue;
+            }
+
+            const int pi = py * 4 + px;
+            const std::size_t dst =
+              (static_cast<std::size_t>(y) * static_cast<std::size_t>(width) + static_cast<std::size_t>(x)) * 4u;
+            outRGBA[dst + 0] = bc4R[pi];
+            outRGBA[dst + 1] = bc4G[pi];
+            outRGBA[dst + 2] = 0;
+            outRGBA[dst + 3] = 255;
+          }
+        }
+      }
+      else
+      {
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+} // namespace
 
 // LoadFreeImageTexture.cpp
 Color getAverageColor(const gl::TextureBuffer& buffer, GLenum format);
@@ -284,7 +666,13 @@ Result<gl::Texture> loadBtfTexture(fs::Reader& reader, bool bVerticalFlip /*= fa
 
     // note; we could use the reflectivity for average color
     // since reflectivity is average color; just.. based on a gamma value.
-    if (Btf::Version(hdr.ver_major, hdr.ver_minor) >= Btf::VersionReflectivity())
+    if (Btf::Version(hdr.ver_major, hdr.ver_minor) >= Btf::VersionFrameDataSize())
+    {
+      reader.readVec<float, 3>();
+      frame.framedatasize = reader.read<int32, int32>();
+      reader.readVec<byte, 24>();
+    }
+    else if (Btf::Version(hdr.ver_major, hdr.ver_minor) >= Btf::VersionReflectivity())
     {
       reader.readVec<float, 3>();
       reader.readVec<byte, 28>();
@@ -300,7 +688,51 @@ Result<gl::Texture> loadBtfTexture(fs::Reader& reader, bool bVerticalFlip /*= fa
     const size_t numMips = 1;
     auto buffers = gl::TextureBufferList{numMips};
     setMipBufferSize(buffers, numMips, width, height, GL_RGBA);
-    reader.read(buffers[0].data(), buffers[0].size());
+
+    const auto compressionType = static_cast<Btf::ECompression>(tnfo.compressiontype);
+    const auto formatType = static_cast<Btf::EFormat>(tnfo.format);
+
+    size_t framePayloadSize = frameBytes(compressionType, formatType, tnfo.width, tnfo.height);
+    if (framePayloadSize == 0)
+    {
+      return Error(
+        fmt::format(
+          "unsupported BTF frame payload format (compression={}, format={})",
+          tnfo.compressiontype,
+          tnfo.format));
+    }
+
+    if (Btf::Version(hdr.ver_major, hdr.ver_minor) >= Btf::VersionFrameDataSize())
+    {
+      if (frame.framedatasize <= 0)
+      {
+        return Error(fmt::format("invalid frame payload size in frame header: {}", frame.framedatasize));
+      }
+      framePayloadSize = static_cast<size_t>(frame.framedatasize);
+    }
+
+    auto encodedFrame = std::vector<u8>(framePayloadSize);
+    reader.read(encodedFrame.data(), encodedFrame.size());
+
+    std::vector<u8> decodedRGBA;
+    if (!decodeFrameToRGBA(
+          encodedFrame.data(),
+          encodedFrame.size(),
+          tnfo.width,
+          tnfo.height,
+          compressionType,
+          formatType,
+          decodedRGBA) ||
+        decodedRGBA.size() != buffers[0].size())
+    {
+      return Error(
+        fmt::format(
+          "failed to decode BTF frame (compression={}, format={})",
+          tnfo.compressiontype,
+          tnfo.format));
+    }
+
+    std::memcpy(buffers[0].data(), decodedRGBA.data(), decodedRGBA.size());
 
     // flip vertically if required (usually only models)
     if (bVerticalFlip)
