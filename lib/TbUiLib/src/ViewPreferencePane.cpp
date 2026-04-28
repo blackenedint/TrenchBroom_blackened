@@ -23,6 +23,7 @@
 #include <QCheckBox>
 #include <QComboBox>
 #include <QLabel>
+#include <QSignalBlocker>
 #include <QtGlobal>
 
 #include "PreferenceManager.h"
@@ -96,11 +97,11 @@ void ViewPreferencePane::createGui()
   auto* layout = new QVBoxLayout{};
   layout->setContentsMargins(QMargins{});
   layout->setSpacing(0);
-
   layout->addSpacing(LayoutConstants::NarrowVMargin);
   layout->addWidget(viewPreferences, 1);
   layout->addSpacing(LayoutConstants::MediumVMargin);
-  setLayout(layout);
+
+  createScrollableContent(layout);
 }
 
 QWidget* ViewPreferencePane::createViewPreferences()
@@ -229,7 +230,6 @@ QWidget* ViewPreferencePane::createViewPreferences()
   layout->addSection("Fonts");
   layout->addRow("Renderer Font Size", m_rendererFontSizeCombo);
 
-  viewBox->setMinimumWidth(400);
   viewBox->setLayout(layout);
 
   return viewBox;
@@ -331,6 +331,23 @@ void ViewPreferencePane::doResetToDefaults()
 
 void ViewPreferencePane::updateControls()
 {
+  const auto layoutBlocker = QSignalBlocker{m_layoutCombo};
+  const auto link2DCamerasBlocker = QSignalBlocker{m_link2dCameras};
+  const auto brightnessBlocker = QSignalBlocker{m_brightnessSlider};
+  const auto gridAlphaBlocker = QSignalBlocker{m_gridAlphaSlider};
+  const auto fovBlocker = QSignalBlocker{m_fovSlider};
+
+  const auto filterModeBlocker = QSignalBlocker{m_filterModeCombo};
+
+  const auto showAxesBlocker = QSignalBlocker{m_showAxes};
+  const auto enableMsaaBlocker = QSignalBlocker{m_enableMsaa};
+  const auto themeBlocker = QSignalBlocker{m_themeCombo};
+
+  const auto materialBrowserIconSizeBlocker =
+    QSignalBlocker{m_materialBrowserIconSizeCombo};
+
+  const auto rendererFontSizeBlocker = QSignalBlocker{m_rendererFontSizeCombo};
+
   auto& prefs = PreferenceManager::instance();
 
   m_layoutCombo->setCurrentIndex(prefs.getPendingValue(Preferences::MapViewLayout));

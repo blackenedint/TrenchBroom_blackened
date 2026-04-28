@@ -1,5 +1,3 @@
-cmake_minimum_required(VERSION 3.12)
-
 add_library(TbUiLib STATIC)
 
 target_sources(TbUiLib
@@ -88,6 +86,7 @@ target_sources(TbUiLib
     ${CMAKE_CURRENT_SOURCE_DIR}/src/FileDialogDefaultDir.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/FileEventFilter.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/FileLogger.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/FixedWidthFont.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/FlagsEditor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/FlagsPopupEditor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/FlashSelectionAnimation.cpp
@@ -103,6 +102,7 @@ target_sources(TbUiLib
     ${CMAKE_CURRENT_SOURCE_DIR}/src/GamesPreferencePane.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/GestureTracker.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/GetVersion.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/GlFunctions.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/GlQt.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/HandleDragTracker.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/ImageListBox.cpp
@@ -221,7 +221,6 @@ target_sources(TbUiLib
     ${CMAKE_CURRENT_SOURCE_DIR}/src/VariableStoreModel.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/VertexTool.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/VertexToolController.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/ViewConstants.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/ViewEditor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/ViewPreferencePane.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/ViewUtils.cpp
@@ -316,6 +315,7 @@ target_sources(TbUiLib
     ${CMAKE_CURRENT_SOURCE_DIR}/include/ui/FileDialogDefaultDir.h
     ${CMAKE_CURRENT_SOURCE_DIR}/include/ui/FileEventFilter.h
     ${CMAKE_CURRENT_SOURCE_DIR}/include/ui/FileLogger.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/ui/FixedWidthFont.h
     ${CMAKE_CURRENT_SOURCE_DIR}/include/ui/FlagsEditor.h
     ${CMAKE_CURRENT_SOURCE_DIR}/include/ui/FlagsPopupEditor.h
     ${CMAKE_CURRENT_SOURCE_DIR}/include/ui/FlashSelectionAnimation.h
@@ -331,6 +331,7 @@ target_sources(TbUiLib
     ${CMAKE_CURRENT_SOURCE_DIR}/include/ui/GamesPreferencePane.h
     ${CMAKE_CURRENT_SOURCE_DIR}/include/ui/GestureTracker.h
     ${CMAKE_CURRENT_SOURCE_DIR}/include/ui/GetVersion.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/ui/GlFunctions.h
     ${CMAKE_CURRENT_SOURCE_DIR}/include/ui/GlQt.h
     ${CMAKE_CURRENT_SOURCE_DIR}/include/ui/HandleDragTracker.h
     ${CMAKE_CURRENT_SOURCE_DIR}/include/ui/ImageListBox.h
@@ -461,27 +462,28 @@ target_sources(TbUiLib
     ${CMAKE_CURRENT_SOURCE_DIR}/include/ui/WidgetState.h
   
   PRIVATE FILE_SET version_header TYPE HEADERS
-    BASE_DIRS ${CMAKE_CURRENT_BINARY_DIR}
+    BASE_DIRS ${CMAKE_CURRENT_BINARY_DIR}/generated
 )
 
-target_link_libraries(TbUiLib PRIVATE
-  CompilerConfig
-  PrecompileQtHeaders
-  PrecompileStdHeaders
-)
-target_link_libraries(TbUiLib PRIVATE
-  KdLib
-  Qt6::Network
-  Qt6::OpenGL
-  Qt6::OpenGLWidgets
-  Qt6::Svg
-  Qt6::Widgets
-  TbBaseLib
-  TbMdlLib
-  TbPreferencesLib
-  TbRenderLib
-  UpdateLib
-  VmLib
+target_link_libraries(TbUiLib 
+  PRIVATE
+    CompilerConfig
+    PrecompileQtHeaders
+    PrecompileStdHeaders
+    cpptrace::cpptrace
+    Qt6::Svg
+  PUBLIC
+    KdLib
+    Qt6::Network
+    Qt6::OpenGL
+    Qt6::OpenGLWidgets
+    Qt6::Widgets
+    TbBaseLib
+    TbMdlLib
+    TbPreferencesLib
+    TbRenderLib
+    UpdateLib
+    VmLib
 )
 
 set_target_properties(TbUiLib PROPERTIES AUTOMOC TRUE)
@@ -491,7 +493,7 @@ add_custom_target(TbUiLib_GenerateVersion ${CMAKE_COMMAND}
   -D UTILS="${CMAKE_SOURCE_DIR}/cmake/Utils.cmake"
   -D APP_BUILD_TYPE="${APP_BUILD_TYPE}"
   -D SRC="${CMAKE_CURRENT_SOURCE_DIR}/include/ui/Version.h.in"
-  -D DST="${CMAKE_CURRENT_BINARY_DIR}/ui/Version.h"
+  -D DST="${CMAKE_CURRENT_BINARY_DIR}/generated/ui/Version.h"
   -D GIT_EXECUTABLE="${GIT_EXECUTABLE}"
   -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/GenerateVersion.cmake")
 add_dependencies(TbUiLib TbUiLib_GenerateVersion)

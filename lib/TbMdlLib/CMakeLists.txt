@@ -1,5 +1,3 @@
-cmake_minimum_required(VERSION 3.12)
-
 add_library(TbMdlLib STATIC)
 
 target_sources(TbMdlLib
@@ -35,7 +33,6 @@ target_sources(TbMdlLib
     ${CMAKE_CURRENT_SOURCE_DIR}/src/EmptyGroupValidator.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/EmptyPropertyKeyValidator.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/EmptyPropertyValueValidator.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/EntParser.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Entity.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/EntityColorPropertyValue.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/EntityDefinition.cpp
@@ -54,6 +51,7 @@ target_sources(TbMdlLib
     ${CMAKE_CURRENT_SOURCE_DIR}/src/EntityProperties.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/EntityPropertiesVariableStore.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/EntityRotation.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/EntParser.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/EnvironmentConfig.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/ExportOptions.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/FgdParser.cpp
@@ -79,9 +77,9 @@ target_sources(TbMdlLib
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Layer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/LayerNode.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/LegacyModelDefinitionParser.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/LinkedGroupUtils.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/LinkSourceValidator.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/LinkTargetValidator.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/LinkedGroupUtils.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/LoadAseModel.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/LoadAssimpModel.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/LoadBspModel.cpp
@@ -112,12 +110,6 @@ target_sources(TbMdlLib
     ${CMAKE_CURRENT_SOURCE_DIR}/src/LockState.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/LongPropertyKeyValidator.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/LongPropertyValueValidator.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/Map.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/MapFileSerializer.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/MapFormat.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/MapHeader.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/MapParser.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/MapReader.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Map_Assets.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Map_Brushes.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Map_CopyPaste.cpp
@@ -126,11 +118,17 @@ target_sources(TbMdlLib
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Map_Groups.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Map_Layers.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Map_NodeLocking.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/Map_NodeVisibility.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Map_Nodes.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/Map_NodeVisibility.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Map_Picking.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Map_Selection.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Map_World.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/Map.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/MapFileSerializer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/MapFormat.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/MapHeader.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/MapParser.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/MapReader.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/MaterialUtils.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/MissingClassnameValidator.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/MissingDefinitionValidator.cpp
@@ -147,8 +145,8 @@ target_sources(TbMdlLib
     ${CMAKE_CURRENT_SOURCE_DIR}/src/NodeVisitor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/NodeWriter.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/NonIntegerVerticesValidator.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/ObjSerializer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Object.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/ObjSerializer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Octree.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Palette.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/ParallelUVCoordSystem.cpp
@@ -188,12 +186,13 @@ target_sources(TbMdlLib
     ${CMAKE_CURRENT_SOURCE_DIR}/src/TagMatcher.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/TagVisitor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Transaction.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/UVCoordSystem.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/UndoableCommand.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/UpdateBrushFaceAttributes.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/UpdateLinkedGroupsCommand.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/UpdateLinkedGroupsCommandBase.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/UpdateLinkedGroupsHelper.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/UVCoordSystem.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/UVUtils.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/Validator.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/ValidatorRegistry.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/VertexHandleManager.cpp
@@ -207,9 +206,22 @@ target_sources(TbMdlLib
     BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
-target_link_libraries(TbMdlLib PRIVATE CompilerConfig PrecompileStdHeaders)
-target_link_libraries(TbMdlLib PRIVATE tinyxml2::tinyxml2 miniz::miniz freeimage::FreeImage assimp::assimp fmt::fmt-header-only)
-target_link_libraries(TbMdlLib PUBLIC KdLib TbBaseLib TbElLib TbFsLib TbGlLib)
+target_link_libraries(TbMdlLib
+  PRIVATE
+    CompilerConfig
+    PrecompileStdHeaders
+    assimp::assimp
+    freeimage::FreeImage
+    miniz::miniz
+    tinyxml2::tinyxml2
+  PUBLIC
+    fmt::fmt-header-only
+    KdLib
+    TbBaseLib
+    TbElLib
+    TbFsLib
+    TbGlLib
+  )
 
 if(TB_TESTS)
 add_subdirectory(test)

@@ -2,30 +2,35 @@
 
 # set -o verbose
 
-# install linuxdeploy
-wget -nc https://github.com/linuxdeploy/linuxdeploy/releases/download/1-alpha-20240109-1/linuxdeploy-x86_64.AppImage
-wget -nc https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/1-alpha-20240109-1/linuxdeploy-plugin-qt-x86_64.AppImage
-chmod u+x ./linuxdeploy-x86_64.AppImage
-chmod u+x ./linuxdeploy-plugin-qt-x86_64.AppImage
-
 # Check versions
-qmake -v
 cmake --version
 ninja --version
 pandoc --version
-./linuxdeploy-x86_64.AppImage --version
-./linuxdeploy-plugin-qt-x86_64.AppImage --plugin-version
 
 # Build TB
 
+rm -rf cmakebuild
 mkdir cmakebuild
 cd cmakebuild
+
+# AppImage tools (linuxdeploy and plugins) may need extract-and-run mode in
+# containers where FUSE mounts are unavailable.
+export APPIMAGE_EXTRACT_AND_RUN=1
+
+# install linuxdeploy into the build dir so it gets cleared with it
+wget -nc https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
+wget -nc https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/continuous/linuxdeploy-plugin-qt-x86_64.AppImage
+chmod u+x ./linuxdeploy-x86_64.AppImage
+chmod u+x ./linuxdeploy-plugin-qt-x86_64.AppImage
+./linuxdeploy-x86_64.AppImage --version
+./linuxdeploy-plugin-qt-x86_64.AppImage --plugin-version
+
 cmake .. \
   -DCMAKE_PREFIX_PATH="cmake/packages;$QT_ROOT_DIR" \
   -DCMAKE_BUILD_TYPE=Release \
   -DCMAKE_CXX_FLAGS="-Werror" \
   -DCMAKE_EXE_LINKER_FLAGS="-Wl,--fatal-warnings" \
-  -DTB_ENABLE_CCACHE=0 \
+  -DTB_ENABLE_CCACHE=1 \
   -DTB_ENABLE_PCH=0 \
   -DCMAKE_INSTALL_PREFIX=/usr \
   || exit 1
@@ -70,7 +75,7 @@ cd "$BUILD_DIR/lib/TbRenderLib/test"
 ./TbRenderLibTest || exit 1
 
 cd "$BUILD_DIR/lib/TbUiLib/test"
-xvfb-run -a ./TbUiLibTest || exit 1
+QT_QPA_PLATFORM=offscreen ./TbUiLibTest || exit 1
 
 cd "$BUILD_DIR/lib/VmLib/test"
 ./VmLibTest || exit 1

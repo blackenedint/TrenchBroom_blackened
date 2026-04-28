@@ -13,8 +13,16 @@ target_sources(TbMdlTestUtilsLib
     BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
-target_link_libraries(TbMdlTestUtilsLib PRIVATE CompilerConfig PrecompileStdHeaders)
-target_link_libraries(TbMdlTestUtilsLib PUBLIC TbBaseTestUtilsLib TbGlTestUtilsLib TbMdlLib fmt::fmt-header-only)
+target_link_libraries(TbMdlTestUtilsLib
+  PRIVATE 
+    CompilerConfig 
+    PrecompileStdHeaders
+  PUBLIC
+    fmt::fmt-header-only
+    TbBaseTestUtilsLib
+    TbGlTestUtilsLib
+    TbMdlLib
+)
 
 if(TB_TESTS)
 add_subdirectory(test)

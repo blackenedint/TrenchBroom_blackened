@@ -30,6 +30,7 @@
 #include "gl/MaterialIndexRangeRenderer.h"
 #include "gl/MaterialRenderFunc.h"
 #include "gl/PrimType.h"
+#include "gl/ResourceId.h"
 #include "gl/Shaders.h"
 #include "gl/TextureFont.h"
 #include "gl/VertexArray.h"
@@ -212,6 +213,8 @@ void EntityBrowserView::addEntityToLayout(
   Layout& layout, const mdl::EntityDefinition& definition, const gl::FontDescriptor& font)
 {
   auto& map = m_document.map();
+  const auto name =
+    m_group ? std::string{mdl::getShortName(definition)} : definition.name;
 
   if (
     (!m_hideUnused || definition.usageCount() > 0)
@@ -221,9 +224,8 @@ void EntityBrowserView::addEntityToLayout(
     const auto& pointEntityDefinition = *definition.pointEntityDefinition;
 
     const auto maxCellWidth = layout.maxCellWidth();
-    const auto actualFont =
-      fontManager().selectFontSize(font, definition.name, maxCellWidth, 5);
-    const auto actualSize = fontManager().font(actualFont).measure(definition.name);
+    const auto actualFont = fontManager().selectFontSize(font, name, maxCellWidth, 5);
+    const auto actualSize = fontManager().font(actualFont).measure(name);
     const auto spec =
       mdl::safeGetModelSpecification(map.logger(), definition.name, [&]() {
         return pointEntityDefinition.modelDefinition.defaultModelSpecification();
@@ -277,7 +279,7 @@ void EntityBrowserView::addEntityToLayout(
         bounds,
         transform,
         modelScale},
-      definition.name,
+      name,
       rotatedBoundsSize.y(),
       rotatedBoundsSize.z(),
       actualSize.x(),

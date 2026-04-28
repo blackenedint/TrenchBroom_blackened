@@ -41,7 +41,7 @@ echo "TB_SIGN_MAC_BUNDLE: $TB_SIGN_MAC_BUNDLE"
 # more details on how to set up the necessary prerequisites for signing and notarizing the
 # app and the archive.
 
-
+rm -rf cmakebuild
 mkdir cmakebuild
 cd cmakebuild
 cmake .. \
@@ -50,7 +50,7 @@ cmake .. \
   -DCMAKE_BUILD_TYPE="$TB_BUILD_TYPE" \
   -DCMAKE_CXX_FLAGS="-Werror" \
   -DCMAKE_EXE_LINKER_FLAGS="-Wl,-fatal_warnings" \
-  -DTB_ENABLE_CCACHE=0 \
+  -DTB_ENABLE_CCACHE=1 \
   -DTB_ENABLE_PCH=0 \
   -DTB_ENABLE_ASAN="$TB_ENABLE_ASAN" \
   -DTB_ENABLE_TSAN="$TB_ENABLE_TSAN" \
