@@ -14,6 +14,7 @@ concurrency:
 
 jobs:
   delete-old-nuget-versions:
+    if: github.repository_owner == 'TrenchBroom'
     runs-on: ubuntu-latest
     steps:
       - name: Delete old NuGet versions
