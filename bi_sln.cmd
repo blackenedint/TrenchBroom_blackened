@@ -11,6 +11,8 @@ SET "INSTALLDIR=m:/bi/vigilseven/_tools/TrenchBroom"
 :: i **may** explicitly move it to %ROOTDIR%/thirdparty/Qt/6.7.3
 :: but it's 15GB for just the required bits.
 SET "QTDIR=m:\bi\Qt\6.9.2\msvc2022_64"
+SET "QT_PLUGIN_PATH=%QTDIR%\plugins"
+SET "QT_QPA_PLATFORM_PLUGIN_PATH=%QTDIR%\plugins\platforms"
 
 @rem SET VCVERSION="v143,version=14.38"
 SET VCVERSION=v143
