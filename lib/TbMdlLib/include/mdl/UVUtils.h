@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2010 Kristian Duske
+ Copyright (C) 2026 Kristian Duske
 
  This file is part of TrenchBroom.
 
@@ -17,22 +17,18 @@
  along with TrenchBroom. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "ui/ViewConstants.h"
+#pragma once
 
-#include <QFontDatabase>
+#include "vm/vec.h"
 
-namespace tb::ui::Fonts
+#include <tuple>
+
+namespace tb::mdl
 {
 
-QFont fixedWidthFont()
-{
-#if defined __APPLE__
-  auto font = QFont{"Monaco"};
-  font.setStyleHint(QFont::TypeWriter);
-  return font;
-#else
-  return QFontDatabase::systemFont(QFontDatabase::FixedFont);
-#endif
-}
+/**
+ * Return the up and right axes for a camera that looks at the given face.
+ */
+std::tuple<vm::vec3d, vm::vec3d> computeCameraAxesForFaceNormal(const vm::vec3d& normal);
 
-} // namespace tb::ui::Fonts
+} // namespace tb::mdl
