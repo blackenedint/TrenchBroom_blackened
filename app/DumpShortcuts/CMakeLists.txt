@@ -44,6 +44,7 @@ if(WIN32)
                 COMMAND "${TB_WINDEPLOYQT_PATH}"
                         --no-compiler-runtime
                         --no-translations
+						--include-plugins qoffscreen
                         "$<TARGET_FILE_DIR:DumpShortcuts>")
     else()
         message(STATUS "windeployqt skipped")
