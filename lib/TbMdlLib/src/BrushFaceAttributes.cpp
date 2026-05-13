@@ -131,7 +131,7 @@ bool BrushFaceAttributes::hasLightmapScale() const
   return m_lightmapScale.has_value();
 }
 
-const std::optional<float>& BrushFaceAttributes::lightmapScale() const
+const std::optional<int32_t>& BrushFaceAttributes::lightmapScale() const
 {
   return m_lightmapScale;
 }
@@ -265,7 +265,7 @@ bool BrushFaceAttributes::setColor(const std::optional<Color>& color)
 }
 
 // BEGIN #BLACKENED
-bool BrushFaceAttributes::setLightmapScale(const std::optional<float>& scaleValue)
+bool BrushFaceAttributes::setLightmapScale(const std::optional<int32_t>& scaleValue)
 {
   if (scaleValue != m_lightmapScale)
   {

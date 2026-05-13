@@ -112,7 +112,7 @@ struct FaceAttribsConfig
   FlagsConfig contentFlags;
   BrushFaceAttributes defaults{BrushFaceAttributes::NoMaterialName};
   // BEGIN #BLACKENED
-  float defaultLightmapScale;
+  int32_t defaultLightmapScale;
   // END #BLACKEND
 
 

@@ -29,6 +29,9 @@ class QAbstractButton;
 class QLabel;
 class QLineEdit;
 class QGridLayout;
+// BEGIN #BLACKENED
+class QSpinBox;
+// END #BLACKENED
 
 namespace tb
 {
@@ -73,7 +76,7 @@ private:
   SpinControl* m_yScaleEditor = nullptr;
   SpinControl* m_rotationEditor = nullptr;
   // BEGIN #BLACKENED
-  SpinControl* m_lightmapScaleEditor = nullptr;
+  QSpinBox* m_lightmapScaleEditor = nullptr;
   // END #BLACKENED
   QLabel* m_surfaceValueLabel = nullptr;
   QWidget* m_surfaceValueEditorLayout = nullptr;
@@ -116,7 +119,7 @@ private:
   void xScaleChanged(double value);
   void yScaleChanged(double value);
   // BEGIN #BLACKENED
-  void lightmapScaleChanged(double value);
+  void lightmapScaleChanged(int32_t value);
   // END #BLACKENED
   void surfaceFlagChanged(size_t index, int value, int setFlag, int mixedFlag);
   void contentFlagChanged(size_t index, int value, int setFlag, int mixedFlag);

@@ -52,7 +52,7 @@ private:
 
   // BEGIN #BLACKENED
   // make it optional
-  std::optional<float> m_lightmapScale;
+  std::optional<int32_t> m_lightmapScale;
   // END #BLACKENED
 
 
@@ -98,7 +98,7 @@ public:
 
   // BEGIN #BLACKENED
   bool hasLightmapScale() const;
-  const std::optional<float>& lightmapScale() const;
+  const std::optional<int32_t>& lightmapScale() const;
   // END #BLACKENED
 
   bool valid() const;
@@ -117,7 +117,7 @@ public:
   bool setColor(const std::optional<Color>& color);
 
   // BEGIN #BLACKENED
-  bool setLightmapScale(const std::optional<float>& scaleValue);
+  bool setLightmapScale(const std::optional<int32_t>& scaleValue);
   // END #BLACKENED
 };
 

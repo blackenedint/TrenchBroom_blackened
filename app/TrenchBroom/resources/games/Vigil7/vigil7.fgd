@@ -1515,7 +1515,10 @@
 	sunspreadangle(float) : "SpreadAngle" : 0 : "The angular extent of the light for casting soft shadows. Higher numbers are more diffuse. 5 is a good starting value."
 ]
 @PointClass iconsprite("textures/sprites/editor/light.btf") base(light) = light_dynamic : "Invisible fully realtime lightsource." []
-@PointClass iconsprite("textures/sprites/editor/light.btf") base(light_spot) = light_spot_dynamic : "A fully realtime spotlight;  if a target is set, direction will be adjusted to 'look' at that target." []
+@PointClass iconsprite("textures/sprites/editor/light.btf") base(light_spot) = light_spot_dynamic : "A fully realtime spotlight;  if a target is set, direction will be adjusted to 'look' at that target."
+[
+
+]
 
 @SolidClass base(Door) = momentary_door : "Momentary/Continuous door" 
 [
@@ -1626,14 +1629,6 @@
 	]
 ]
 
-
-//@PointClass base(Monster, Sequence) studio("models/v_tripmine.mdl") body(3) sequence(7) = monster_tripmine : "Active Tripmine" 
-//[
-//	spawnflags(Flags) =
-//	[
-//		1 : "Instant On" : 0
-//	]
-//]
 @PointClass base(Monster, Sequence) size(-32 -32 -32, 32 32 32) studio("models/turret.mdl") = monster_turret : "Auto Turret"
 [
 	orientation(Choices) : "Orientation" : 0 =
@@ -1948,7 +1943,6 @@
 		8: "No clients" : 0
 		16: "FireClientOnly" : 0
 		32: "TouchClientOnly" : 0
-		64: "Always Gib" : 0
 	]
 	master(string) : "Master" 
 	dmg(integer) : "Damage" : 10
@@ -1968,6 +1962,12 @@
 		512 : "PLASMA"
 		1024 : "POISON"
 		16384: "RADIATION"
+	]
+	damageflag(choices) : "Damage Flag" : 0 =
+	[
+		0 : "None"
+		1 : "Never Gib"
+		2 : "Always Gib"
 	]
 ]
 

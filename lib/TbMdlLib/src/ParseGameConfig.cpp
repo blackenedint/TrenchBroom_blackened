@@ -402,12 +402,12 @@ FlagsConfig parseFlagsConfig(const el::EvaluationContext& context, const el::Val
   return FlagsConfig{flags};
 }
 // BEGIN #BLACKENED
-float parseDefaultLightmapScale(
+int32_t parseDefaultLightmapScale(
   const el::EvaluationContext& context, const el::Value& value)
 {
   if (value == el::Value::Null)
-    return 1.0f;
-  return vm::clamp((float)value.numberValue(context), 0.25f, 6.0f);
+    return 16;
+  return vm::clamp((int32_t)value.numberValue(context), 1, 128);
 }
 // END #BLACKENED
 

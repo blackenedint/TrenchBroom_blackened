@@ -200,7 +200,7 @@ void FaceAttribsEditor::yScaleChanged(const double value)
   }
 }
 // BEGIN #BLACKENED
-void FaceAttribsEditor::lightmapScaleChanged(const double value)
+void FaceAttribsEditor::lightmapScaleChanged(const int32_t value)
 {
   auto& map = m_document.map();
   if (!map.selection().hasAnyBrushFaces())
@@ -208,7 +208,7 @@ void FaceAttribsEditor::lightmapScaleChanged(const double value)
     return;
   }
 
-  if (!setBrushFaceAttributes(map, {.lightmapScale = mdl::SetValue{float(value)}}))
+  if (!setBrushFaceAttributes(map, {.lightmapScale = mdl::SetValue{int32_t(value)}}))
   {
     updateControls();
   }
@@ -524,9 +524,9 @@ QWidget* FaceAttribsEditor::createAttribsWidget()
   // BEGIN #BLACKENED
   auto* lightmapScaleLabel = new QLabel{"Lightmap Scale"};
   setEmphasizedStyle(lightmapScaleLabel);
-  m_lightmapScaleEditor = new SpinControl{};
-  m_lightmapScaleEditor->setRange(0.25f, 6.0f);
-  m_lightmapScaleEditor->setDigits(0, 6);
+  m_lightmapScaleEditor = new QSpinBox{};
+  m_lightmapScaleEditor->setRange(1, 128);
+  m_lightmapScaleEditor->setValue(16);
   // END #BLACKENED
 
   m_surfaceValueLabel = new QLabel{"Value"};
@@ -687,7 +687,7 @@ void FaceAttribsEditor::bindEvents()
   // BEGIN #BLACKENED
   connect(
     m_lightmapScaleEditor,
-    QOverload<double>::of(&QDoubleSpinBox::valueChanged),
+    QOverload<int>::of(&QSpinBox::valueChanged),
     this,
     &FaceAttribsEditor::lightmapScaleChanged);
   // END #BLACKENED
@@ -774,7 +774,28 @@ static void setValueOrMulti(QDoubleSpinBox* box, const bool multi, const double 
     box->setValue(value);
   }
 }
+// BEGIN #BLACKENED
+static void disableAndSetPlaceholder(QSpinBox* box, const QString& text)
+{
+  box->setSpecialValueText(text);
+  box->setValue(box->minimum());
+  box->setEnabled(false);
+}
 
+static void setValueOrMulti(QSpinBox* box, const bool multi, const int32_t value)
+{
+  if (multi)
+  {
+    box->setSpecialValueText("multi");
+    box->setValue(box->minimum());
+  }
+  else
+  {
+    box->setSpecialValueText("");
+    box->setValue(value);
+  }
+}
+// END #BLACKENED
 void FaceAttribsEditor::updateControls()
 {
   // block signals emitted when updating the editor values
@@ -937,7 +958,7 @@ void FaceAttribsEditor::updateControls()
     setValueOrMulti(m_xScaleEditor, xScaleMulti, double(xScale));
     setValueOrMulti(m_yScaleEditor, yScaleMulti, double(yScale));
     // BEGIN #BLACKENED
-    setValueOrMulti(m_lightmapScaleEditor, lightmapScaleMulti, double(lightmapScale));
+    setValueOrMulti(m_lightmapScaleEditor, lightmapScaleMulti, int32_t(lightmapScale));
     // END #BLACKENED
 
     setValueOrMulti(m_surfaceValueEditor, surfaceValueMulti, double(surfaceValue));

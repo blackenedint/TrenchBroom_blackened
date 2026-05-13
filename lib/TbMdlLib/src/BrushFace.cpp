@@ -488,10 +488,10 @@ std::optional<Color> BrushFace::resolvedColor() const
   return m_attributes.color();
 }
 // BEGIN #BLACKENED
-float BrushFace::resolvedLightmapScale() const
+int32_t BrushFace::resolvedLightmapScale() const
 {
-  // if it's set; resolve it, otherwise use 1.0f.
-  return m_attributes.hasLightmapScale() ? m_attributes.lightmapScale().value() : 1.0f;
+  // if it's set; resolve it, otherwise use 16.
+  return m_attributes.hasLightmapScale() ? m_attributes.lightmapScale().value() : 16;
 }
 // END #BLACKENED
 

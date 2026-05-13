@@ -676,7 +676,7 @@ void StandardMapParser::parseBlackenedFace(ParserStatus& status)
   attribs.setRotation(parseFloat());
   attribs.setXScale(parseFloat());
   attribs.setYScale(parseFloat());
-  attribs.setLightmapScale(parseFloat());
+  attribs.setLightmapScale(parseInteger());
 
   // Quake 2 extra info is still optional (for now) ; i _may_ remove it.
   if (!m_tokenizer.peekToken().hasType(

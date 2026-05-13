@@ -288,7 +288,7 @@ public:
   }
 
 private:
-  float m_DefaultLightmapScale;
+  int32_t m_DefaultLightmapScale;
   void doWriteBrushFace(std::ostream& stream, const mdl::BrushFace& face) const override
   {
     writeFacePoints(stream, face);
