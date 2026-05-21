@@ -20,7 +20,9 @@
 
 #include "kd/ranges/as_rvalue_view.h"
 
+#include <ranges>
 #include <sstream>
+#include <type_traits>
 #include <vector>
 
 #include <catch2/catch_test_macros.hpp>
@@ -30,7 +32,7 @@ namespace kdl
 
 TEST_CASE("as_rvalue")
 {
-  SECTION("iterator / sentinel")
+  SECTION("iterator/sentinel")
   {
     SECTION("required types")
     {

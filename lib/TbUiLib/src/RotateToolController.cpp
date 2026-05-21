@@ -177,15 +177,18 @@ private:
     render::RenderBatch& renderBatch,
     const vm::vec3d& initialHandlePosition) const
   {
-    const auto center = m_tool.rotationCenter();
-    const auto axis = m_tool.rotationAxis(m_area);
-    const auto handleRadius =
-      static_cast<float>(m_tool.majorHandleRadius(renderContext.camera()));
-    const auto startAxis = vm::normalize(initialHandlePosition - center);
-    const auto endAxis = vm::quatd{axis, m_angle} * startAxis;
+    if (const auto handleRadius =
+          static_cast<float>(m_tool.majorHandleRadius(renderContext.camera()));
+        handleRadius > 0.0f)
+    {
+      const auto center = m_tool.rotationCenter();
+      const auto axis = m_tool.rotationAxis(m_area);
+      const auto startAxis = vm::normalize(initialHandlePosition - center);
+      const auto endAxis = vm::quatd{axis, m_angle} * startAxis;
 
-    renderBatch.addOneShot(new AngleIndicatorRenderer{
-      center, handleRadius, vm::find_abs_max_component(axis), startAxis, endAxis});
+      renderBatch.addOneShot(new AngleIndicatorRenderer{
+        center, handleRadius, vm::find_abs_max_component(axis), startAxis, endAxis});
+    }
   }
 
   void renderAngleText(

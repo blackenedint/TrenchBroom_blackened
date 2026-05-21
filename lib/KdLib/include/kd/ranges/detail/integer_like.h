@@ -22,7 +22,9 @@
 
 #include <type_traits>
 
-namespace kdl::ranges::detail
+namespace kdl::ranges
+{
+namespace detail
 {
 
 template <class T>
@@ -38,14 +40,6 @@ public:
 };
 
 template <class T>
-struct is_integer_like : std::integral_constant<bool, is_integer_like_impl<T>::value>
-{
-};
-
-template <class T>
-constexpr bool is_integer_like_v = is_integer_like<T>::value;
-
-template <class T>
 struct is_signed_integer_like_impl
 {
 private:
@@ -59,13 +53,24 @@ public:
   static constexpr bool value = signed_integral_builtin;
 };
 
+} // namespace detail
+
+template <class T>
+struct is_integer_like
+  : std::integral_constant<bool, detail::is_integer_like_impl<T>::value>
+{
+};
+
+template <class T>
+constexpr bool is_integer_like_v = is_integer_like<T>::value;
+
 template <class T>
 struct is_signed_integer_like
-  : std::integral_constant<bool, is_signed_integer_like_impl<T>::value>
+  : std::integral_constant<bool, detail::is_signed_integer_like_impl<T>::value>
 {
 };
 
 template <class T>
 constexpr bool is_signed_integer_like_v = is_signed_integer_like<T>::value;
 
-} // namespace kdl::ranges::detail
+} // namespace kdl::ranges

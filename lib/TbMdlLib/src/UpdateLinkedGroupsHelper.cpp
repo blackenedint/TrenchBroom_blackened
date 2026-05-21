@@ -45,7 +45,7 @@ namespace
 // Order groups so that descendants will be updated before their ancestors
 auto compareByAncestry(const GroupNode* lhs, const GroupNode* rhs)
 {
-  return rhs->isAncestorOf(lhs);
+  return rhs->isAncestorOf(*lhs);
 }
 
 std::vector<Node*> collectOldChildren(

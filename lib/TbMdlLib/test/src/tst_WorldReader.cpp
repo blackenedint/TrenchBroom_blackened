@@ -121,6 +121,26 @@ TEST_CASE("WorldReader")
     CHECK(!defaultLayer->layer().omitFromExport());
   }
 
+  SECTION("Worldspawn file position is transferred")
+  {
+    // The leading newline means the opening brace is on line 2 and the closing brace
+    // is on line 4, giving lineNumber() == 2 and lineCount() == 3.
+    const auto data = R"(
+{
+"classname" "worldspawn"
+}
+)";
+
+    auto reader = WorldReader{data, mdl::MapFormat::Standard, {}};
+
+    auto worldResult = reader.read(worldBounds, status, taskManager);
+    REQUIRE(worldResult);
+
+    const auto& worldNode = worldResult.value();
+    CHECK(worldNode->lineNumber() == 2u);
+    CHECK(worldNode->lineCount() == 3u);
+  }
+
   SECTION("Default layer properties")
   {
     const auto data = R"(

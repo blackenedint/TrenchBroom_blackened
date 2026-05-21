@@ -59,23 +59,23 @@ std::vector<GroupNode*> collectGroupsOrContainers(const std::vector<Node*>& node
   Node::visitAll(
     nodes,
     kdl::overload(
-      [](const WorldNode*) {},
-      [](const LayerNode*) {},
-      [&](GroupNode* groupNode) { result.push_back(groupNode); },
-      [&](EntityNode* entityNode) {
-        if (auto* containingGroup = entityNode->containingGroup())
+      [](const WorldNode&) {},
+      [](const LayerNode&) {},
+      [&](GroupNode& groupNode) { result.push_back(&groupNode); },
+      [&](EntityNode& entityNode) {
+        if (auto* containingGroup = entityNode.containingGroup())
         {
           result.push_back(containingGroup);
         }
       },
-      [&](BrushNode* brushNode) {
-        if (auto* containingGroup = brushNode->containingGroup())
+      [&](BrushNode& brushNode) {
+        if (auto* containingGroup = brushNode.containingGroup())
         {
           result.push_back(containingGroup);
         }
       },
-      [&](PatchNode* patchNode) {
-        if (auto* containingGroup = patchNode->containingGroup())
+      [&](PatchNode& patchNode) {
+        if (auto* containingGroup = patchNode.containingGroup())
         {
           result.push_back(containingGroup);
         }
@@ -104,12 +104,12 @@ void copyAndSetLinkIds(
 bool shouldCloneParentWhenCloningNode(const Node* node)
 {
   return node->parent()->accept(kdl::overload(
-    [](const WorldNode*) { return false; },
-    [](const LayerNode*) { return false; },
-    [](const GroupNode*) { return false; },
-    [&](const EntityNode*) { return true; },
-    [](const BrushNode*) { return false; },
-    [](const PatchNode*) { return false; }));
+    [](const WorldNode&) { return false; },
+    [](const LayerNode&) { return false; },
+    [](const GroupNode&) { return false; },
+    [&](const EntityNode&) { return true; },
+    [](const BrushNode&) { return false; },
+    [](const PatchNode&) { return false; }));
 }
 
 void resetLinkIdsOfNonGroupedNodes(const std::map<Node*, std::vector<Node*>>& nodes)
@@ -119,15 +119,15 @@ void resetLinkIdsOfNonGroupedNodes(const std::map<Node*, std::vector<Node*>>& no
     Node::visitAll(
       children,
       kdl::overload(
-        [](const WorldNode*) {},
-        [](const LayerNode*) {},
-        [](const GroupNode*) {},
-        [](auto&& thisLambda, EntityNode* entityNode) {
-          entityNode->setLinkId(generateUuid());
-          entityNode->visitChildren(thisLambda);
+        [](const WorldNode&) {},
+        [](const LayerNode&) {},
+        [](const GroupNode&) {},
+        [](auto&& thisLambda, EntityNode& entityNode) {
+          entityNode.setLinkId(generateUuid());
+          entityNode.visitChildren(thisLambda);
         },
-        [](BrushNode* brushNode) { brushNode->setLinkId(generateUuid()); },
-        [](PatchNode* patchNode) { patchNode->setLinkId(generateUuid()); }));
+        [](BrushNode& brushNode) { brushNode.setLinkId(generateUuid()); },
+        [](PatchNode& patchNode) { patchNode.setLinkId(generateUuid()); }));
   }
 }
 
@@ -152,28 +152,28 @@ auto setLinkIdsForReparentingNodes(
     Node::visitAll(
       nodes,
       kdl::overload(
-        [](const WorldNode*) {},
-        [](const LayerNode*) {},
-        [](const GroupNode*) {
+        [](const WorldNode&) {},
+        [](const LayerNode&) {},
+        [](const GroupNode&) {
           // group nodes can keep their ID because they should remain in their link set
         },
-        [&, newParent = newParent_](auto&& thisLambda, EntityNode* entityNode) {
-          if (newParent->isAncestorOf(entityNode->parent()))
+        [&, newParent = newParent_](auto&& thisLambda, EntityNode& entityNode) {
+          if (newParent->isAncestorOf(*entityNode.parent()))
           {
-            result.emplace_back(entityNode, generateUuid());
-            entityNode->visitChildren(thisLambda);
+            result.emplace_back(&entityNode, generateUuid());
+            entityNode.visitChildren(thisLambda);
           }
         },
-        [&, newParent = newParent_](BrushNode* brushNode) {
-          if (newParent->isAncestorOf(brushNode->parent()))
+        [&, newParent = newParent_](BrushNode& brushNode) {
+          if (newParent->isAncestorOf(*brushNode.parent()))
           {
-            result.emplace_back(brushNode, generateUuid());
+            result.emplace_back(&brushNode, generateUuid());
           }
         },
-        [&, newParent = newParent_](PatchNode* patchNode) {
-          if (newParent->isAncestorOf(patchNode->parent()))
+        [&, newParent = newParent_](PatchNode& patchNode) {
+          if (newParent->isAncestorOf(*patchNode.parent()))
           {
-            result.emplace_back(patchNode, generateUuid());
+            result.emplace_back(&patchNode, generateUuid());
           }
         }));
   }
@@ -188,7 +188,7 @@ std::vector<Node*> removeImplicitelyRemovedNodes(std::vector<Node*> nodes)
   }
 
   nodes = kdl::vec_sort(std::move(nodes), [](const auto* lhs, const auto* rhs) {
-    return lhs->isAncestorOf(rhs);
+    return lhs->isAncestorOf(*rhs);
   });
 
   auto result = std::vector<Node*>{};
@@ -270,7 +270,7 @@ std::vector<Node*> addNodes(Map& map, const std::map<Node*, std::vector<Node*>>&
 {
   contract_assert(std::ranges::all_of(nodes, [&](const auto& parentAndChildren) {
     const auto& [parent, children] = parentAndChildren;
-    return parent == &map.worldNode() || parent->isDescendantOf(&map.worldNode());
+    return parent == &map.worldNode() || parent->isDescendantOf(map.worldNode());
   }));
 
   auto transaction = Transaction{map, "Add Objects"};
@@ -394,7 +394,7 @@ bool reparentNodes(Map& map, const std::map<Node*, std::vector<Node*>>& nodesToA
 
     const auto nodesToDowngrade = mdl::collectNodesAndDescendants(
       nodes,
-      [&](mdl::Object* node) { return node->containingLayer() != newParentLayer; });
+      [&](const mdl::Object& node) { return node.containingLayer() != newParentLayer; });
 
     downgradeUnlockedToInherit(map, nodesToDowngrade);
     downgradeShownToInherit(map, nodesToDowngrade);

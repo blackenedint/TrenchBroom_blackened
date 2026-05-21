@@ -389,7 +389,7 @@ TEST_CASE("Map_Brushes")
       {
         selectNodes(map, {groupNode, linkedGroupNode});
 
-        CHECK(setBrushFaceAttributes(map, {.materialName = "abc"}));
+        REQUIRE(setBrushFaceAttributes(map, {.materialName = "abc"}));
 
         // check that the brushes in both linked groups got a material
         for (auto* g : std::vector<GroupNode*>{groupNode, linkedGroupNode})

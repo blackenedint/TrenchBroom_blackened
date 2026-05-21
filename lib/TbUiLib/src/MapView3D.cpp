@@ -300,27 +300,33 @@ vm::vec3f computeCameraTargetPosition(const std::vector<mdl::Node*>& nodes)
   mdl::Node::visitAll(
     nodes,
     kdl::overload(
-      [](auto&& thisLambda, mdl::WorldNode* world) { world->visitChildren(thisLambda); },
-      [](auto&& thisLambda, mdl::LayerNode* layer) { layer->visitChildren(thisLambda); },
-      [](auto&& thisLambda, mdl::GroupNode* group) { group->visitChildren(thisLambda); },
-      [&](auto&& thisLambda, mdl::EntityNode* entity) {
-        if (!entity->hasChildren())
+      [](auto&& thisLambda, mdl::WorldNode& worldNode) {
+        worldNode.visitChildren(thisLambda);
+      },
+      [](auto&& thisLambda, mdl::LayerNode& layerNode) {
+        layerNode.visitChildren(thisLambda);
+      },
+      [](auto&& thisLambda, mdl::GroupNode& groupNode) {
+        groupNode.visitChildren(thisLambda);
+      },
+      [&](auto&& thisLambda, mdl::EntityNode& entityNode) {
+        if (!entityNode.hasChildren())
         {
-          entity->logicalBounds().for_each_vertex(handlePoint);
+          entityNode.logicalBounds().for_each_vertex(handlePoint);
         }
         else
         {
-          entity->visitChildren(thisLambda);
+          entityNode.visitChildren(thisLambda);
         }
       },
-      [&](mdl::BrushNode* brush) {
-        for (const auto* vertex : brush->brush().vertices())
+      [&](mdl::BrushNode& brushNode) {
+        for (const auto* vertex : brushNode.brush().vertices())
         {
           handlePoint(vertex->position());
         }
       },
-      [&](mdl::PatchNode* patchNode) {
-        for (const auto& controlPoint : patchNode->patch().controlPoints())
+      [&](mdl::PatchNode& patchNode) {
+        for (const auto& controlPoint : patchNode.patch().controlPoints())
         {
           handlePoint(controlPoint.xyz());
         }
@@ -349,25 +355,31 @@ float computeCameraOffset(const gl::Camera& camera, const std::vector<mdl::Node*
   mdl::Node::visitAll(
     nodes,
     kdl::overload(
-      [](auto&& thisLambda, mdl::WorldNode* world) { world->visitChildren(thisLambda); },
-      [](auto&& thisLambda, mdl::LayerNode* layer) { layer->visitChildren(thisLambda); },
-      [](auto&& thisLambda, mdl::GroupNode* group) { group->visitChildren(thisLambda); },
-      [&](auto&& thisLambda, mdl::EntityNode* entity) {
-        if (!entity->hasChildren())
+      [](auto&& thisLambda, mdl::WorldNode& worldNode) {
+        worldNode.visitChildren(thisLambda);
+      },
+      [](auto&& thisLambda, mdl::LayerNode& layerNode) {
+        layerNode.visitChildren(thisLambda);
+      },
+      [](auto&& thisLambda, mdl::GroupNode& groupNode) {
+        groupNode.visitChildren(thisLambda);
+      },
+      [&](auto&& thisLambda, mdl::EntityNode& entityNode) {
+        if (!entityNode.hasChildren())
         {
           for (size_t i = 0u; i < 4u; ++i)
           {
-            entity->logicalBounds().for_each_vertex(
+            entityNode.logicalBounds().for_each_vertex(
               [&](const auto& point) { handlePoint(point, frustumPlanes[i]); });
           }
         }
         else
         {
-          entity->visitChildren(thisLambda);
+          entityNode.visitChildren(thisLambda);
         }
       },
-      [&](mdl::BrushNode* brush) {
-        for (const auto* vertex : brush->brush().vertices())
+      [&](mdl::BrushNode& brushNode) {
+        for (const auto* vertex : brushNode.brush().vertices())
         {
           for (size_t i = 0u; i < 4u; ++i)
           {
@@ -375,8 +387,8 @@ float computeCameraOffset(const gl::Camera& camera, const std::vector<mdl::Node*
           }
         }
       },
-      [&](mdl::PatchNode* patchNode) {
-        for (const auto& controlPoint : patchNode->patch().controlPoints())
+      [&](mdl::PatchNode& patchNode) {
+        for (const auto& controlPoint : patchNode.patch().controlPoints())
         {
           for (size_t i = 0u; i < 4u; ++i)
           {

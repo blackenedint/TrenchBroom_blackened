@@ -89,14 +89,14 @@ public:
   {
     while (cur != end)
     {
-      updateEntity(*cur);
+      updateEntity(**cur);
       ++cur;
     }
   }
 
-  void addEntity(const mdl::EntityNode* entityNode);
-  void removeEntity(const mdl::EntityNode* entityNode);
-  void updateEntity(const mdl::EntityNode* entityNode);
+  void addEntity(const mdl::EntityNode& entityNode);
+  void removeEntity(const mdl::EntityNode& entityNode);
+  void updateEntity(const mdl::EntityNode& entityNode);
   void clear();
 
   bool applyTinting() const;

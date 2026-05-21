@@ -70,7 +70,7 @@ public:
 private:
   void writeDefaultLayer();
   void writeCustomLayers();
-  void writeCustomLayer(const LayerNode* layer);
+  void writeCustomLayer(const LayerNode& layer);
 
 public:
   void writeNodes(const std::vector<Node*>& nodes, kdl::task_manager& taskManager);

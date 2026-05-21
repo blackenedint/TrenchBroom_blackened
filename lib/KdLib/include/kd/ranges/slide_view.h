@@ -188,7 +188,7 @@ public:
     {
       if constexpr (caches_last)
       {
-        return x.last_ele == y.last_ele;
+        return x.last_ele_ == y.last_ele_;
       }
       else
       {
@@ -279,10 +279,10 @@ public:
       std::ranges::iterator_t<Base> last_ele,
       std::ranges::range_difference_t<Base> n)
       requires caches_last
-      : detail::maybe_iterator_caches_last<true, Base>{std::move(last_ele)}
-      , current_{std::move(current)}
+      : current_{std::move(current)}
       , n_{n}
     {
+      this->last_ele_ = std::move(last_ele);
     }
 
     std::ranges::iterator_t<Base> current_{};
@@ -387,7 +387,12 @@ public:
   constexpr auto size()
     requires std::ranges::sized_range<V>
   {
-    return const_cast<const slide_view*>(this)->size();
+    auto s = std::ranges::distance(base_) - n_ + 1;
+    if (s < 0)
+    {
+      s = 0;
+    }
+    return std::make_unsigned_t<decltype(s)>(s);
   }
 
   constexpr auto size() const

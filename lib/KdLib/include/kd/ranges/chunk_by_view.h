@@ -249,17 +249,17 @@ constexpr auto chunk_by(Pred&& pred)
 namespace views
 {
 
-template <std::ranges::viewable_range R>
-constexpr auto chunk_by(R&& r, std::ranges::range_difference_t<R> n)
+template <std::ranges::viewable_range R, typename Pred>
+constexpr auto chunk_by(R&& r, Pred&& pred)
 {
-  return ranges::views::chunk_by(std::forward<R>(r), n);
-};
+  return ranges::views::chunk_by(std::forward<R>(r), std::forward<Pred>(pred));
+}
 
-template <typename DifferenceType>
-constexpr auto chunk_by(const DifferenceType n)
+template <typename Pred>
+constexpr auto chunk_by(Pred&& pred)
 {
-  return ranges::views::chunk_by(n);
-};
+  return ranges::views::chunk_by(std::forward<Pred>(pred));
+}
 
 } // namespace views
 } // namespace kdl

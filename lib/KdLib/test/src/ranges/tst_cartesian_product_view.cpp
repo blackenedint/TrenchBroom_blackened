@@ -23,7 +23,10 @@
 #include <algorithm>
 #include <forward_list>
 #include <memory>
+#include <ranges>
 #include <sstream>
+#include <tuple>
+#include <type_traits>
 #include <vector>
 
 #include <catch2/catch_test_macros.hpp>
@@ -44,9 +47,9 @@ auto make(std::vector<T> v, std::vector<U> w)
 
 TEST_CASE("cartesian_product")
 {
-  using namespace Catch::Matchers;
+  using Catch::Matchers::RangeEquals;
 
-  SECTION("iterator / sentinel")
+  SECTION("iterator/sentinel")
   {
     SECTION("required types (random access range)")
     {
@@ -179,6 +182,26 @@ TEST_CASE("cartesian_product")
     }
   }
 
+  SECTION("move-only value types")
+  {
+    using move_only = std::unique_ptr<int>;
+
+    auto v = std::vector<move_only>{};
+    v.push_back(std::make_unique<int>(1));
+    v.push_back(std::make_unique<int>(2));
+
+    auto w = std::vector<int>{3, 4};
+
+    CHECK_THAT(
+      views::cartesian_product(v, w),
+      RangeEquals(std::vector<std::tuple<move_only&, int>>{
+        {v[0], 3},
+        {v[0], 4},
+        {v[1], 3},
+        {v[1], 4},
+      }));
+  }
+
   SECTION("examples")
   {
     CHECK_THAT(
@@ -208,23 +231,6 @@ TEST_CASE("cartesian_product")
       (make<int, float>({1, 2}, {4.0f, 5.0f, 6.0f})),
       RangeEquals(std::vector<std::tuple<int, float>>{
         {1, 4.0f}, {1, 5.0f}, {1, 6.0f}, {2, 4.0f}, {2, 5.0f}, {2, 6.0f}}));
-  }
-
-
-  SECTION("move-only values")
-  {
-    auto v = std::vector<std::unique_ptr<int>>{};
-    v.push_back(std::make_unique<int>(1));
-    v.push_back(std::make_unique<int>(2));
-
-    auto w = std::vector<float>{1.0f};
-
-    CHECK_THAT(
-      views::cartesian_product(v, w),
-      RangeEquals(std::vector<std::tuple<std::unique_ptr<int>&, float&>>{
-        {v[0], w[0]},
-        {v[1], w[0]},
-      }));
   }
 }
 

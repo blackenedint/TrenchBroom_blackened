@@ -20,8 +20,10 @@
 
 #include "kd/ranges/stride_view.h"
 
-#include <algorithm>
+#include <memory>
+#include <ranges>
 #include <sstream>
+#include <type_traits>
 #include <vector>
 
 #include <catch2/catch_test_macros.hpp>
@@ -42,9 +44,9 @@ auto make_stride(std::vector<T> v, const int n)
 
 TEST_CASE("stride")
 {
-  using namespace Catch::Matchers;
+  using Catch::Matchers::RangeEquals;
 
-  SECTION("iterator / sentinel")
+  SECTION("iterator/sentinel")
   {
     SECTION("required types (random access range)")
     {
@@ -146,6 +148,21 @@ TEST_CASE("stride")
       CHECK_FALSE(i > i);
       CHECK(i >= i);
     }
+  }
+
+  SECTION("move-only value types")
+  {
+    using move_only = std::unique_ptr<int>;
+
+    auto v = std::vector<move_only>{};
+    v.push_back(std::make_unique<int>(1));
+    v.push_back(std::make_unique<int>(2));
+    v.push_back(std::make_unique<int>(3));
+
+    auto s = v | views::stride(2);
+    auto e = v | std::views::filter([](const auto& x) { return *x != 2; });
+
+    CHECK_THAT(s, RangeEquals(e));
   }
 
   SECTION("examples")

@@ -251,11 +251,11 @@ TEST_CASE("Map_Selection")
 
       addNodes(map, {{parentForNodes(map), {brushNode1, brushNode2, brushNode3}}});
 
-      REQUIRE(brushNode1->intersects(brushNode2));
-      REQUIRE(brushNode2->intersects(brushNode1));
+      REQUIRE(brushNode1->intersects(*brushNode2));
+      REQUIRE(brushNode2->intersects(*brushNode1));
 
-      REQUIRE(!brushNode1->intersects(brushNode3));
-      REQUIRE(!brushNode3->intersects(brushNode1));
+      REQUIRE(!brushNode1->intersects(*brushNode3));
+      REQUIRE(!brushNode3->intersects(*brushNode1));
 
       selectNodes(map, {brushNode1});
       selectTouchingNodes(map, false);
@@ -369,8 +369,8 @@ TEST_CASE("Map_Selection")
         vm::translation_matrix(vm::vec3d{100.0, 0.0, 0.0}),
         map.worldBounds());
 
-      REQUIRE(!brushNode1->intersects(brushNode2));
-      REQUIRE(!brushNode1->intersects(brushNode3));
+      REQUIRE(!brushNode1->intersects(*brushNode2));
+      REQUIRE(!brushNode1->intersects(*brushNode3));
 
       addNodes(map, {{parentForNodes(map), {brushNode1, brushNode2, brushNode3}}});
       selectNodes(map, {brushNode1});

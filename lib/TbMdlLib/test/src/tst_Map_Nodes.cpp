@@ -196,23 +196,23 @@ TEST_CASE("Map_Nodes")
 
         auto* linkedNode = linkedGroupNode->children().back();
         linkedNode->accept(kdl::overload(
-          [](const WorldNode*) {},
-          [](const LayerNode*) {},
-          [](const GroupNode*) {},
-          [&](const EntityNode* linkedEntityNode) {
+          [](const WorldNode&) {},
+          [](const LayerNode&) {},
+          [](const GroupNode&) {},
+          [&](const EntityNode& linkedEntityNode) {
             const auto* originalEntityNode = dynamic_cast<EntityNode*>(nodeToAdd);
             REQUIRE(originalEntityNode);
-            CHECK(originalEntityNode->entity() == linkedEntityNode->entity());
+            CHECK(originalEntityNode->entity() == linkedEntityNode.entity());
           },
-          [&](const BrushNode* linkedBrushNode) {
+          [&](const BrushNode& linkedBrushNode) {
             const auto* originalBrushNode = dynamic_cast<BrushNode*>(nodeToAdd);
             REQUIRE(originalBrushNode);
-            CHECK(originalBrushNode->brush() == linkedBrushNode->brush());
+            CHECK(originalBrushNode->brush() == linkedBrushNode.brush());
           },
-          [&](const PatchNode* linkedPatchNode) {
+          [&](const PatchNode& linkedPatchNode) {
             const auto* originalPatchNode = dynamic_cast<PatchNode*>(nodeToAdd);
             REQUIRE(originalPatchNode);
-            CHECK(originalPatchNode->patch() == linkedPatchNode->patch());
+            CHECK(originalPatchNode->patch() == linkedPatchNode.patch());
           }));
 
         map.undoCommand();

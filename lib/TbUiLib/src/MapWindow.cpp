@@ -107,6 +107,7 @@
 #include "ui/SwitchableMapViewContainer.h"
 #include "ui/VertexTool.h"
 #include "ui/ViewUtils.h"
+#include "ui/WadUtils.h"
 #include "ui/WidgetState.h"
 #include "update/Updater.h"
 
@@ -744,34 +745,34 @@ QString describeSelection(const mdl::Map& map)
   size_t hiddenPatches = 0u;
 
   map.worldNode().accept(kdl::overload(
-    [](auto&& thisLambda, const mdl::WorldNode* worldNode) {
-      worldNode->visitChildren(thisLambda);
+    [](auto&& thisLambda, const mdl::WorldNode& worldNode) {
+      worldNode.visitChildren(thisLambda);
     },
-    [](auto&& thisLambda, const mdl::LayerNode* layerNode) {
-      layerNode->visitChildren(thisLambda);
+    [](auto&& thisLambda, const mdl::LayerNode& layerNode) {
+      layerNode.visitChildren(thisLambda);
     },
-    [&](auto&& thisLambda, const mdl::GroupNode* groupNode) {
-      if (!editorContext.visible(*groupNode))
+    [&](auto&& thisLambda, const mdl::GroupNode& groupNode) {
+      if (!editorContext.visible(groupNode))
       {
         ++hiddenGroups;
       }
-      groupNode->visitChildren(thisLambda);
+      groupNode.visitChildren(thisLambda);
     },
-    [&](auto&& thisLambda, const mdl::EntityNode* entityNode) {
-      if (!editorContext.visible(*entityNode))
+    [&](auto&& thisLambda, const mdl::EntityNode& entityNode) {
+      if (!editorContext.visible(entityNode))
       {
         ++hiddenEntities;
       }
-      entityNode->visitChildren(thisLambda);
+      entityNode.visitChildren(thisLambda);
     },
-    [&](const mdl::BrushNode* brushNode) {
-      if (!editorContext.visible(*brushNode))
+    [&](const mdl::BrushNode& brushNode) {
+      if (!editorContext.visible(brushNode))
       {
         ++hiddenBrushes;
       }
     },
-    [&](const mdl::PatchNode* patchNode) {
-      if (!editorContext.visible(*patchNode))
+    [&](const mdl::PatchNode& patchNode) {
+      if (!editorContext.visible(patchNode))
       {
         ++hiddenPatches;
       }
@@ -2626,55 +2627,17 @@ void MapWindow::dropEvent(QDropEvent* event)
     return;
   }
 
-  auto& map = m_document->map();
-  const auto& gameInfo = map.gameInfo();
-  const auto& wadPropertyKey = gameInfo.gameConfig.materialConfig.property;
-  if (!wadPropertyKey)
+  auto pathQStrs = QStringList{};
+  pathQStrs.reserve(urls.size());
+  for (const auto& url : urls)
   {
-    return;
+    pathQStrs.push_back(url.toLocalFile());
   }
 
-  const auto* wadPathsStr = map.worldNode().entity().property(*wadPropertyKey);
-  auto wadPaths = wadPathsStr ? kdl::str_split(*wadPathsStr, ";")
-                                  | kdl::ranges::to<std::vector<std::filesystem::path>>()
-                              : std::vector<std::filesystem::path>{};
-
-  auto pathDialog = ChoosePathTypeDialog{
-    window(),
-    pathFromQString(urls.front().toLocalFile()),
-    map.path(),
-    // BEGIN #BLACKENED
-    // pref(gameInfo.gamePathPreference)
-    gameInfo.getGamePath()
-    // END #BLACKENED
-  };
-
-  const auto result = pathDialog.exec();
-  if (result != QDialog::Accepted)
+  if (addWadPaths(pathQStrs, m_document->map(), this))
   {
-    return;
+    event->acceptProposedAction();
   }
-
-  auto wadPathsToAdd = std::vector<std::filesystem::path>{};
-  std::ranges::transform(urls, std::back_inserter(wadPathsToAdd), [&](const auto& url) {
-    return convertToPathType(
-      pathDialog.pathType(),
-      pathFromQString(url.toLocalFile()),
-      map.path(),
-      // BEGIN #BLACKENED
-      // pref(gameInfo.gamePathPreference)
-      gameInfo.getGamePath()
-      // END #BLACKENED
-    );
-  });
-
-  const auto newWadPathsStr = kdl::str_join(
-    kdl::vec_concat(std::move(wadPaths), std::move(wadPathsToAdd))
-      | std::views::transform([](const auto& path) { return path.string(); }),
-    ";");
-  setEntityProperty(map, *wadPropertyKey, newWadPathsStr);
-
-  event->acceptProposedAction();
 }
 
 void MapWindow::changeEvent(QEvent*)

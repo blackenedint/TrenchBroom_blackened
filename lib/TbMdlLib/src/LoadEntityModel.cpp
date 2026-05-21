@@ -29,6 +29,7 @@
 #include "mdl/LoadBspModel.h"
 #include "mdl/LoadBvmModel.h"
 #include "mdl/LoadDkmModel.h"
+#include "mdl/LoadFmModel.h"
 #include "mdl/LoadImageSpriteModel.h"
 #include "mdl/LoadMd2Model.h"
 #include "mdl/LoadMd3Model.h"
@@ -108,6 +109,10 @@ Result<EntityModelData> loadEntityModelData(
            if (canLoadAseModel(path))
            {
              return loadAseModel(modelName, reader.stringView(), loadMaterial, logger);
+           }
+           if (canLoadFmModel(path, reader))
+           {
+             return loadFmModel(modelName, reader, fs, logger);
            }
            if (canLoadImageSpriteModel(path))
            {

@@ -109,24 +109,24 @@ void PatchRenderer::clear()
   invalidate();
 }
 
-void PatchRenderer::addPatch(const mdl::PatchNode* patchNode)
+void PatchRenderer::addPatch(const mdl::PatchNode& patchNode)
 {
-  if (m_patchNodes.insert(patchNode).second)
+  if (m_patchNodes.insert(&patchNode).second)
   {
     invalidate();
   }
 }
 
-void PatchRenderer::removePatch(const mdl::PatchNode* patchNode)
+void PatchRenderer::removePatch(const mdl::PatchNode& patchNode)
 {
-  if (auto it = m_patchNodes.find(patchNode); it != std::end(m_patchNodes))
+  if (auto it = m_patchNodes.find(&patchNode); it != std::end(m_patchNodes))
   {
     m_patchNodes.erase(it);
     invalidate();
   }
 }
 
-void PatchRenderer::invalidatePatch(const mdl::PatchNode*)
+void PatchRenderer::invalidatePatch(const mdl::PatchNode&)
 {
   invalidate();
 }

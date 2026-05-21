@@ -541,7 +541,7 @@ template <std::ranges::viewable_range R>
 constexpr auto chunk(R&& r, std::ranges::range_difference_t<R> n)
 {
   return ranges::chunk_view{std::forward<R>(r), n};
-};
+}
 
 namespace detail
 {
@@ -556,7 +556,7 @@ template <typename DifferenceType>
 chunk_view_helper(DifferenceType) -> chunk_view_helper<DifferenceType>;
 
 template <std::ranges::viewable_range R, typename DifferenceType>
-auto operator|(R&& r, const chunk_view_helper<DifferenceType>& h)
+constexpr auto operator|(R&& r, const chunk_view_helper<DifferenceType>& h)
 {
   return chunk(std::forward<R>(r), static_cast<std::ranges::range_difference_t<R>>(h.n));
 }
@@ -567,7 +567,7 @@ template <typename DifferenceType>
 constexpr auto chunk(const DifferenceType n)
 {
   return detail::chunk_view_helper{n};
-};
+}
 
 } // namespace views
 } // namespace ranges
@@ -579,13 +579,13 @@ template <std::ranges::viewable_range R>
 constexpr auto chunk(R&& r, std::ranges::range_difference_t<R> n)
 {
   return ranges::views::chunk(std::forward<R>(r), n);
-};
+}
 
 template <typename DifferenceType>
 constexpr auto chunk(const DifferenceType n)
 {
   return ranges::views::chunk(n);
-};
+}
 
 } // namespace views
 } // namespace kdl

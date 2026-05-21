@@ -108,16 +108,16 @@ public:
    * Adds a patch. Calling with an already-added patch is allowed, but ignored (not
    * guaranteed to invalidate it).
    */
-  void addPatch(const mdl::PatchNode* patchNode);
+  void addPatch(const mdl::PatchNode& patchNode);
   /**
    * Removes a patch. Calling with an unknown patch is allowed, but ignored.
    */
-  void removePatch(const mdl::PatchNode* patchNode);
+  void removePatch(const mdl::PatchNode& patchNode);
   /**
    * Causes cached renderer data to be rebuilt for the given patch (on the next render()
    * call).
    */
-  void invalidatePatch(const mdl::PatchNode* patchNode);
+  void invalidatePatch(const mdl::PatchNode& patchNode);
 
   void render(RenderContext& renderContext, RenderBatch& renderBatch);
 

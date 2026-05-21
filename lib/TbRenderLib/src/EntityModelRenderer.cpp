@@ -60,34 +60,34 @@ EntityModelRenderer::~EntityModelRenderer()
   clear();
 }
 
-void EntityModelRenderer::addEntity(const mdl::EntityNode* entityNode)
+void EntityModelRenderer::addEntity(const mdl::EntityNode& entityNode)
 {
   const auto modelSpec =
-    mdl::safeGetModelSpecification(m_logger, entityNode->entity().classname(), [&]() {
-      return entityNode->entity().modelSpecification();
+    mdl::safeGetModelSpecification(m_logger, entityNode.entity().classname(), [&]() {
+      return entityNode.entity().modelSpecification();
     });
 
   auto* renderer = m_entityModelManager.renderer(modelSpec);
   if (renderer != nullptr)
   {
-    m_entities.emplace(entityNode, renderer);
+    m_entities.emplace(&entityNode, renderer);
   }
 }
 
-void EntityModelRenderer::removeEntity(const mdl::EntityNode* entityNode)
+void EntityModelRenderer::removeEntity(const mdl::EntityNode& entityNode)
 {
-  m_entities.erase(entityNode);
+  m_entities.erase(&entityNode);
 }
 
-void EntityModelRenderer::updateEntity(const mdl::EntityNode* entityNode)
+void EntityModelRenderer::updateEntity(const mdl::EntityNode& entityNode)
 {
   const auto modelSpec =
-    mdl::safeGetModelSpecification(m_logger, entityNode->entity().classname(), [&]() {
-      return entityNode->entity().modelSpecification();
+    mdl::safeGetModelSpecification(m_logger, entityNode.entity().classname(), [&]() {
+      return entityNode.entity().modelSpecification();
     });
 
   auto* renderer = m_entityModelManager.renderer(modelSpec);
-  auto it = m_entities.find(entityNode);
+  auto it = m_entities.find(&entityNode);
 
   if (renderer == nullptr && it == std::end(m_entities))
   {
@@ -96,7 +96,7 @@ void EntityModelRenderer::updateEntity(const mdl::EntityNode* entityNode)
 
   if (it == std::end(m_entities))
   {
-    m_entities.emplace(entityNode, renderer);
+    m_entities.emplace(&entityNode, renderer);
   }
   else
   {

@@ -399,7 +399,7 @@ TEST_CASE("Map_Geometry")
       selectNodes(map, {brushNode});
 
       auto& vertexHandles = map.vertexHandles();
-      vertexHandles.addHandles(brushNode);
+      vertexHandles.addHandles(*brushNode);
       vertexHandles.select(std::vector<vm::vec3d>{
         {-32, -32, 32},
         {-32, 32, 32},

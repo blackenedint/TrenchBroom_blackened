@@ -332,7 +332,8 @@ public:
   constexpr auto size()
     requires std::ranges::sized_range<V>
   {
-    return const_cast<const stride_view*>(this)->size();
+    const auto s = detail::div_ceil(std::ranges::distance(base_), stride_);
+    return std::make_unsigned_t<decltype(s)>(s);
   }
 
   constexpr auto size() const

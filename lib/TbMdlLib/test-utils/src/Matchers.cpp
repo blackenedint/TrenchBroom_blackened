@@ -55,37 +55,37 @@ bool nodesMatch(const Node& lhs, const Node& rhs)
   }
 
   return lhs.accept(kdl::overload(
-    [&](const WorldNode* expectedWorldNode) {
+    [&](const WorldNode& expectedWorldNode) {
       const auto* inWorldNode = dynamic_cast<const WorldNode*>(&rhs);
-      return inWorldNode && inWorldNode->entity() == expectedWorldNode->entity()
-             && nodesMatch(inWorldNode->children(), expectedWorldNode->children());
+      return inWorldNode && inWorldNode->entity() == expectedWorldNode.entity()
+             && nodesMatch(inWorldNode->children(), expectedWorldNode.children());
     },
-    [&](const LayerNode* expectedLayerNode) {
+    [&](const LayerNode& expectedLayerNode) {
       const auto* inLayerNode = dynamic_cast<const LayerNode*>(&rhs);
-      return inLayerNode && inLayerNode->layer() == expectedLayerNode->layer()
-             && nodesMatch(inLayerNode->children(), expectedLayerNode->children());
+      return inLayerNode && inLayerNode->layer() == expectedLayerNode.layer()
+             && nodesMatch(inLayerNode->children(), expectedLayerNode.children());
     },
-    [&](const GroupNode* expectedGroupNode) {
+    [&](const GroupNode& expectedGroupNode) {
       const auto* inGroupNode = dynamic_cast<const GroupNode*>(&rhs);
-      return inGroupNode && inGroupNode->group() == expectedGroupNode->group()
-             && inGroupNode->linkId() == expectedGroupNode->linkId()
-             && nodesMatch(inGroupNode->children(), expectedGroupNode->children());
+      return inGroupNode && inGroupNode->group() == expectedGroupNode.group()
+             && inGroupNode->linkId() == expectedGroupNode.linkId()
+             && nodesMatch(inGroupNode->children(), expectedGroupNode.children());
     },
-    [&](const EntityNode* expectedEntityNode) {
+    [&](const EntityNode& expectedEntityNode) {
       const auto* inEntityNode = dynamic_cast<const EntityNode*>(&rhs);
-      return inEntityNode && inEntityNode->entity() == expectedEntityNode->entity()
-             && inEntityNode->linkId() == expectedEntityNode->linkId()
-             && nodesMatch(inEntityNode->children(), expectedEntityNode->children());
+      return inEntityNode && inEntityNode->entity() == expectedEntityNode.entity()
+             && inEntityNode->linkId() == expectedEntityNode.linkId()
+             && nodesMatch(inEntityNode->children(), expectedEntityNode.children());
     },
-    [&](const BrushNode* expectedBrushNode) {
+    [&](const BrushNode& expectedBrushNode) {
       const auto* inBrushNode = dynamic_cast<const BrushNode*>(&rhs);
-      return inBrushNode && inBrushNode->brush() == expectedBrushNode->brush()
-             && inBrushNode->linkId() == expectedBrushNode->linkId();
+      return inBrushNode && inBrushNode->brush() == expectedBrushNode.brush()
+             && inBrushNode->linkId() == expectedBrushNode.linkId();
     },
-    [&](const PatchNode* expectedPatchNode) {
+    [&](const PatchNode& expectedPatchNode) {
       const auto* inPatchNode = dynamic_cast<const PatchNode*>(&rhs);
-      return inPatchNode && inPatchNode->patch() == expectedPatchNode->patch()
-             && inPatchNode->linkId() == expectedPatchNode->linkId();
+      return inPatchNode && inPatchNode->patch() == expectedPatchNode.patch()
+             && inPatchNode->linkId() == expectedPatchNode.linkId();
     }));
 }
 
