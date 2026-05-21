@@ -239,7 +239,17 @@
 @BaseClass = Light 
 [
 	_lightcolor(color255) : "Color" : "255 255 128 200" : "First three integer numbers are the color (RGB). The fourth number is the brightness."
-	_attenuation(float) : "Attenuation" : 1 : "linear attenuation"
+	_fifty_percent_distance(float) : "50 percent distance" : 256 : "If set above 0, distance where this light reaches half brightness. Set to 0 to use attenuation coefficients."
+	_zero_percent_distance(float) : "0 percent distance" : 512 : "Used with 50 percent distance. If lower than the 50 percent distance, it becomes twice that value."
+	_hardfalloff(choices) : "Hard falloff" : 1 : "Fade to zero at the 0 percent distance." =
+	[
+		0 : "No"
+		1 : "Yes"
+	]
+	_constant_attn(float) : "Constant attenuation" : 0 : "Source-style constant attenuation coefficient."
+	_linear_attn(float) : "Linear attenuation" : 0 : "Source-style linear attenuation coefficient."
+	_quadratic_attn(float) : "Quadratic attenuation" : 0 : "Source-style quadratic attenuation coefficient."
+	_distance(float) : "Maximum distance" : 0 : "Optional smooth cutoff distance for coefficient attenuation."
 	style(Choices) : "Appearance" : 0 : "Light appearance. Values:" =
 	[
 		0 : "Normal"
@@ -1503,6 +1513,8 @@
 [
 	_inner_cone(integer) : "Inner (bright) angle" : 30 : "The angle of the cone formed around the directional axis. The area inside this cone will contain the brightest light."
 	_outer_cone(integer) : "Outer (fading) angle" : 45 : "As above, although the area inside this cone will fade increasingly towards the outer edges."
+	_inner_cone_scale(float) : "Inner edge scale" : 1 : "Brightness scale at the inner cone edge. Lower values eg 0.10 -> 0.05 create a flashlight-style hot spot; depending on the actual inner cone size"
+	_exponent(float) : "Penumbra exponent" : 2 : "Shapes the fade from the inner cone edge to the outer cone edge."	
 	pitch(integer) : "Pitch" : -90 : "The pitch of the light (-90 is straight down, 90 is straight up)."
 	spawnflags(Flags) = [ 1 : "Initially dark" : 0 : "If this is enabled, the entity will need to be triggered to work." ]
 ]
@@ -1512,9 +1524,12 @@
 	_lightcolor(color255) : "Color" : "255 255 128 200" : "First three integer numbers are the color (RGB). The fourth number is the brightness."
 	_ambient(color255) : "Ambient light" : "255 255 255 20"
 	pitch(integer) : "Pitch" : -90 : "Negative pitch points downward (-90 is straight down, 90 is straight up)."
-	sunspreadangle(float) : "SpreadAngle" : 0 : "The angular extent of the light for casting soft shadows. Higher numbers are more diffuse. 5 is a good starting value."
+	sunspreadangle(float) : "SpreadAngle" : "0" : "The angular extent of the light for casting soft shadows. Higher numbers are more diffuse. 5 is a good starting value."
 ]
-@PointClass iconsprite("textures/sprites/editor/light.btf") base(light) = light_dynamic : "Invisible fully realtime lightsource." []
+@PointClass iconsprite("textures/sprites/editor/light.btf") base(light) = light_dynamic : "Invisible fully realtime lightsource."
+[
+	
+]
 @PointClass iconsprite("textures/sprites/editor/light.btf") base(light_spot) = light_spot_dynamic : "A fully realtime spotlight;  if a target is set, direction will be adjusted to 'look' at that target."
 [
 
@@ -1681,7 +1696,7 @@
 	globalstate(string) : "Global State Master"
 ]
 
-@PointClass base(Targetname, Angles) flags(Path) size(16 16 16) color(247 181 82) = path_corner : "Path marker"
+@PointClass base(Targetname, Angles) size(16 16 16) color(247 181 82) = path_corner : "Path marker"
 [
 	spawnflags(Flags) =
 	[
@@ -1696,7 +1711,7 @@
 	yaw_speed(integer) : "New Train rot. Speed" : 0
 ]
 
-@PointClass base(Targetname, Angles) flags(Path) size(16 16 16) = path_track : "Train Track Path"
+@PointClass base(Targetname, Angles) size(16 16 16) = path_track : "Train Track Path"
 [
 	spawnflags(Flags) =
 	[
@@ -2144,6 +2159,7 @@
 	]
 ]
 @PointClass base(Weapon) studio("models/weapons/w_ak5.bvm") = weapon_ak5 : "AK5" []
+@PointClass base(Weapon) studio("models/weapons/w_m4.bvm") = weapon_m4 : "M4" []
 
 
 @PointClass base(Appearflags, Targetname, Target) color(76 25 153) size(-8 -8 -8, 8 8 8) = func_timer : "Timer (Quake2 Style)"

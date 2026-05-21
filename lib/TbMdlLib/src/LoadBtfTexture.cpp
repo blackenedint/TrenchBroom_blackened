@@ -39,36 +39,33 @@ namespace tb::mdl
 {
 // so I can copy and paste without having to keep altering;
 // changing to defines
-#define uint32 uint32_t
-#define int32 int32_t
-#define uint16 uint16_t
-#define int16 int16_t
+// removed: int16/int32; the main project has upgraded to using proper types.
 #ifndef byte
 #define byte uint8_t
 #endif
 
 namespace Btf
 {
-constexpr uint32 BTF_IDENT = (('F' << 24) + ('T' << 16) + ('I' << 8) + 'B');
-constexpr uint32 BTF_FRAMEID = (('M' << 24) + ('A' << 16) + ('R' << 8) + 'F');
-constexpr int16 BTF_VER_MAJOR = 1;
-constexpr int16 BTF_VER_MINOR = 2;
+constexpr uint32_t BTF_IDENT = (('F' << 24) + ('T' << 16) + ('I' << 8) + 'B');
+constexpr uint32_t BTF_FRAMEID = (('M' << 24) + ('A' << 16) + ('R' << 8) + 'F');
+constexpr int16_t BTF_VER_MAJOR = 1;
+constexpr int16_t BTF_VER_MINOR = 2;
 
-constexpr uint32 Version(int16 major, int16 minor)
+constexpr uint32_t Version(int16_t major, int16_t minor)
 {
   return static_cast<uint32_t>(major * 100 + minor * 10);
 }
-constexpr uint32 HighestVersion()
+constexpr uint32_t HighestVersion()
 {
   return Version(BTF_VER_MAJOR, BTF_VER_MINOR);
 }
 
-constexpr uint32 VersionReflectivity()
+constexpr uint32_t VersionReflectivity()
 {
   return Version(1, 1);
 }
 
-constexpr uint32 VersionFrameDataSize()
+constexpr uint32_t VersionFrameDataSize()
 {
   return Version(1, 2);
 }
@@ -88,8 +85,8 @@ constexpr size_t SHA1_BUFFER_SIZE = 20;
 constexpr size_t MAX_TEXTURE_NAME = 64; // 32 can probably fit, but this is safer.
 
 // Current known metadata types.
-constexpr uint32 BTF_METAQ2 = (('A' << 24) + ('T' << 16) + ('M' << 8) + 'Q');  // QMTA
-constexpr uint32 BTF_METASPR = (('T' << 24) + ('M' << 16) + ('P' << 8) + 'S'); // SPMT
+constexpr uint32_t BTF_METAQ2 = (('A' << 24) + ('T' << 16) + ('M' << 8) + 'Q');  // QMTA
+constexpr uint32_t BTF_METASPR = (('T' << 24) + ('M' << 16) + ('P' << 8) + 'S'); // SPMT
 
 enum ECompression
 {
@@ -99,17 +96,6 @@ enum ECompression
   BC7,
   DXT1,
   DXT5
-};
-
-// currently only RGBA is written
-// but will figure this out later.
-enum EFormat
-{
-  RGBA = 0,
-
-  // FUTURE (TBD)
-  RGB,
-  ARGB,
 };
 
 enum EAnimType
@@ -123,74 +109,74 @@ enum EAnimType
 #pragma pack(push, 1)
 struct header_t
 {
-  uint32 ident;
-  int16 ver_major;
-  int16 ver_minor;
+  uint32_t ident;
+  int16_t ver_major;
+  int16_t ver_minor;
 };
 
 struct texinfo_t
 {
-  int32 width;
-  int32 height;
+  int32_t width;
+  int32_t height;
 
-  int16 compressiontype; // ECompression
-  int16 format;          // EFormat
-  int16 animType;        // EAnimType
-  int16 frame_count;     // number of frames in texture
+  int16_t compressiontype; // ECompression
+  int16_t btf_flags;           // EFlags
+  int16_t animType;        // EAnimType
+  int16_t frame_count;     // number of frames in texture
 
-  int32 framedatasize;
-  int32 framedataoffset;
+  int32_t framedatasize;
+  int32_t framedataoffset;
 
-  int32 metadatasize;
-  int32 metadataoffset;
+  int32_t metadatasize;
+  int32_t metadataoffset;
 };
 
 // frames... shouldn't need to change often.
 // ver 1.0; reserved[40]
 // ver 1.1; reserved[28]
-// ver 1.2; framedatasize + reserved[24]
+// ver 1.2; framedatasize; reserved[24]
 struct frame_t
 {
   uint32_t ident;
   std::string sha1; // SHA1_BUFFER_SIZE;
   float reflectivity[3];
-  int32 framedatasize;
+  int32_t framedatasize;
   byte reserved[24];
 };
 
 
 struct metadata_t
 {
-  uint32 ident;
+  uint32_t ident;
 };
 
 // metadata for quake2/vigil7
 struct metadata_q2_t : public metadata_t
 {
   // game surface flags;
-  int32 surfaceflags;
+  int32_t surfaceflags;
 
   // game content flags
-  int32 contents;
+  int32_t contents;
 
   // SURF_LIGHT value in Q2 (int32) ; changed to a float so I can re-purpose it.
   float value;
 
   // texture is emissive; alpha is mask
-  int16 emissive;
+  int16_t emissive;
 
   // surface type out of surfaces.txt
   char surfacetype[MAX_TEXTURE_NAME];
 
   // number of alternate texture names
-  int16 alternate_count;
+  int16_t alternate_count;
   // followed by alternate_count * char[btf::MAX_TEXTURE_NAME]
 };
 
 struct metadata_sprite_t : public metadata_t
 {
-  int32 orientation;
-  int32 rendertype;
+  int32_t orientation;
+  int32_t rendertype;
   // followed by frame_count * int32 (intervals)
 };
 #pragma pack(pop)
@@ -257,26 +243,14 @@ static inline int compressionBlockBytes(const Btf::ECompression compressionType)
   }
 }
 
-static inline std::size_t formatRowPitch(const Btf::EFormat format, const int width)
+// all other types are deprecated (never went past 4 channels, staying 4 channels)
+static inline std::size_t formatRowPitch(const int width)
 {
-  switch (format)
-  {
-  case Btf::EFormat::RGBA:
-    return static_cast<std::size_t>(width) * 4u;
-  case Btf::EFormat::RGB:
-    return static_cast<std::size_t>(width) * 3u;
-  case Btf::EFormat::ARGB:
-    return static_cast<std::size_t>(width) * 4u;
-  default:
-    return 0u;
-  }
+  return static_cast<std::size_t>(width) * 4u;
 }
 
 static inline std::size_t frameBytes(
-  const Btf::ECompression compressionType,
-  const Btf::EFormat format,
-  const int width,
-  const int height)
+  const Btf::ECompression compressionType, const int width, const int height)
 {
   if (width <= 0 || height <= 0)
   {
@@ -297,7 +271,7 @@ static inline std::size_t frameBytes(
            * static_cast<std::size_t>(blockBytes);
   }
 
-  return formatRowPitch(format, width) * static_cast<std::size_t>(height);
+  return formatRowPitch(width) * static_cast<std::size_t>(height);
 }
 
 static inline void decodeRGB565(std::uint16_t c, u8& r, u8& g, u8& b)
@@ -399,7 +373,6 @@ static bool decodeFrameToRGBA(
   const int width,
   const int height,
   const Btf::ECompression compressionType,
-  const Btf::EFormat format,
   std::vector<u8>& outRGBA)
 {
   if (width <= 0 || height <= 0)
@@ -413,47 +386,47 @@ static bool decodeFrameToRGBA(
 
   if (compressionType == Btf::ECompression::None)
   {
-    const std::size_t rawSize = frameBytes(compressionType, format, width, height);
+    const std::size_t rawSize = frameBytes(compressionType, width, height);
     if (rawSize == 0 || payloadSize < rawSize)
     {
       return false;
     }
 
-    const std::size_t pixelCount =
-      static_cast<std::size_t>(width) * static_cast<std::size_t>(height);
+    // const std::size_t pixelCount =
+    //   static_cast<std::size_t>(width) * static_cast<std::size_t>(height);
 
-    switch (format)
-    {
-    case Btf::EFormat::RGBA:
-      std::memcpy(outRGBA.data(), payload, rgbaSize);
-      return true;
-    case Btf::EFormat::RGB:
-      for (std::size_t i = 0; i < pixelCount; ++i)
-      {
-        const std::size_t dst = i * 4u;
-        const std::size_t src = i * 3u;
-
-        outRGBA[dst + 0u] = payload[src + 0u];
-        outRGBA[dst + 1u] = payload[src + 1u];
-        outRGBA[dst + 2u] = payload[src + 2u];
-        outRGBA[dst + 3u] = 255;
-      }
-      return true;
-    case Btf::EFormat::ARGB:
-      for (std::size_t i = 0; i < pixelCount; ++i)
-      {
-        const std::size_t dst = i * 4u;
-        const std::size_t src = i * 4u;
-
-        outRGBA[dst + 0u] = payload[src + 1u];
-        outRGBA[dst + 1u] = payload[src + 2u];
-        outRGBA[dst + 2u] = payload[src + 3u];
-        outRGBA[dst + 3u] = payload[src + 0u];
-      }
-      return true;
-    default:
-      return false;
-    }
+    //     switch (format)
+    //     {
+    //     case Btf::EFormat::RGBA:
+    std::memcpy(outRGBA.data(), payload, rgbaSize);
+    return true;
+    //     case Btf::EFormat::RGB:
+    //       for (std::size_t i = 0; i < pixelCount; ++i)
+    //       {
+    //         const std::size_t dst = i * 4u;
+    //         const std::size_t src = i * 3u;
+    //
+    //         outRGBA[dst + 0u] = payload[src + 0u];
+    //         outRGBA[dst + 1u] = payload[src + 1u];
+    //         outRGBA[dst + 2u] = payload[src + 2u];
+    //         outRGBA[dst + 3u] = 255;
+    //       }
+    //       return true;
+    //     case Btf::EFormat::ARGB:
+    //       for (std::size_t i = 0; i < pixelCount; ++i)
+    //       {
+    //         const std::size_t dst = i * 4u;
+    //         const std::size_t src = i * 4u;
+    //
+    //         outRGBA[dst + 0u] = payload[src + 1u];
+    //         outRGBA[dst + 1u] = payload[src + 2u];
+    //         outRGBA[dst + 2u] = payload[src + 3u];
+    //         outRGBA[dst + 3u] = payload[src + 0u];
+    //       }
+    //       return true;
+    //     default:
+    //       return false;
+    //     }
   }
 
   if (compressionType == Btf::ECompression::BC7)
@@ -621,33 +594,33 @@ Result<gl::Texture> loadBtfTexture(fs::Reader& reader, bool bVerticalFlip /*= fa
   try
   {
     Btf::header_t hdr{};
-    hdr.ident = reader.read<uint32, uint32>();
+    hdr.ident = reader.read<uint32_t, uint32_t>();
     if (hdr.ident != Btf::BTF_IDENT)
       return Error("unknown btf identifier: " + std::to_string(hdr.ident));
 
-    hdr.ver_major = reader.read<int16, int16>();
-    hdr.ver_minor = reader.read<int16, int16>();
+    hdr.ver_major = reader.read<int16_t, int16_t>();
+    hdr.ver_minor = reader.read<int16_t, int16_t>();
     if (Btf::Version(hdr.ver_major, hdr.ver_minor) > Btf::HighestVersion())
       return Error(
         fmt::format("unsupported btf version: {}.{}", hdr.ver_major, hdr.ver_minor));
 
     Btf::texinfo_t tnfo{};
-    tnfo.width = reader.read<int32, int32>();
-    tnfo.height = reader.read<int32, int32>();
-    tnfo.compressiontype = reader.read<int16, int16>();
-    tnfo.format = reader.read<int16, int16>();
-    tnfo.animType = reader.read<int16, int16>(); // 0 = none, 1 = sequence, 2 = random
-    tnfo.frame_count = reader.read<int16, int16>();
+    tnfo.width = reader.read<int32_t, int32_t>();
+    tnfo.height = reader.read<int32_t, int32_t>();
+    tnfo.compressiontype = reader.read<int16_t, int16_t>();
+    tnfo.btf_flags = reader.read<int16_t, int16_t>();
+    tnfo.animType = reader.read<int16_t, int16_t>(); // 0 = none, 1 = sequence, 2 = random
+    tnfo.frame_count = reader.read<int16_t, int16_t>();
     if (tnfo.frame_count <= 0)
       return Error(fmt::format("frames are missing? {}", tnfo.frame_count));
 
 
     // use these in trenchbroom instead.
-    size_t framedatasize = reader.readSize<int32>();
-    size_t framedataoffset = reader.readSize<int32>();
+    size_t framedatasize = reader.readSize<int32_t>();
+    size_t framedataoffset = reader.readSize<int32_t>();
 
-    size_t metadatasize = reader.readSize<int32>();
-    size_t metadataoffset = reader.readSize<int32>();
+    size_t metadatasize = reader.readSize<int32_t>();
+    size_t metadataoffset = reader.readSize<int32_t>();
 
     if (framedatasize == 0)
       return Error("no framedata");
@@ -663,7 +636,7 @@ Result<gl::Texture> loadBtfTexture(fs::Reader& reader, bool bVerticalFlip /*= fa
       reader.seekFromBegin(metadataoffset);
 
       // read metadata type.
-      uint32 metadatatype = reader.read<uint32, uint32>();
+      uint32_t metadatatype = reader.read<uint32_t, uint32_t>();
       switch (metadatatype)
       {
       case Btf::BTF_METAQ2: {
@@ -686,7 +659,7 @@ Result<gl::Texture> loadBtfTexture(fs::Reader& reader, bool bVerticalFlip /*= fa
     }
 
 
-    const int32_t flags = meta_q2.surfaceflags;
+    const int32_t surfFlags = meta_q2.surfaceflags;
     const int32_t contents = meta_q2.contents;
     const int32_t lightvalue = static_cast<int32_t>(meta_q2.value);
 
@@ -696,7 +669,7 @@ Result<gl::Texture> loadBtfTexture(fs::Reader& reader, bool bVerticalFlip /*= fa
     reader.seekFromBegin(framedataoffset);
 
     Btf::frame_t frame{};
-    frame.ident = reader.read<uint32, uint32>();
+    frame.ident = reader.read<uint32_t, uint32_t>();
     if (frame.ident != Btf::BTF_FRAMEID)
       return Error("invalid frame data: " + std::to_string(frame.ident));
 
@@ -707,9 +680,11 @@ Result<gl::Texture> loadBtfTexture(fs::Reader& reader, bool bVerticalFlip /*= fa
     // since reflectivity is average color; just.. based on a gamma value.
     if (Btf::Version(hdr.ver_major, hdr.ver_minor) >= Btf::VersionFrameDataSize())
     {
+      // reflectivity
       reader.readVec<float, 3>();
-      frame.framedatasize = reader.read<int32, int32>();
-      reader.readVec<byte, 24>();
+
+      frame.framedatasize = reader.read<int32_t, int32_t>();
+      reader.readVec<byte, 20>(); // remaining 20 bytes
     }
     else if (Btf::Version(hdr.ver_major, hdr.ver_minor) >= Btf::VersionReflectivity())
     {
@@ -729,16 +704,12 @@ Result<gl::Texture> loadBtfTexture(fs::Reader& reader, bool bVerticalFlip /*= fa
     setMipBufferSize(buffers, numMips, width, height, GL_RGBA);
 
     const auto compressionType = static_cast<Btf::ECompression>(tnfo.compressiontype);
-    const auto formatType = static_cast<Btf::EFormat>(tnfo.format);
 
-    size_t framePayloadSize =
-      frameBytes(compressionType, formatType, tnfo.width, tnfo.height);
+    size_t framePayloadSize = frameBytes(compressionType, tnfo.width, tnfo.height);
     if (framePayloadSize == 0)
     {
       return Error(fmt::format(
-        "unsupported BTF frame payload format (compression={}, format={})",
-        tnfo.compressiontype,
-        tnfo.format));
+        "unsupported BTF frame payload format (compression={})", tnfo.compressiontype));
     }
 
     if (Btf::Version(hdr.ver_major, hdr.ver_minor) >= Btf::VersionFrameDataSize())
@@ -762,14 +733,11 @@ Result<gl::Texture> loadBtfTexture(fs::Reader& reader, bool bVerticalFlip /*= fa
         tnfo.width,
         tnfo.height,
         compressionType,
-        formatType,
         decodedRGBA)
       || decodedRGBA.size() != buffers[0].size())
     {
-      return Error(fmt::format(
-        "failed to decode BTF frame (compression={}, format={})",
-        tnfo.compressiontype,
-        tnfo.format));
+      return Error(
+        fmt::format("failed to decode BTF frame (compression={})", tnfo.compressiontype));
     }
 
     std::memcpy(buffers[0].data(), decodedRGBA.data(), decodedRGBA.size());
@@ -805,7 +773,7 @@ Result<gl::Texture> loadBtfTexture(fs::Reader& reader, bool bVerticalFlip /*= fa
 
     // static auto averageColor = Color{};
     const auto averageColor = getAverageColor(buffers[0], GL_BGRA);
-    auto embeddedDefaults = gl::Q2EmbeddedDefaults{flags, contents, lightvalue};
+    auto embeddedDefaults = gl::Q2EmbeddedDefaults{surfFlags, contents, lightvalue};
     return gl::Texture{
       width,
       height,
