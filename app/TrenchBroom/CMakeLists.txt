@@ -50,7 +50,7 @@ if(APPLE)
         set_source_files_properties(${GAME_FILE} PROPERTIES  MACOSX_PACKAGE_LOCATION Resources/games/${GAME_FILE_DIR} HEADER_FILE_ONLY ON)
     endforeach()
 
-    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    if(CMAKE_BUILD_TYPE STREQUAL "Debug" AND NOT TB_BLACKENED)
     # Collect all untested game resources. These are only bundled in Debug builds.
     file(GLOB_RECURSE MACOSX_GAME_TESTING_FILES CONFIGURE_DEPENDS RELATIVE ${TB_RESOURCE_DIR}/games-testing "${TB_RESOURCE_DIR}/games-testing/*")
 
